@@ -10,14 +10,13 @@ Web::~Web()
 
 }
 
-bool Web::check(char *argv) const
+void Web::check(char *argv) const
 {
 	if (argv[0] == 'e')
-		return false;
-	return true;
+		throw std::bad_exception();
 }
 
-void Web::start() const
+void Web::run() const
 {
 	std::cout << "TEST" << std::endl;
 }

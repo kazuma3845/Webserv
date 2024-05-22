@@ -10,6 +10,6 @@ class Web
 		Web();
 		~Web();
 
-		bool check(char *argv) const;
-		void start() const;
+		void check(char *argv) const;
+		void run() const;
 };

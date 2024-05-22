@@ -12,14 +12,12 @@ int main(int argc, char **argv)
 	}
 	try
 	{
-		if (!web.check(argv[1]))
-			throw std::bad_exception();
-		web.start();
+		web.check(argv[1]);
+		web.run();
 	}
 	catch(const std::exception& e)
 	{
 		std::cerr << "Error: " << e.what() << std::endl;
 	}
-	
 	return 0;
 }
