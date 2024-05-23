@@ -22,16 +22,6 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-Web::Web()
-{
-
-}
-
-Web::~Web()
-{
-
-}
-
 void Web::check(char *argv) const
 {
 	if (argv[0] == 'e')
