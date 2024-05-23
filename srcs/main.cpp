@@ -6,14 +6,14 @@ int main(int argc, char **argv)
 
 	if (argc != 2)
 	{
-		std::cout << "Error, Wrong number of arguments" << std::endl;
+		std::cerr << "Error, Wrong number of arguments" << std::endl;
 		return 1;
 	}
 	try
 	{
-		web.check(argv[1]); // init struct and check error
-		web.run();	// Run programme
-		web.clean();	// Clean all
+		web.check(argv[1]);	// init struct and check error
+		// web.run();		// Run programme
+		// web.clean();		// Clean all
 	}
 	catch(const std::exception& e)
 	{
@@ -22,15 +22,32 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void Web::check(char *argv) const
+void Web::check(char *argv)
 {
-	if (argv[0] == 'e')
+	std::string line;
+	std::string key;
+	std::string value;
+	std::ifstream file;
+
+	file.open(argv);
+	if (!file)
 		throw std::bad_exception();
+	getline(file, line);
+	
+	std::cout << line << std::endl;
+	while (getline(file, line) && !line.empty())
+	{
+    	std::stringstream ss(line);
+    	ss >> key >> value;
+		value.pop_back();
+		this->_info[key] = value;
+    	// std::cout << this->_info[key] << std::endl;
+	}
 }
 
 void Web::run() const
 {
-	std::cout << "TEST" << std::endl;
+	std::cout << "RUN" << std::endl;
 }
 
 void Web::clean() const
