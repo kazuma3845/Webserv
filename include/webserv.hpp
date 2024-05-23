@@ -12,4 +12,5 @@ class Web
 
 		void check(char *argv) const;
 		void run() const;
+		void clean() const;
 };
