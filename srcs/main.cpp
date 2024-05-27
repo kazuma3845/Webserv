@@ -30,7 +30,7 @@ void Web::add_map(std::string line, std::string first_key)
 	std::stringstream ss(line);
 
 	ss >> key >> value;
-	if (value.empty())
+	if (value.empty() || key.front() == '#')
 		return ;
 	if (value.back() == '}')
 		value.pop_back();
@@ -41,12 +41,15 @@ void Web::add_map(std::string line, std::string first_key)
 		while (value.back() != ';')
 		{
 			ss >> rest;
+			if (rest.empty())
+				break ;
 			value = value + " " + rest;
 		}
-		value.pop_back();
+		if (value.back() == ';')
+			value.pop_back();
 	}
 	this->_info[first_key][key] = value;
-	// std::cout << "Key: " << key << " | Value: " << this->_info[first_key][key] << std::endl;
+	std::cout << "Key: " << key << " | Value: " << this->_info[first_key][key] << " | Size: " << this->_info[first_key].size() << std::endl;
 }
 
 void Web::check(char *argv)
@@ -54,27 +57,47 @@ void Web::check(char *argv)
 	std::string line;
 	std::ifstream file;
 	std::string key;
+	bool i = true;
+	bool finish = false;
 
 	file.open(argv);
 	if (!file)
 		throw std::bad_exception();
+	this->_key.push_back("serveur");
 	getline(file, line);
-	while (getline(file, line) && !line.empty())
-		add_map(line, "serveur");
-	getline(file, line);
-	std::stringstream ss(line);
-	ss >> key;
-	ss >> key;
-	// std::cout << std::endl << key << std::endl;
-	while (getline(file, line) && !line.empty())
-		add_map(line, key);
-	getline(file, line);
-	std::stringstream ssi(line);
-	ssi >> key;
-	ssi >> key;
-	// std::cout << std::endl << key << std::endl;
-	while (getline(file, line) && !line.empty())
-		add_map(line, key);
+	while (1)
+	{
+		if (i)
+		{
+			if (!getline(file, line))
+				break ;
+			while (line.back() != '{' && finish == false)
+			{
+				add_map(line, "serveur");
+				if (!getline(file, line))
+					finish = true;
+			}
+			i = false;
+		}
+		else
+		{
+			std::stringstream ss(line);
+			ss >> key;
+			ss >> key;
+			this->_key.push_back(key);
+			std::cout << std::endl << key << std::endl;
+			if (!getline(file, line))
+				break ;
+			while (line.back() != '{' && finish == false)
+			{
+				add_map(line, key);
+				if (!getline(file, line))
+					finish = true;
+			}
+		}
+		if (finish)
+			break ;
+	}
 }
 
 void Web::run() const

@@ -6,9 +6,8 @@
 # include <fstream>
 # include <sstream>
 
-
-# include <vector>
 # include <map>
+# include <vector>
 
 // using namespace std;
 
@@ -16,6 +15,7 @@ class Web
 {
 	private:
 		std::map<std::string, std::map<std::string, std::string> > _info;
+		std::vector<std::string> _key;
 
 	public:
 		Web(){};
