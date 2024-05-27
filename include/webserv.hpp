@@ -27,5 +27,5 @@ class Web
 		void clean() const;
 
 		//additional fonction
-		void add_map(std::string line, std::string first_key);
+		void add_map(std::string line, std::string first_key, int *i);
 };

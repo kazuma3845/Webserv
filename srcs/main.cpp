@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void Web::add_map(std::string line, std::string first_key)
+void Web::add_map(std::string line, std::string first_key, int *i)
 {
 	std::string key;
 	std::string value;
@@ -48,6 +48,8 @@ void Web::add_map(std::string line, std::string first_key)
 		if (value.back() == ';')
 			value.pop_back();
 	}
+	if (this->_info[first_key].find(key) != this->_info[first_key].end())
+		key = key + std::to_string(++(*i));
 	this->_info[first_key][key] = value;
 	std::cout << "Key: " << key << " | Value: " << this->_info[first_key][key] << " | Size: " << this->_info[first_key].size() << std::endl;
 }
@@ -57,8 +59,9 @@ void Web::check(char *argv)
 	std::string line;
 	std::ifstream file;
 	std::string key;
-	bool i = true;
+	bool j = true;
 	bool finish = false;
+	int i = 1;
 
 	file.open(argv);
 	if (!file)
@@ -67,17 +70,17 @@ void Web::check(char *argv)
 	getline(file, line);
 	while (1)
 	{
-		if (i)
+		if (j)
 		{
 			if (!getline(file, line))
 				break ;
 			while (line.back() != '{' && finish == false)
 			{
-				add_map(line, "serveur");
+				add_map(line, "serveur", &i);
 				if (!getline(file, line))
 					finish = true;
 			}
-			i = false;
+			j = false;
 		}
 		else
 		{
@@ -90,7 +93,7 @@ void Web::check(char *argv)
 				break ;
 			while (line.back() != '{' && finish == false)
 			{
-				add_map(line, key);
+				add_map(line, key, &i);
 				if (!getline(file, line))
 					finish = true;
 			}
