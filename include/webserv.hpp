@@ -6,6 +6,8 @@
 # include <fstream>
 # include <sstream>
 
+# include "../srcs/parsing/configserv.hpp"
+
 # include <map>
 # include <vector>
 
@@ -14,18 +16,15 @@
 class Web
 {
 	private:
-		std::map<std::string, std::map<std::string, std::string> > _info;
-		std::vector<std::string> _key;
+		std::vector<configserv *> _serv;
 
 	public:
 		Web(){};
 		~Web(){};
 
 		//main fonction
-		void check(char *argv);
+		void parsing(char *argv);
 		void run() const;
 		void clean() const;
 
-		//additional fonction
-		void add_map(std::string line, std::string first_key, int *i);
 };

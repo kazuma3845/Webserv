@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 	}
 	try
 	{
-		web.check(argv[1]);	// init struct and check error
+		web.parsing(argv[1]);	// init struct and check error
 		// web.run();		// Run programme
 		// web.clean();		// Clean all
 	}
@@ -22,84 +22,31 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void Web::add_map(std::string line, std::string first_key, int *i)
+void Web::parsing(char *argv)
 {
-	std::string key;
-	std::string value;
-	std::string rest;
-	std::stringstream ss(line);
-
-	ss >> key >> value;
-	if (value.empty() || key.front() == '#')
-		return ;
-	if (value.back() == '}')
-		value.pop_back();
-	if (value.back() == ';')
-		value.pop_back();
-	else
-	{
-		while (value.back() != ';')
-		{
-			ss >> rest;
-			if (rest.empty())
-				break ;
-			value = value + " " + rest;
-		}
-		if (value.back() == ';')
-			value.pop_back();
-	}
-	if (this->_info[first_key].find(key) != this->_info[first_key].end())
-		key = key + std::to_string(++(*i));
-	this->_info[first_key][key] = value;
-	std::cout << "Key: " << key << " | Value: " << this->_info[first_key][key] << " | Size: " << this->_info[first_key].size() << std::endl;
-}
-
-void Web::check(char *argv)
-{
-	std::string line;
 	std::ifstream file;
-	std::string key;
-	bool j = true;
-	bool finish = false;
-	int i = 1;
-
+	std::vector<std::string> fileline;
+	std::string line;
+	unsigned int i = 0;
 	file.open(argv);
 	if (!file)
 		throw std::bad_exception();
-	this->_key.push_back("serveur");
-	getline(file, line);
-	while (1)
+	for (; getline(file, line); i++)
+		fileline.push_back(line);
+	file.close();
+	// for (unsigned int j = 0; j < i; j++)
+	// 	std::cout << fileline[j] << std::endl;
+	unsigned int filesize = fileline.size();
+	i = 0;
+	for (; i < filesize; i++)
 	{
-		if (j)
-		{
-			if (!getline(file, line))
-				break ;
-			while (line.back() != '{' && finish == false)
-			{
-				add_map(line, "serveur", &i);
-				if (!getline(file, line))
-					finish = true;
-			}
-			j = false;
-		}
+		if (fileline[i].compare("server {"))
+			throw std::exception();
 		else
 		{
-			std::stringstream ss(line);
-			ss >> key;
-			ss >> key;
-			this->_key.push_back(key);
-			std::cout << std::endl << key << std::endl;
-			if (!getline(file, line))
-				break ;
-			while (line.back() != '{' && finish == false)
-			{
-				add_map(line, key, &i);
-				if (!getline(file, line))
-					finish = true;
-			}
+			configserv server;
+			server.serv(fileline, i);
 		}
-		if (finish)
-			break ;
 	}
 }
 

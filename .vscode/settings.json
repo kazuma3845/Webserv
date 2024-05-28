@@ -66,6 +66,10 @@
 		"stack": "cpp",
 		"filesystem": "cpp",
 		"__tree": "cpp",
-		"map": "cpp"
+		"map": "cpp",
+		"__verbose_abort": "cpp",
+		"clocale": "cpp",
+		"execution": "cpp",
+		"variant": "cpp"
 	}
 }
