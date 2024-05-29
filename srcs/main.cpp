@@ -40,13 +40,21 @@ void Web::parsing(char *argv)
 	i = 0;
 	for (; i < filesize; i++)
 	{
-		if (fileline[i].compare("server {"))
-			throw std::exception();
-		else
-		{
-			configserv server;
-			server.serv(fileline, i);
-		}
+		// if (fileline[i].compare("server {"))
+		// 	throw std::exception();
+		// else
+		// {
+			try
+			{
+				configserv server;
+				server.serv(fileline, ++i);
+				this->_serv.push_back(server);
+			}
+			catch (const std::exception& e)
+			{
+				std::cerr << "Error: " << e.what() << std::endl;
+			}
+		// }
 	}
 }
 

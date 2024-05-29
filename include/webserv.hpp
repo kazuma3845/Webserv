@@ -16,7 +16,7 @@
 class Web
 {
 	private:
-		std::vector<configserv *> _serv;
+		std::vector<configserv> _serv;
 
 	public:
 		Web(){};
