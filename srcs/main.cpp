@@ -25,36 +25,47 @@ int main(int argc, char **argv)
 void Web::parsing(char *argv)
 {
 	std::ifstream file;
-	std::vector<std::string> fileline;
+	std::vector<std::string> word;
+	std::vector< std::vector<std::string> > fileline;
 	std::string line;
 	unsigned int i = 0;
 	file.open(argv);
 	if (!file)
 		throw std::bad_exception();
 	for (; getline(file, line); i++)
-		fileline.push_back(line);
+	{
+		if (!line.empty())
+		{
+			std::stringstream ss(line);
+			for (; ss;)
+			{
+				std::string w;
+				ss >> w;
+				if (!w.empty())
+				{
+					if (w.back() == ';')
+						w.pop_back();
+					word.push_back(w);
+				}
+			}
+			fileline.push_back(word);
+			word.clear();
+		}
+	}
 	file.close();
-	// for (unsigned int j = 0; j < i; j++)
-	// 	std::cout << fileline[j] << std::endl;
 	unsigned int filesize = fileline.size();
 	i = 0;
 	for (; i < filesize; i++)
 	{
-		// if (fileline[i].compare("server {"))
-		// 	throw std::exception();
-		// else
-		// {
-			try
-			{
+		std::cout << "Server: " << fileline[i][0] << std::endl;
+		if (fileline[i][0].compare("server"))
+			throw std::exception();
+		else
+		{
 				configserv server;
 				server.serv(fileline, ++i);
 				this->_serv.push_back(server);
-			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Error: " << e.what() << std::endl;
-			}
-		// }
+		}
 	}
 }
 

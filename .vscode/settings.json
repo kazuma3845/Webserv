@@ -70,6 +70,7 @@
 		"__verbose_abort": "cpp",
 		"clocale": "cpp",
 		"execution": "cpp",
-		"variant": "cpp"
+		"variant": "cpp",
+		"__memory": "cpp"
 	}
 }

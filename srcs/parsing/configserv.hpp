@@ -25,7 +25,6 @@ class configserv
 		~configserv(){};
 
 		//additional fonction
-		void add_map(std::string line, unsigned int &i);
-		void serv(std::vector<std::string> file, unsigned int &i);
+		void serv(std::vector< std::vector<std::string> > file, unsigned int &i);
 
 };
