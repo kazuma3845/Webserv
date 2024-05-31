@@ -35,6 +35,7 @@
 
 void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int &i)
 {
+	std::string tab[8] = {"listen", "server_name", "host", "root", "autoindex", "client_max_body_size", "index", "error_page"};
 	for (; i < file.size(); i++)
 	{
 		if (file[i][0].compare("}") == 0)
@@ -45,16 +46,82 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 		{
 			i++;
 			for (unsigned int j = 0; file[i][0].compare("}"); i++)
-				std::cout << file[i][j] << std::endl;
+				(void)j;
+				// std::cout << file[i][j] << std::endl;
 		}
-		// else if ()
-		// {
-
-		// }
 		else
 		{
-			std::cout << file[i][0] << std::endl;
+			int j = 0;
+			for (; tab[j].compare(file[i][0]); j++)
+				;
+			std::cout << "j = " << j << std::endl;
+			switch(j)
+			{
+				case 0:
+				{
+					_listen.push_back(file[i][1]);
+					break ;
+				}
+				case 1:
+				{
+					_name.push_back(file[i][1]);
+					break ;
+				}
+				case 2:
+				{
+					_host.push_back(file[i][1]);
+					break ;
+				}
+				case 3:
+				{
+					_root.push_back(file[i][1]);
+					break ;
+				}
+				case 4:
+				{
+					_autoindex.push_back(file[i][1]);
+					break ;
+				}
+				case 5:
+				{
+					_client_size.push_back(file[i][1]);
+					break ;
+				}
+				case 6:
+				{
+					_html.push_back(file[i][1]);
+					break ;
+				}
+				case 7:
+				{
+					_error[file[i][0]] = file[i][1];
+					break ;
+				}
+				default:
+				{
+					_rest[file[i][0]] = file[i][1];
+					break ;
+				}
+			}
 		}
-		std::cout << "-----------------" << std::endl;
 	}
+}
+
+
+void configserv::print() const
+{
+	for (unsigned int i = 0; i < _listen.size(); i++)
+		std::cout << "Listen: " << _listen[i] << std::endl;
+	for (unsigned int i = 0; i < _name.size(); i++)
+		std::cout << "Name: " << _name[i] << std::endl;
+	for (unsigned int i = 0; i < _host.size(); i++)
+		std::cout << "Host: " << _host[i] << std::endl;
+	for (unsigned int i = 0; i < _root.size(); i++)
+		std::cout << "Root: " << _root[i] << std::endl;
+	for (unsigned int i = 0; i < _autoindex.size(); i++)
+		std::cout << "Autoindex: " << _autoindex[i] << std::endl;
+	for (unsigned int i = 0; i < _client_size.size(); i++)
+		std::cout << "Client size: " << _client_size[i] << std::endl;
+	for (unsigned int i = 0; i < _html.size(); i++)
+		std::cout << "HTML: " << _html[i] << std::endl;
 }

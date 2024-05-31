@@ -57,7 +57,6 @@ void Web::parsing(char *argv)
 	i = 0;
 	for (; i < filesize; i++)
 	{
-		std::cout << "Server: " << fileline[i][0] << std::endl;
 		if (fileline[i][0].compare("server"))
 			throw std::exception();
 		else
@@ -67,11 +66,11 @@ void Web::parsing(char *argv)
 				this->_serv.push_back(server);
 		}
 	}
+	_serv.front().print();
 }
 
 void Web::run() const
 {
-	std::cout << "RUN" << std::endl;
 }
 
 void Web::clean() const
