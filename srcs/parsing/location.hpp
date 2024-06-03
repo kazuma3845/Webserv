@@ -1,7 +1,5 @@
 #pragma once
 
-class configserv;
-
 # include <iostream>
 # include <string>
 # include <algorithm>
@@ -11,11 +9,7 @@ class configserv;
 # include <map>
 # include <vector>
 
-# include "location.hpp"
-
-// using namespace std;
-
-class configserv
+class location
 {
 	private:
 		std::vector<std::string> _listen;
@@ -27,15 +21,9 @@ class configserv
 		std::vector<std::string> _html;
 		std::string _error;
 		std::map<std::string, std::string> _errorpath;
-		std::vector<location> _location;
-
  
 	public:
-		configserv(){};
-		~configserv(){};
-
-		//additional fonction
-		void serv(std::vector< std::vector<std::string> > file, unsigned int &i);
-		void print();
+		location(){};
+		~location(){};
 
 };

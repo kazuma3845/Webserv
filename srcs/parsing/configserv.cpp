@@ -44,17 +44,14 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 			;
 		else if (file[i][0].compare("location") == 0)
 		{
-			i++;
-			for (unsigned int j = 0; file[i][0].compare("}"); i++)
-				(void)j;
-				// std::cout << file[i][j] << std::endl;
+			location a;
+			_location.push_back(a);
 		}
 		else
 		{
 			int j = 0;
 			for (; tab[j].compare(file[i][0]); j++)
 				;
-			std::cout << "j = " << j << std::endl;
 			switch(j)
 			{
 				case 0:
@@ -94,12 +91,13 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 				}
 				case 7:
 				{
-					_error[file[i][0]] = file[i][1];
+					_error = file[i][1];
+					_errorpath[_error] = file[i][2];
 					break ;
 				}
 				default:
 				{
-					_rest[file[i][0]] = file[i][1];
+					throw std::exception();
 					break ;
 				}
 			}
@@ -108,7 +106,7 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 }
 
 
-void configserv::print() const
+void configserv::print()
 {
 	for (unsigned int i = 0; i < _listen.size(); i++)
 		std::cout << "Listen: " << _listen[i] << std::endl;
@@ -124,4 +122,5 @@ void configserv::print() const
 		std::cout << "Client size: " << _client_size[i] << std::endl;
 	for (unsigned int i = 0; i < _html.size(); i++)
 		std::cout << "HTML: " << _html[i] << std::endl;
+	std::cout << "Error num: " << _error << " | Path: " << _errorpath[_error] << std::endl;
 }
