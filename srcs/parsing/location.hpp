@@ -26,4 +26,16 @@ class location
 
 		void init(std::vector< std::vector<std::string> > file, unsigned int &i);
 		void print();
+
+		//GET
+		std::string getName() const;
+		std::string getRoot() const;
+		bool getAutoindex() const;
+		unsigned int getClientSize() const;
+		std::string getIndex() const;
+		std::string getAlias() const;
+		std::string getReturn() const;
+		std::vector<std::string> getAllowMethods() const;
+		std::vector<std::string> getCgiPath() const;
+		std::vector<std::string> getCgiExt() const;
 };

@@ -69,7 +69,7 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 			}
 			default:
 			{
-				throw std::exception();
+				std::cerr << "Error: Wrong argument in file .conf" << std::endl;
 				break ;
 			}
 		}
@@ -93,4 +93,54 @@ void location::print()
 		std::cout << "Cgi_path: " << _cgi_path[i] << std::endl;
 	for (unsigned int i = 0; i < _cgi_ext.size(); i++)
 		std::cout << "Cgi_ext: " << _cgi_ext[i] << std::endl;
+}
+
+std::string location::getName() const
+{
+	return _name;
+}
+
+std::string location::getRoot() const
+{
+	return _root;
+}
+
+bool location::getAutoindex() const
+{
+	return _autoindex;
+}
+
+unsigned int location::getClientSize() const
+{
+	return _client_size;
+}
+
+std::string location::getIndex() const
+{
+	return _index;
+}
+
+std::string location::getAlias() const
+{
+	return _alias;
+}
+
+std::string location::getReturn() const
+{
+	return _return;
+}
+
+std::vector<std::string> location::getAllowMethods() const
+{
+	return _allow_methods;
+}
+
+std::vector<std::string> location::getCgiPath() const
+{
+	return _cgi_path;
+}
+
+std::vector<std::string> location::getCgiExt() const
+{
+	return _cgi_ext;
 }

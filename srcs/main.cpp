@@ -53,9 +53,9 @@ void Web::parsing(char *argv)
 		}
 	}
 	file.close();
-	unsigned int filesize = fileline.size();
+	;
 	i = 0;
-	for (; i < filesize; i++)
+	for (; i < fileline.size(); i++)
 	{
 		if (fileline[i][0].compare("server"))
 			throw std::exception();
@@ -63,19 +63,13 @@ void Web::parsing(char *argv)
 		{
 			if (fileline[i][0].compare("{") == 0)
 				throw std::exception();
-			try
-			{
 			configserv server;
 			server.serv(fileline, ++i);
 			this->_serv.push_back(server);
-			}
-			catch (const std::exception& e)
-			{
-				std::cerr << "Error: " << e.what() << std::endl;
-			}
 		}
 	}
-	_serv.front().print();
+	for (unsigned int m = 0; m < _serv.size(); m++)
+		_serv[m].print();
 }
 
 void Web::run() const
