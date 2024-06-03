@@ -63,9 +63,16 @@ void Web::parsing(char *argv)
 		{
 			if (fileline[i][0].compare("{") == 0)
 				throw std::exception();
+			try
+			{
 			configserv server;
 			server.serv(fileline, ++i);
 			this->_serv.push_back(server);
+			}
+			catch (const std::exception& e)
+			{
+				std::cerr << "Error: " << e.what() << std::endl;
+			}
 		}
 	}
 	_serv.front().print();
