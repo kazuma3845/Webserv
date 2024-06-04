@@ -19,14 +19,15 @@ class configserv
 {
 	private:
 		std::vector<std::string> _listen;
-		std::vector<std::string> _name;
-		std::vector<std::string> _host;
-		std::vector<std::string> _root;
-		std::vector<std::string> _autoindex;
-		std::vector<std::string> _client_size;
-		std::vector<std::string> _html;
+		std::string _name;
+		std::string _host;
+		std::string _root;
+		bool _autoindex;
+		unsigned int _client_size;
+		std::string _index;
 		std::string _error;
 		std::map<std::string, std::string> _errorpath;
+		std::vector<std::string> _allow_methods;
 		std::vector<location> _location;
 
  
@@ -38,4 +39,16 @@ class configserv
 		void serv(std::vector< std::vector<std::string> > file, unsigned int &i);
 		void print();
 
+		//GET
+		std::vector<std::string> getListen() const;
+		std::string getName() const;
+		std::string getHost() const;
+		std::string getRoot() const;
+		bool getAutoindex() const;
+		unsigned int getClientSize() const;
+		std::string getIndex() const;
+		std::string	getError() const;
+		std::map<std::string, std::string> getErrorPath() const;
+		std::vector<std::string> getAllowMethods() const;
+		std::vector<location> getLocation() const;
 };

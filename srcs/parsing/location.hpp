@@ -2,9 +2,6 @@
 
 # include <iostream>
 # include <string>
-# include <algorithm>
-# include <fstream>
-# include <sstream>
 
 # include <map>
 # include <vector>
@@ -12,18 +9,33 @@
 class location
 {
 	private:
-		std::vector<std::string> _listen;
-		std::vector<std::string> _name;
-		std::vector<std::string> _host;
-		std::vector<std::string> _root;
-		std::vector<std::string> _autoindex;
-		std::vector<std::string> _client_size;
-		std::vector<std::string> _html;
-		std::string _error;
-		std::map<std::string, std::string> _errorpath;
+		std::string _name;
+		std::string _root;
+		bool _autoindex;
+		unsigned int _client_size;
+		std::string _index;
+		std::string _alias;
+		std::string _return;
+		std::vector<std::string> _allow_methods;
+		std::vector<std::string>	_cgi_path;
+		std::vector<std::string>	_cgi_ext;
  
 	public:
-		location(){};
+		location();
 		~location(){};
 
+		void init(std::vector< std::vector<std::string> > file, unsigned int &i);
+		void print();
+
+		//GET
+		std::string getName() const;
+		std::string getRoot() const;
+		bool getAutoindex() const;
+		unsigned int getClientSize() const;
+		std::string getIndex() const;
+		std::string getAlias() const;
+		std::string getReturn() const;
+		std::vector<std::string> getAllowMethods() const;
+		std::vector<std::string> getCgiPath() const;
+		std::vector<std::string> getCgiExt() const;
 };

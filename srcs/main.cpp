@@ -31,7 +31,7 @@ void Web::parsing(char *argv)
 	unsigned int i = 0;
 	file.open(argv);
 	if (!file)
-		throw std::bad_exception();
+		throw ExceptionErrorFile();
 	for (; getline(file, line); i++)
 	{
 		if (!line.empty())
@@ -53,9 +53,9 @@ void Web::parsing(char *argv)
 		}
 	}
 	file.close();
-	unsigned int filesize = fileline.size();
+	;
 	i = 0;
-	for (; i < filesize; i++)
+	for (; i < fileline.size(); i++)
 	{
 		if (fileline[i][0].compare("server"))
 			throw std::exception();
@@ -68,7 +68,8 @@ void Web::parsing(char *argv)
 			this->_serv.push_back(server);
 		}
 	}
-	_serv.front().print();
+	for (unsigned int m = 0; m < _serv.size(); m++)
+		_serv[m].print();
 }
 
 void Web::run() const
@@ -78,4 +79,14 @@ void Web::run() const
 void Web::clean() const
 {
 
+}
+
+const char *Web::ExceptionErrorFile::what() const throw()
+{
+	return "could not open file.";
+}
+
+const char *Web::ExceptionInFile::what() const throw()
+{
+	return "bad input in file.";
 }
