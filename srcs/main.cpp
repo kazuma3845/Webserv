@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 	try
 	{
 		web.parsing(argv[1]);	// init struct and check error
-		// web.run();		// Run programme
+		web.run();		// Run programme
 		// web.clean();		// Clean all
 	}
 	catch(const std::exception& e)
@@ -74,6 +74,7 @@ void Web::parsing(char *argv)
 
 void Web::run() const
 {
+	Server server = Server(this->_serv);
 }
 
 void Web::clean() const
