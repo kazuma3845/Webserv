@@ -1,4 +1,5 @@
 # include "configserv.hpp"
+#include "../../include/webserv.hpp"
 
 void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int &i)
 {
@@ -50,7 +51,11 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 				}
 				case 5:
 				{
-					_client_size = stoi(file[i][1]); //----------------C++11---------------------------------------------------
+					std::string str = file[i][1];
+					std::stringstream ss(str);
+					int x;
+					ss >> x;
+					_client_size = x;
 					break ;
 				}
 				case 6:
@@ -72,7 +77,7 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 				}
 				default:
 				{
-					std::cerr << "Error: Wrong argument in file .conf" << std::endl;
+					throw ;
 					break ;
 				}
 			}

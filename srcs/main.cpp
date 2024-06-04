@@ -31,7 +31,7 @@ void Web::parsing(char *argv)
 	unsigned int i = 0;
 	file.open(argv);
 	if (!file)
-		throw std::bad_exception();
+		throw ExceptionErrorFile();
 	for (; getline(file, line); i++)
 	{
 		if (!line.empty())
@@ -79,4 +79,14 @@ void Web::run() const
 void Web::clean() const
 {
 
+}
+
+const char *Web::ExceptionErrorFile::what() const throw()
+{
+	return "could not open file.";
+}
+
+const char *Web::ExceptionInFile::what() const throw()
+{
+	return "bad input in file.";
 }

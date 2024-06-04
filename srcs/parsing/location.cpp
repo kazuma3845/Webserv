@@ -1,4 +1,5 @@
 #include "location.hpp"
+#include "../../include/webserv.hpp"
 
 location::location()
 {
@@ -31,7 +32,11 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 			}
 			case 2:
 			{
-				_client_size = stoi(file[i][1]); //----------------C++11---------------------------------------------------
+				std::string str = file[i][1];
+				std::stringstream ss(str);
+				int x;
+				ss >> x;
+				_client_size = x;
 				break ;
 			}
 			case 3:
@@ -69,7 +74,7 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 			}
 			default:
 			{
-				std::cerr << "Error: Wrong argument in file .conf" << std::endl;
+				throw Web::ExceptionInFile();
 				break ;
 			}
 		}

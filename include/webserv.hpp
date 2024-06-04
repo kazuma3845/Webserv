@@ -27,4 +27,17 @@ class Web
 		void run() const;
 		void clean() const;
 
+		//exception
+		class ExceptionErrorFile : public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
+
+		class ExceptionInFile : public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
+
 };
