@@ -1,6 +1,11 @@
 # include "configserv.hpp"
 #include "../../include/webserv.hpp"
 
+configserv::configserv()
+{
+	_autoindex = false;
+}
+
 void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int &i)
 {
 	std::string tab[9] = {"listen", "server_name", "host", "root", "autoindex", "client_max_body_size", "index", "error_page", "allow_methods"};

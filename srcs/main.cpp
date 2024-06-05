@@ -22,6 +22,20 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+void Web::check()
+{
+	for (unsigned int i = 0; i < _serv.size(); i++)
+	{
+		if (_serv[i].getListen().empty())
+			throw ExceptionInFile();
+		if (_serv[i].getName().empty())
+			throw ExceptionInFile();
+		if (_serv[i].getRoot().empty())
+			throw ExceptionInFile();
+		if (_serv[i].getIndex().empty())
+			throw ExceptionInFile();
+	}
+}
 void Web::parsing(char *argv)
 {
 	std::ifstream file;
@@ -68,6 +82,7 @@ void Web::parsing(char *argv)
 			this->_serv.push_back(server);
 		}
 	}
+	check();
 	for (unsigned int m = 0; m < _serv.size(); m++)
 		_serv[m].print();
 }

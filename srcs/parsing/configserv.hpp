@@ -32,7 +32,7 @@ class configserv
 
  
 	public:
-		configserv(){};
+		configserv();
 		~configserv(){};
 
 		//additional fonction

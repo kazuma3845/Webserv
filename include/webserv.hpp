@@ -27,6 +27,9 @@ class Web
 		void run() const;
 		void clean() const;
 
+
+		//fonction additionnal
+		void check();
 		//exception
 		class ExceptionErrorFile : public std::exception
 		{
