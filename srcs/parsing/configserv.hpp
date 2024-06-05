@@ -18,7 +18,7 @@ class configserv;
 class configserv
 {
 	private:
-		std::vector<std::string> _listen;
+		std::vector<int> _listen;
 		std::string _name;
 		std::string _host;
 		std::string _root;
@@ -40,7 +40,7 @@ class configserv
 		void print();
 
 		//GET
-		std::vector<std::string> getListen() const;
+		std::vector<int> getListen() const;
 		std::string getName() const;
 		std::string getHost() const;
 		std::string getRoot() const;

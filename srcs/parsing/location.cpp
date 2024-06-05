@@ -21,6 +21,8 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 		{
 			case 0:
 			{
+				if (!_root.empty())
+					throw Web::ExceptionInFile();
 				_root = file[i][1];
 				break ;
 			}
@@ -32,6 +34,8 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 			}
 			case 2:
 			{
+				if (_client_size != 0)
+					throw Web::ExceptionInFile();
 				std::string str = file[i][1];
 				std::stringstream ss(str);
 				int x;
@@ -41,33 +45,45 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 			}
 			case 3:
 			{
+				if (!_index.empty())
+					throw Web::ExceptionInFile();
 				_index = file[i][1];
 				break ;
 			}
 			case 4:
 			{
+				if (!_alias.empty())
+					throw Web::ExceptionInFile();
 				_alias = file[i][1];
 				break ;
 			}
 			case 5:
 			{
+				if (!_return.empty())
+					throw Web::ExceptionInFile();
 				_return = file[i][1];
 				break ;
 			}
 			case 6:
 			{
+				if (!_allow_methods.empty())
+					throw Web::ExceptionInFile();
 				for (unsigned int k = 1; k < file[i].size(); k++)
 					_allow_methods.push_back(file[i][k]);
 				break ;
 			}
 			case 7:
 			{
+				if (!_cgi_path.empty())
+					throw Web::ExceptionInFile();
 				for (unsigned int k = 1; k < file[i].size(); k++)
 					_cgi_path.push_back(file[i][k]);
 				break ;
 			}
 			case 8:
 			{
+				if (!_cgi_ext.empty())
+					throw Web::ExceptionInFile();
 				for (unsigned int k = 1; k < file[i].size(); k++)
 					_cgi_ext.push_back(file[i][k]);
 				break ;
