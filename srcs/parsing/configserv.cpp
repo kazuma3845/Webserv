@@ -183,3 +183,8 @@ std::vector<location> configserv::getLocation() const
 {
 	return _location;
 }
+
+void configserv::setClientSize(unsigned int size)
+{
+	_client_size = size;
+}

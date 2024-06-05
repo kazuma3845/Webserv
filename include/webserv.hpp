@@ -13,6 +13,8 @@
 
 // using namespace std;
 
+#define CLIENT_SIZE 5
+
 class Web
 {
 	private:

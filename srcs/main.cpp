@@ -34,6 +34,8 @@ void Web::check()
 			throw ExceptionInFile();
 		if (_serv[i].getIndex().empty())
 			throw ExceptionInFile();
+		if (_serv[i].getClientSize() == 0)
+			_serv[i].setClientSize(CLIENT_SIZE);
 	}
 }
 void Web::parsing(char *argv)

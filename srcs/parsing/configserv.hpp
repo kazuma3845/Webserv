@@ -51,4 +51,7 @@ class configserv
 		std::map<std::string, std::string> getErrorPath() const;
 		std::vector<std::string> getAllowMethods() const;
 		std::vector<location> getLocation() const;
+
+		//set
+		void setClientSize(unsigned int size);
 };
