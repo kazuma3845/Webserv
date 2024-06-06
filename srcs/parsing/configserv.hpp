@@ -18,7 +18,7 @@ class configserv;
 class configserv
 {
 	private:
-		std::vector<std::string> _listen;
+		std::vector<int> _listen;
 		std::string _name;
 		std::string _host;
 		std::string _root;
@@ -32,7 +32,7 @@ class configserv
 
  
 	public:
-		configserv(){};
+		configserv();
 		~configserv(){};
 
 		//additional fonction
@@ -40,7 +40,7 @@ class configserv
 		void print();
 
 		//GET
-		std::vector<std::string> getListen() const;
+		std::vector<int> getListen() const;
 		std::string getName() const;
 		std::string getHost() const;
 		std::string getRoot() const;
@@ -51,4 +51,7 @@ class configserv
 		std::map<std::string, std::string> getErrorPath() const;
 		std::vector<std::string> getAllowMethods() const;
 		std::vector<location> getLocation() const;
+
+		//set
+		void setClientSize(unsigned int size);
 };

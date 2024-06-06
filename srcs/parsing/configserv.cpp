@@ -1,6 +1,12 @@
 # include "configserv.hpp"
 #include "../../include/webserv.hpp"
 
+configserv::configserv()
+{
+	_autoindex = false;
+	_client_size = 0;
+}
+
 void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int &i)
 {
 	std::string tab[9] = {"listen", "server_name", "host", "root", "autoindex", "client_max_body_size", "index", "error_page", "allow_methods"};
@@ -25,22 +31,41 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 			{
 				case 0:
 				{
-					_listen.push_back(file[i][1]);
+					size_t found = file[i][1].find(":");
+					if (found != std::string::npos)
+					{
+						_host = file[i][1].substr(0, found);
+						file[i][1] = file[i][1].substr(found + 1, file[i][1].size());
+					}
+					std::string str = file[i][1];
+					std::stringstream ss(str);
+					int x;
+					ss >> x;
+					_listen.push_back(x);
 					break ;
 				}
 				case 1:
 				{
-					_name = file[i][1];
+					if (_name.empty())
+						_name = file[i][1];
+					else
+						throw Web::ExceptionInFile();
 					break ;
 				}
 				case 2:
 				{
-					_host = file[i][1];
+					if (_host.empty())
+						_host = file[i][1];
+					else
+						throw Web::ExceptionInFile();
 					break ;
 				}
 				case 3:
 				{
-					_root = file[i][1];
+					if (_root.empty())
+						_root = file[i][1];
+					else
+						throw Web::ExceptionInFile();
 					break ;
 				}
 				case 4:
@@ -51,6 +76,8 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 				}
 				case 5:
 				{
+					if (_client_size != 0)
+						throw Web::ExceptionInFile();
 					std::string str = file[i][1];
 					std::stringstream ss(str);
 					int x;
@@ -60,7 +87,10 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 				}
 				case 6:
 				{
-					_index = file[i][1];
+					if (_index.empty())
+						_index = file[i][1];
+					else
+						throw Web::ExceptionInFile();
 					break ;
 				}
 				case 7:
@@ -77,7 +107,7 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 				}
 				default:
 				{
-					throw ;
+					throw Web::ExceptionInFile();
 					break ;
 				}
 			}
@@ -105,7 +135,7 @@ void configserv::print()
 	std::cout << std::endl;
 }
 
-std::vector<std::string> configserv::getListen() const
+std::vector<int> configserv::getListen() const
 {
 	return _listen;
 }
@@ -158,4 +188,9 @@ std::vector<std::string> configserv::getAllowMethods() const
 std::vector<location> configserv::getLocation() const
 {
 	return _location;
+}
+
+void configserv::setClientSize(unsigned int size)
+{
+	_client_size = size;
 }

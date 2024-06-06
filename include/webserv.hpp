@@ -13,6 +13,8 @@
 
 // using namespace std;
 
+#define CLIENT_SIZE 5
+
 class Web
 {
 	private:
@@ -23,10 +25,13 @@ class Web
 		~Web(){};
 
 		//main fonction
-		void parsing(char *argv);
+		void parsing(char **argv, int argc);
 		void run() const;
 		void clean() const;
 
+
+		//fonction additionnal
+		void check();
 		//exception
 		class ExceptionErrorFile : public std::exception
 		{
