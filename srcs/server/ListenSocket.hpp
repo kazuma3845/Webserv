@@ -1,5 +1,6 @@
 #ifndef LISTENSOCKET_HPP
 # define LISTENSOCKET_HPP
+
 # include <iostream>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -13,8 +14,6 @@
 # include "../parsing/configserv.hpp"
 # define MESSAGE_BUFFER 40000
 # define MAX_CLIENTS 30
-
-class configserv;
 
 class ListenSocket {
 	private :
@@ -30,7 +29,7 @@ class ListenSocket {
 
 	public :
 		ListenSocket(configserv config_serv);
-		~ListenSocket(void);
+		~ListenSocket(void){};
 		ListenSocket(const ListenSocket& copy);
 
 		ListenSocket&			operator=(const ListenSocket& ref);

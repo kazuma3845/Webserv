@@ -157,8 +157,8 @@ void Server::read_socket(Client client)
 	}
 
 	// Remove socket from read to write
-	FD_CLR(socket, &this->_read_sds);
+	// FD_CLR(socket, &this->_read_sds);
 	// FD_SET(sd, &this->_write_sds);
-	close(socket);
-	this->_client_sd_map.erase(socket);
+	// close(socket);
+	// this->_client_sd_map.erase(socket);
 }

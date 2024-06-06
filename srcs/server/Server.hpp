@@ -1,5 +1,8 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
+
+class Server;
+
 # include <iostream>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -13,9 +16,6 @@
 # include "../parsing/configserv.hpp"
 # include "../client/Client.hpp"
 # include "ListenSocket.hpp"
-
-class ListenSocket;
-class Client;
 
 class Server {
 	private :

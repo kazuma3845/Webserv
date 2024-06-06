@@ -7,6 +7,7 @@
 # include <sstream>
 
 # include "../srcs/parsing/configserv.hpp"
+# include "../srcs/server/Server.hpp"
 
 # include <map>
 # include <vector>

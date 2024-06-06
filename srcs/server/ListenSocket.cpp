@@ -10,66 +10,25 @@
 // /*                                                                            */
 // /* ************************************************************************** */
 
-// #include "ListenSocket.hpp"
+#include "ListenSocket.hpp"
 
 // // ------------------- Constructors -------------------
 
-// ListenSocket::ListenSocket(void)
-// {
-// 	std::cout << "New ListenSocket called" << std::endl;
-// }
 
 ListenSocket::ListenSocket(configserv config_serv)
 {
-	std::string port = *config_serv.getListen().begin();
-	this->_port = atoi(port.c_str());
+	this->_port = *config_serv.getListen().begin();
 	this->_name = config_serv.getName();
 	this->_host = config_serv.getHost();
 	this->_root = config_serv.getRoot();
 	// std::cout << "ListenSocket was called." << std::endl;
 }
 
-// // ListenSocket::ListenSocket(int domain, int type, int protocol, int port, u_long interface_IP)
-// // {
-// // 	// Filling Address'struct
-// // 	this->_address.sin_family = domain;
-// // 	this->_address.sin_addr.s_addr = interface_IP;
-// // 	this->_address.sin_port = htons(port);
-
-// // 	// Establish main server socket
-// // 	this->_listen_fd = socket(domain, type, protocol);
-// // 	test_connection(this->_listen_fd);
-
-// // 	// Initialize all client_fd to 0 so not checked
-// // 	this->_client_fds.assign(MAX_CLIENTS, 0);
-
-// // 	// Set socket to allow multiple connections (reuse address and port)
-// // 	int opt = 1;
-// // 	this->_setsockopter = setsockopt(this->_listen_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
-// // 	test_connection(this->_setsockopter);
-
-// // 	// Bind socket to IP address and port
-// // 	this->_binder = bind(this->_listen_fd, (struct sockaddr *)&this->_address, sizeof(this->_address));
-// // 	test_connection(this->_binder);
-
-// // 	// Set a listener ont the socket
-// // 	this->_listener = listen(this->_listen_fd, 512);
-// // 	test_connection(this->_listener);
-
-// // 	std::cout << "ListenSocket was called." << std::endl;
-
-// // }
-
-// ListenSocket::~ListenSocket(void)
-// {
-// 	std::cout << "ListenSocket was destroyed." << std::endl;
-// }
-
-// ListenSocket::ListenSocket( const ListenSocket& copy )
-// {
-// 	std::cout << "ListenSocket copy constructor called" << std::endl;
-// 	*this = copy;
-// }
+ListenSocket::ListenSocket( const ListenSocket& copy )
+{
+	std::cout << "ListenSocket copy constructor called" << std::endl;
+	*this = copy;
+}
 
 ListenSocket& ListenSocket::operator=( const ListenSocket& ref )
 {
@@ -86,7 +45,6 @@ ListenSocket& ListenSocket::operator=( const ListenSocket& ref )
 	return *this;
 }
 
-// AF_INET, SOCK_STREAM, 0, 8080, INADDR_ANY
 void ListenSocket::initSocket(void)
 {
 	memset(&this->_address, 0, sizeof(this->_address));
