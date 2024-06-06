@@ -28,8 +28,10 @@ void Web::check()
 	{
 		if (_serv[i].getListen().empty())
 			throw ExceptionInFile();
-		if (_serv[i].getName().empty())
+		if (_serv[i].getHost().empty())
 			throw ExceptionInFile();
+		if (_serv[i].getName().empty())
+			_serv[i].setName("localhost");
 		if (_serv[i].getRoot().empty())
 			throw ExceptionInFile();
 		if (_serv[i].getIndex().empty())

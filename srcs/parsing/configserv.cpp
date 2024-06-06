@@ -194,3 +194,8 @@ void configserv::setClientSize(unsigned int size)
 {
 	_client_size = size;
 }
+
+void configserv::setName(std::string str)
+{
+	_name = str;
+}

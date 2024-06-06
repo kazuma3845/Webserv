@@ -54,4 +54,5 @@ class configserv
 
 		//set
 		void setClientSize(unsigned int size);
+		void setName(std::string str);
 };
