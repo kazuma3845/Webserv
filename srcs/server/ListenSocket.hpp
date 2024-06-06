@@ -28,7 +28,7 @@ class ListenSocket {
 		ListenSocket(void);
 
 	public :
-		ListenSocket(configserv config_serv);
+		ListenSocket(configserv config_serv, int port);
 		~ListenSocket(void){};
 		ListenSocket(const ListenSocket& copy);
 
@@ -39,6 +39,9 @@ class ListenSocket {
 		int						get_listen_fd(void);
 		int						get_activity_mon(void);
 		int						get_port(void);
+		std::string				get_root(void);
+		std::string				get_host(void);
+		std::string				get_name(void);
 		struct sockaddr_in		get_address(void);
 
 };

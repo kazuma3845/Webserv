@@ -15,9 +15,9 @@
 // // ------------------- Constructors -------------------
 
 
-ListenSocket::ListenSocket(configserv config_serv)
+ListenSocket::ListenSocket(configserv config_serv, int port)
 {
-	this->_port = *config_serv.getListen().begin();
+	this->_port = port;
 	this->_name = config_serv.getName();
 	this->_host = config_serv.getHost();
 	this->_root = config_serv.getRoot();
@@ -26,7 +26,7 @@ ListenSocket::ListenSocket(configserv config_serv)
 
 ListenSocket::ListenSocket( const ListenSocket& copy )
 {
-	std::cout << "ListenSocket copy constructor called" << std::endl;
+	// std::cout << "ListenSocket copy constructor called" << std::endl;
 	*this = copy;
 }
 
@@ -52,7 +52,6 @@ void ListenSocket::initSocket(void)
 	this->_address.sin_family = AF_INET;
 	// this->_address.sin_addr.s_addr = INADDR_ANY;
 	this->_address.sin_port = htons(this->_port);
-	std::cerr << "IP : " << _host << std::endl;
 
 	if (inet_pton(AF_INET, this->_host.c_str(), &this->_address.sin_addr) <= 0) {
 		perror("Invalid address/ Address not supported");
@@ -114,6 +113,20 @@ struct sockaddr_in ListenSocket::get_address(void)
 	return this->_address;
 }
 
+std::string ListenSocket::get_root(void)
+{
+	return this->_root;
+}
+
+std::string ListenSocket::get_host(void)
+{
+	return this->_host;
+}
+
+std::string ListenSocket::get_name(void)
+{
+	return this->_name;
+}
 
 void test_connection(int value)
 {
