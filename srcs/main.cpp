@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 	}
 	try
 	{
-		web.parsing(argv[1]);	// init struct and check error
+		web.parsing(argv, argc);	// init struct and check error
 		// web.run();		// Run programme
 		// web.clean();		// Clean all
 	}
@@ -38,51 +38,55 @@ void Web::check()
 			_serv[i].setClientSize(CLIENT_SIZE);
 	}
 }
-void Web::parsing(char *argv)
+void Web::parsing(char **argv, int argc)
 {
 	std::ifstream file;
 	std::vector<std::string> word;
 	std::vector< std::vector<std::string> > fileline;
 	std::string line;
 	unsigned int i = 0;
-	file.open(argv);
-	if (!file)
-		throw ExceptionErrorFile();
-	for (; getline(file, line); i++)
+	for (int j = 1; j < argc; j++)
 	{
-		if (!line.empty())
+		file.open(argv[j]);
+		if (!file)
+			throw ExceptionErrorFile();
+		for (; getline(file, line); i++)
 		{
-			std::stringstream ss(line);
-			for (; ss;)
+			if (!line.empty())
 			{
-				std::string w;
-				ss >> w;
-				if (!w.empty())
+				std::stringstream ss(line);
+				for (; ss;)
 				{
-					if (w.back() == ';')
-						w.pop_back();
-					word.push_back(w);
+					std::string w;
+					ss >> w;
+					if (!w.empty())
+					{
+						if (w.back() == ';')
+							w.pop_back();
+						word.push_back(w);
+					}
 				}
+				fileline.push_back(word);
+				word.clear();
 			}
-			fileline.push_back(word);
-			word.clear();
 		}
-	}
-	file.close();
-	;
-	i = 0;
-	for (; i < fileline.size(); i++)
-	{
-		if (fileline[i][0].compare("server"))
-			throw std::exception();
-		else
+		file.close();
+		;
+		i = 0;
+		for (; i < fileline.size(); i++)
 		{
-			if (fileline[i][0].compare("{") == 0)
+			if (fileline[i][0].compare("server"))
 				throw std::exception();
-			configserv server;
-			server.serv(fileline, ++i);
-			this->_serv.push_back(server);
+			else
+			{
+				if (fileline[i][0].compare("{") == 0)
+					throw std::exception();
+				configserv server;
+				server.serv(fileline, ++i);
+				this->_serv.push_back(server);
+			}
 		}
+		fileline.clear();
 	}
 	check();
 	for (unsigned int m = 0; m < _serv.size(); m++)

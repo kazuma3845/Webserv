@@ -31,6 +31,12 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 			{
 				case 0:
 				{
+					size_t found = file[i][1].find(":");
+					if (found != std::string::npos)
+					{
+						_host = file[i][1].substr(0, found);
+						file[i][1] = file[i][1].substr(found + 1, file[i][1].size());
+					}
 					std::string str = file[i][1];
 					std::stringstream ss(str);
 					int x;
