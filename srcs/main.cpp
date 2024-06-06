@@ -75,6 +75,8 @@ void Web::parsing(char *argv)
 void Web::run() const
 {
 	Server server = Server(this->_serv);
+	server.set_server();
+	server.run_server();
 }
 
 void Web::clean() const

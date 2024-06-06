@@ -26,8 +26,7 @@ ListenSocket::ListenSocket(configserv config_serv)
 	this->_name = config_serv.getName();
 	this->_host = config_serv.getHost();
 	this->_root = config_serv.getRoot();
-	std::cout << "ListenSocket was called." << std::endl;
-
+	// std::cout << "ListenSocket was called." << std::endl;
 }
 
 ListenSocket::~ListenSocket(void)
@@ -43,16 +42,15 @@ ListenSocket::ListenSocket( const ListenSocket& copy )
 
 ListenSocket& ListenSocket::operator=( const ListenSocket& ref )
 {
-	std::cout << "ListenSocket assignment operator called" << std::endl;
+	// std::cout << "ListenSocket assignment operator called" << std::endl;
 	if ( this != &ref )
 	{
 		this->_listen_fd = ref._listen_fd;
-		this->_binder = ref._binder;
-		this->_listener = ref._listener;
-		this->_setsockopter = ref._setsockopter;
 		this->_activity_mon = ref._activity_mon;
 		this->_address = ref._address;
 		this->_name = ref._name;
+		this->_port = ref._port;
+		this->_host = ref._host;
 	}
 	return *this;
 }
@@ -63,27 +61,46 @@ void ListenSocket::initSocket(void)
 	memset(&this->_address, 0, sizeof(this->_address));
 	// Filling Address'struct
 	this->_address.sin_family = AF_INET;
-	this->_address.sin_addr.s_addr = INADDR_ANY;
+	// this->_address.sin_addr.s_addr = INADDR_ANY;
 	this->_address.sin_port = htons(this->_port);
+	std::cerr << "IP : " << _host << std::endl;
+
+	if (inet_pton(AF_INET, this->_host.c_str(), &this->_address.sin_addr) <= 0) {
+		perror("Invalid address/ Address not supported");
+		exit(EXIT_FAILURE);
+	}
 
 	// Establish main server socket
 	this->_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-	test_connection(this->_listen_fd);
+	if (this->_listen_fd < 0)
+	{
+		std::cerr << "Issue creating _listen_fd" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	// Set socket to allow multiple connections (reuse address and port)
 	int opt = 1;
-	this->_setsockopter = setsockopt(this->_listen_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt));
-	test_connection(this->_setsockopter);
+	if (setsockopt(this->_listen_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
+	{
+		std::cerr << "Issue setsockopt : " << this->_port << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	// Bind socket to IP address and port
-	this->_binder = bind(this->_listen_fd, (struct sockaddr *)&this->_address, sizeof(this->_address));
-	test_connection(this->_binder);
+	if (bind(this->_listen_fd, (struct sockaddr *)&this->_address, sizeof(this->_address)) < 0)
+	{
+		std::cerr << "Issue binding _listen_fd at port : " << this->_port << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	// Set a listener ont the socket
-	this->_listener = listen(this->_listen_fd, 512);
-	test_connection(this->_listener);
+	if (listen(this->_listen_fd, 512) < 0)
+	{
+		std::cerr << "Issue listening _listen_fd at port : " << this->_port << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
-	std::cout << "ListenSocket was called." << std::endl;
+	// std::cout << "ListenSocket was called." << std::endl;
 }
 
 // ------------------- Getter functions -------------------
@@ -93,24 +110,14 @@ int ListenSocket::get_listen_fd(void)
 	return this->_listen_fd;
 }
 
-int ListenSocket::get_binder(void)
-{
-	return this->_binder;
-}
-
-int ListenSocket::get_listener(void)
-{
-	return this->_listener;
-}
-
-int ListenSocket::get_setsockopter(void)
-{
-	return this->_setsockopter;
-}
-
 int ListenSocket::get_activity_mon(void)
 {
 	return this->_activity_mon;
+}
+
+int ListenSocket::get_port(void)
+{
+	return this->_port;
 }
 
 struct sockaddr_in ListenSocket::get_address(void)

@@ -13,6 +13,7 @@ Server::Server(std::vector<configserv>	config_servs) : _max_sd(0)
 	{
 		ListenSocket curr_listen_socket = ListenSocket(*it);
 		this->_listen_sockets.push_back(curr_listen_socket);
+		std::cerr << "=====>> Creating ListenSocket : " << curr_listen_socket.get_port() << std::endl;
 	}
 	std::cout << "Server was called." << std::endl;
 }
@@ -63,34 +64,47 @@ void Server::set_server(void)
 		// Save the max socket descriptor for forther use
 		if (current_fd > this->_max_sd)
 			this->_max_sd = current_fd;
+		std::cerr << "=====>> TEST : port : " << it->get_port() << " fd :" << it->get_listen_fd() << std::endl;
 	}
+	std::cerr << "=====>> TEST : max : " << this->_max_sd << std::endl;
 }
 
 void Server::run_server(void)
 {
-	fd_set			read_fds;
-	int				max_sd; /* Max Socket descriptor */
-	int				addrlen;
+	fd_set		temp_read_sds;
 
 	std::cout  << std::endl << "SERVER STARTED" << std::endl;
 	while (1) {
-		std::cerr << "|START" << std::endl;
+		temp_read_sds = this->_read_sds;
+		std::cerr << std::endl << "|START : " << std::endl;
 
+					std::cout << "Verify 0 " << this->_max_sd << std::endl;
+					for (int fd = 0; fd <= this->_max_sd; ++fd) {
+					if (FD_ISSET(fd, &temp_read_sds)) {
+						std::cout << "  - " << fd << std::endl;
+					}
+					}
 		// Wait for an activity on one of the , select return the value of readies FD
-		if (select(this->_max_sd + 1, &this->_read_sds, NULL, NULL, NULL) <= 0);
+		if (select(this->_max_sd + 1, &temp_read_sds, NULL, NULL, NULL) <= 0)
 			exit(1);
-
-		// If something happened on the master socket, it's an incoming connection
+					std::cout << "Verify 1 " << this->_max_sd << std::endl;
+					for (int fd = 0; fd <= this->_max_sd; ++fd) {
+					if (FD_ISSET(fd, &temp_read_sds)) {
+						std::cout << "  - " << fd << std::endl;
+					}
+					}
 		for(std::vector<ListenSocket>::iterator it = this->_listen_sockets.begin(); it != this->_listen_sockets.end(); ++it)
 		{
-			if (FD_ISSET(it->get_listen_fd(), &this->_read_sds))
+			std::cerr << "### Listen fd " << it->get_listen_fd() << std::endl;
+			if (FD_ISSET(it->get_listen_fd(), &temp_read_sds))
 				this->add_client(*it);
 		}
 		
 		// If something happened on the client socket
 		for(std::vector<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
 		{
-			if (FD_ISSET(it->get_fd(), &this->_read_sds))
+			std::cerr << "*** Client fd " << it->get_fd() << std::endl;
+			if (FD_ISSET(it->get_fd(), &temp_read_sds))
 				read_socket(*it);
 		}
 		//================================
@@ -99,26 +113,48 @@ void Server::run_server(void)
 		//================================
 		//================================
 	}
+	std::cerr << "SERVER END " << std::endl;
 }
 
 void Server::add_client(ListenSocket listen_socket)
 {
-	int				addrlen;
-	char			buffer[MESSAGE_BUFFER];
-	int				new_socket;
+	struct sockaddr_in	address;
+	int					addrlen;
+	int					new_socket;
 
-	addrlen = sizeof(listen_socket.get_address());
-	if (accept(listen_socket.get_listen_fd(), (struct sockaddr *)&listen_socket.get_address(), (socklen_t*)&addrlen) <= 0);
+	// address = listen_socket.get_address();
+	addrlen = sizeof(address);
+					std::cout << "Verify 2" << std::endl;
+					for (int fd = 0; fd <= this->_max_sd; ++fd) {
+					if (FD_ISSET(fd, &this->_read_sds)) {
+						std::cout << "  - " << fd << std::endl;
+					}
+					}
+	std::cout << "listen_socket.get_listen_fd() " << listen_socket.get_listen_fd() << std::endl;
+	new_socket = accept(listen_socket.get_listen_fd(), (struct sockaddr *)&address, (socklen_t*)&addrlen);
+	if (new_socket == -1)
+	{
+		std::cerr << "Issue accepting new_socket :" << new_socket 
+		<< " " << listen_socket.get_listen_fd()
+		<< " " << strerror(errno)
+		<< std::endl;
 		exit(1);
+	}
 
 	// Set new socket as non blocked
-	if (fcntl(new_socket, F_SETFL, O_NONBLOCK) <= 0);
+	if (fcntl(new_socket, F_SETFL, O_NONBLOCK) < 0)
+	{
+		std::cerr << "Issue setting O_NONBLOCK" << std::endl;
 		exit(1);
+	}
 	Client new_client = Client(new_socket, listen_socket);
 	// ------------- Message for testing
 	std::cout << "|   New connection: socket fd is " << new_socket << " | " << inet_ntoa(listen_socket.get_address().sin_addr) << " | "<< ntohs(listen_socket.get_address().sin_port) << std::endl;
 
 	// Add new socket to vector of client
+	FD_SET(new_socket, &this->_read_sds);
+	if (new_socket > this->_max_sd)
+			this->_max_sd = new_socket;
 	this->_clients.push_back(new_client);
 }
 
@@ -141,6 +177,6 @@ void Server::read_socket(Client client)
 
 	// Remove socket from read to write
 	FD_CLR(sd, &this->_read_sds);
-	FD_SET(sd, &this->_write_sds);
-	// close(sd);
+	// FD_SET(sd, &this->_write_sds);
+	close(sd);
 }

@@ -19,9 +19,6 @@ class configserv;
 class ListenSocket {
 	private :
 		int							_listen_fd;
-		int							_binder;
-		int							_listener;
-		int							_setsockopter;
 		int							_activity_mon;
 		std::string					_name;
 		std::string					_host;
@@ -39,13 +36,10 @@ class ListenSocket {
 		ListenSocket&			operator=(const ListenSocket& ref);
 
 		void					initSocket(void);
-		void					run_server(void);
 
 		int						get_listen_fd(void);
-		int						get_binder(void);
-		int						get_listener(void);
-		int						get_setsockopter(void);
 		int						get_activity_mon(void);
+		int						get_port(void);
 		struct sockaddr_in		get_address(void);
 
 };
