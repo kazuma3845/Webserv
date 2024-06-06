@@ -22,7 +22,7 @@ class Server {
 		std::vector<ListenSocket>	_listen_sockets;
 		std::vector<Client>			_clients;
 		// std::map<int, ListenSocket>	_listen_sd_map;
-		// std::map<int, Client>		_client_sd_map;
+		std::map<int, Client>		_client_sd_map;
 		fd_set						_read_sds;
 		// fd_set						_write_sds;
 		int							_max_sd;

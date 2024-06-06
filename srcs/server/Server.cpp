@@ -78,34 +78,20 @@ void Server::run_server(void)
 		temp_read_sds = this->_read_sds;
 		std::cerr << std::endl << "|START : " << std::endl;
 
-					std::cout << "Verify 0 " << this->_max_sd << std::endl;
-					for (int fd = 0; fd <= this->_max_sd; ++fd) {
-					if (FD_ISSET(fd, &temp_read_sds)) {
-						std::cout << "  - " << fd << std::endl;
-					}
-					}
 		// Wait for an activity on one of the , select return the value of readies FD
 		if (select(this->_max_sd + 1, &temp_read_sds, NULL, NULL, NULL) <= 0)
 			exit(1);
-					std::cout << "Verify 1 " << this->_max_sd << std::endl;
-					for (int fd = 0; fd <= this->_max_sd; ++fd) {
-					if (FD_ISSET(fd, &temp_read_sds)) {
-						std::cout << "  - " << fd << std::endl;
-					}
-					}
 		for(std::vector<ListenSocket>::iterator it = this->_listen_sockets.begin(); it != this->_listen_sockets.end(); ++it)
 		{
-			std::cerr << "### Listen fd " << it->get_listen_fd() << std::endl;
 			if (FD_ISSET(it->get_listen_fd(), &temp_read_sds))
 				this->add_client(*it);
 		}
 		
 		// If something happened on the client socket
-		for(std::vector<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+		for(int i = 0; i <= this->_max_sd; ++i)
 		{
-			std::cerr << "*** Client fd " << it->get_fd() << std::endl;
-			if (FD_ISSET(it->get_fd(), &temp_read_sds))
-				read_socket(*it);
+			if (_client_sd_map.count(i) && FD_ISSET((this->_client_sd_map[i]).get_fd(), &temp_read_sds))
+				read_socket(this->_client_sd_map[i]);
 		}
 		//================================
 		//================================
@@ -122,14 +108,7 @@ void Server::add_client(ListenSocket listen_socket)
 	int					addrlen;
 	int					new_socket;
 
-	// address = listen_socket.get_address();
 	addrlen = sizeof(address);
-					std::cout << "Verify 2" << std::endl;
-					for (int fd = 0; fd <= this->_max_sd; ++fd) {
-					if (FD_ISSET(fd, &this->_read_sds)) {
-						std::cout << "  - " << fd << std::endl;
-					}
-					}
 	std::cout << "listen_socket.get_listen_fd() " << listen_socket.get_listen_fd() << std::endl;
 	new_socket = accept(listen_socket.get_listen_fd(), (struct sockaddr *)&address, (socklen_t*)&addrlen);
 	if (new_socket == -1)
@@ -155,28 +134,31 @@ void Server::add_client(ListenSocket listen_socket)
 	FD_SET(new_socket, &this->_read_sds);
 	if (new_socket > this->_max_sd)
 			this->_max_sd = new_socket;
-	this->_clients.push_back(new_client);
+	this->_client_sd_map.insert(std::make_pair(new_socket, new_client));
+	// this->_clients.push_back(new_client);
 }
 
 void Server::read_socket(Client client)
 {
 	char			buffer[MESSAGE_BUFFER];
-	int				sd = client.get_fd();
+	int				socket = client.get_fd();
 
-	std::cerr << "|      ----> Socket " << sd << " was readed and will close" << std::endl;
+	std::cerr << "|      ----> Socket " << socket << " was readed and will close" << std::endl;
 
 	// Handle the stuff to do late .....
 	memset(buffer, 0, sizeof(buffer));
-	int has_content = read(sd, buffer, MESSAGE_BUFFER);
+	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content)
 	{
+		client.set_request_content(buffer);
 		std::cerr << "-------------- CONTENT --------------" << std::endl;
-		std::cerr << buffer << std::endl;
+		std::cerr << client.get_request_content() << std::endl;
 		std::cerr << "-------------- ------- --------------" << std::endl;
 	}
 
 	// Remove socket from read to write
-	FD_CLR(sd, &this->_read_sds);
+	FD_CLR(socket, &this->_read_sds);
 	// FD_SET(sd, &this->_write_sds);
-	close(sd);
+	close(socket);
+	this->_client_sd_map.erase(socket);
 }

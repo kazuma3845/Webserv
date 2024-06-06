@@ -32,6 +32,7 @@ Client& Client::operator=( const Client& ref )
 	{
 		this->_connected_fd = ref._connected_fd;
 		this->_listen_socket = ref._listen_socket;
+		this->_request_content = ref._request_content;
 	}
 	return *this;
 }
@@ -39,4 +40,14 @@ Client& Client::operator=( const Client& ref )
 int Client::get_fd(void)
 {
 	return this->_connected_fd;
+}
+
+std::string Client::get_request_content(void)
+{
+	return this->_request_content;
+}
+
+void Client::set_request_content(std::string request_content)
+{
+	this->_request_content = request_content;
 }

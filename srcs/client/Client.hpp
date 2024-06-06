@@ -18,14 +18,18 @@ class Client {
 	private :
 		int							_connected_fd;
 		ListenSocket*				_listen_socket;
-		Client(void);
+		std::string					_request_content;
 	public :
+		Client(void);
 		Client(int fd, ListenSocket &listen_socket);
 		~Client(void);
 		Client(const Client& copy);
 
 		Client&						operator=(const Client& ref);
 		int							get_fd(void);
+		std::string					get_request_content(void);
+
+		void						set_request_content(std::string request_content);
 };
 
 #endif
