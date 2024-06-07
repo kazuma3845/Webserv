@@ -16,7 +16,7 @@
 "<!DOCTYPE html>\n" \
 "<html>\n" \
 "<head>\n" \
-"    <title>Example Page</title>\n" \
+"    <title>Webserv</title>\n" \
 "    <meta charset=\"UTF-8\">\n" \
 "</head>\n" \
 "<body>\n" \

@@ -161,7 +161,7 @@ void Server::read_socket(Client client)
 		std::istringstream contentStream(client.get_request_content());
 		std::string line;
 
-		std::cerr << "|" << std::endl << "|   CONTENT ->" << std::endl;
+		std::cerr << "|" << std::endl << "|   CONTENT READED ->" << std::endl;
 		while (std::getline(contentStream, line)) {
 			std::cerr << "|      " << line << std::endl;
 		}
@@ -194,7 +194,7 @@ void Server::write_socket(Client client)
 	std::istringstream contentStream(HTML_CONTENT);
 	std::string line;
 
-	std::cerr << "|" << std::endl << "|   CONTENT ->" << std::endl;
+	std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
 	while (std::getline(contentStream, line)) {
 		std::cerr << "|      " << line << std::endl;
 	}
