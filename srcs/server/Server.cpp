@@ -17,7 +17,7 @@ Server::Server(std::vector<configserv>	config_servs) : _max_sd(0)
 		for (int i_port = 0; i_port != nb_ports; i_port++)
 		{
 			ListenSocket curr_listen_socket = ListenSocket(*it, it->getListen()[i_port]);
-			this->_listen_sockets.push_back(curr_listen_socket);
+			this->_ListenSockets.push_back(curr_listen_socket);
 		}
 	}
 	std::cout << "Server was called." << std::endl;
@@ -58,7 +58,8 @@ void Server::set_server(void)
 	int	current_fd;
 	// Clear the socket set to void
 	FD_ZERO(&this->_read_sds);
-	for (std::vector<ListenSocket>::iterator it = this->_listen_sockets.begin(); it != this->_listen_sockets.end(); ++it)
+	FD_ZERO(&this->_write_sds);
+	for (std::vector<ListenSocket>::iterator it = this->_ListenSockets.begin(); it != this->_ListenSockets.end(); ++it)
 	{
 		it->initSocket();
 		current_fd = it->get_listen_fd();
@@ -77,32 +78,35 @@ void Server::set_server(void)
 void Server::run_server(void)
 {
 	fd_set		temp_read_sds;
+	fd_set		temp_write_sds;
 
 	std::cout << std::endl << "##################" << std::endl << "# SERVER STARTED #" << std::endl << "##################" << std::endl;
 	while (1) {
 		temp_read_sds = this->_read_sds;
+		temp_write_sds = this->_write_sds;
 		std::cerr << std::endl << "| START LOOP: " << std::endl;
 
 		// Wait for an activity on one of the , select return the value of readies FD
 		if (select(this->_max_sd + 1, &temp_read_sds, NULL, NULL, NULL) <= 0)
 			exit(1);
-		for(std::vector<ListenSocket>::iterator it = this->_listen_sockets.begin(); it != this->_listen_sockets.end(); ++it)
+		for(std::vector<ListenSocket>::iterator it = this->_ListenSockets.begin(); it != this->_ListenSockets.end(); ++it)
 		{
 			if (FD_ISSET(it->get_listen_fd(), &temp_read_sds))
 				this->add_client(*it);
 		}
 		
-		// If something happened on the client socket
+		// Reading new request
 		for(int i = 0; i <= this->_max_sd; ++i)
 		{
-			if (_client_sd_map.count(i) && FD_ISSET((this->_client_sd_map[i]).get_fd(), &temp_read_sds))
-				read_socket(this->_client_sd_map[i]);
+			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
+				read_socket(this->_client_sds_map[i]);
 		}
-		//================================
-		//================================
-		// =======> faire pour _write_sds
-		//================================
-		//================================
+		// Writing request response
+		for(int i = 0; i <= this->_max_sd; ++i)
+		{
+			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &_write_sds))
+				write_socket(this->_client_sds_map[i]);
+		}
 		std::cerr << "| END LOOP" << std::endl;
 	}
 	std::cerr << "SERVER END " << std::endl << std::endl;
@@ -139,8 +143,8 @@ void Server::add_client(ListenSocket listen_socket)
 	FD_SET(new_socket, &this->_read_sds);
 	if (new_socket > this->_max_sd)
 			this->_max_sd = new_socket;
-	this->_client_sd_map.insert(std::make_pair(new_socket, new_client));
-	// this->_clients.push_back(new_client);
+	this->_client_sds_map.insert(std::make_pair(new_socket, new_client));
+	// this->_Clients.push_back(new_client);
 }
 
 void Server::read_socket(Client client)
@@ -165,8 +169,40 @@ void Server::read_socket(Client client)
 
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_read_sds);
+	FD_SET(socket, &this->_write_sds);
+	// close(socket);
+	// this->_client_sds_map.erase(socket);
+}
+
+void Server::write_socket(Client client)
+{
+	int				socket = client.get_fd();
+	// Calculer la longueur du contenu HTML
+	int content_length = strlen(HTML_CONTENT);
+
+	// Préparer la réponse HTTP avec l'en-tête Content-Length correct
+	std::string http_response = "HTTP/1.1 200 OK\r\n"
+								"Content-Type: text/html\r\n"
+								"Content-Length: " + std::to_string(content_length) + "\r\n"
+								"\r\n" +
+								HTML_CONTENT;
+
+	// Envoyer la réponse HTTP complète
+	write(socket, http_response.c_str(), http_response.length());
+	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
+	// Only to show the request content;
+	std::istringstream contentStream(HTML_CONTENT);
+	std::string line;
+
+	std::cerr << "|" << std::endl << "|   CONTENT ->" << std::endl;
+	while (std::getline(contentStream, line)) {
+		std::cerr << "|      " << line << std::endl;
+	}
+
+	// Remove socket from read to write
+	FD_CLR(socket, &this->_write_sds);
 
 	// FD_SET(sd, &this->_write_sds);
 	close(socket);
-	this->_client_sd_map.erase(socket);
+	this->_client_sds_map.erase(socket);
 }

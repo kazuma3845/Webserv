@@ -20,12 +20,12 @@ class Server;
 
 class Server {
 	private :
-		std::vector<ListenSocket>	_listen_sockets;
-		std::vector<Client>			_clients;
+		std::vector<ListenSocket>	_ListenSockets;
+		std::vector<Client>			_Clients;
 		// std::map<int, ListenSocket>	_listen_sd_map;
-		std::map<int, Client>		_client_sd_map;
+		std::map<int, Client>		_client_sds_map;
 		fd_set						_read_sds;
-		// fd_set						_write_sds;
+		fd_set						_write_sds;
 		int							_max_sd;
 		Server(void);
 	public :
@@ -41,6 +41,7 @@ class Server {
 		void					run_server(void);
 		void					add_client(ListenSocket listen_socket);
 		void					read_socket(Client client);
+		void					write_socket(Client client);
 };
 
 #endif

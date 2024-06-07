@@ -17,7 +17,7 @@
 
 class ListenSocket {
 	private :
-		int							_listen_fd;
+		int							_listen_sd;
 		int							_activity_mon;
 		std::string					_name;
 		std::string					_host;

@@ -35,7 +35,7 @@ ListenSocket& ListenSocket::operator=( const ListenSocket& ref )
 	// std::cout << "ListenSocket assignment operator called" << std::endl;
 	if ( this != &ref )
 	{
-		this->_listen_fd = ref._listen_fd;
+		this->_listen_sd = ref._listen_sd;
 		this->_activity_mon = ref._activity_mon;
 		this->_address = ref._address;
 		this->_name = ref._name;
@@ -59,32 +59,32 @@ void ListenSocket::initSocket(void)
 	}
 
 	// Establish main server socket
-	this->_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (this->_listen_fd < 0)
+	this->_listen_sd = socket(AF_INET, SOCK_STREAM, 0);
+	if (this->_listen_sd < 0)
 	{
-		std::cerr << "Issue creating _listen_fd" << std::endl;
+		std::cerr << "Issue creating _listen_sd" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// Set socket to allow multiple connections (reuse address and port)
 	int opt = 1;
-	if (setsockopt(this->_listen_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
+	if (setsockopt(this->_listen_sd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
 	{
 		std::cerr << "Issue setsockopt : " << this->_port << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// Bind socket to IP address and port
-	if (bind(this->_listen_fd, (struct sockaddr *)&this->_address, sizeof(this->_address)) < 0)
+	if (bind(this->_listen_sd, (struct sockaddr *)&this->_address, sizeof(this->_address)) < 0)
 	{
-		std::cerr << "Issue binding _listen_fd at port : " << this->_port << std::endl;
+		std::cerr << "Issue binding _listen_sd at port : " << this->_port << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// Set a listener ont the socket
-	if (listen(this->_listen_fd, 512) < 0)
+	if (listen(this->_listen_sd, 512) < 0)
 	{
-		std::cerr << "Issue listening _listen_fd at port : " << this->_port << std::endl;
+		std::cerr << "Issue listening _listen_sd at port : " << this->_port << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -95,7 +95,7 @@ void ListenSocket::initSocket(void)
 
 int ListenSocket::get_listen_fd(void)
 {
-	return this->_listen_fd;
+	return this->_listen_sd;
 }
 
 int ListenSocket::get_activity_mon(void)

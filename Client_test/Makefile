@@ -1,9 +1,8 @@
-NAME = webserv
+NAME = Client_test
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -std=c++98
-SRCS = $(shell find srcs -name '*.cpp')
-OBJS = $(SRCS:srcs/%.cpp=$(OBJ_DIR)/%.o)
-OBJ_DIR = objects
+SRCS = client_test.cpp
+OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)
 
@@ -12,11 +11,8 @@ $(NAME):	$(OBJS)
 		@echo "\033[0;32mCompilation finished\033[0m"
 
 
-$(OBJ_DIR)/%.o: srcs/%.cpp | create_dirs
+%.o: %.cpp
 		@$(CC) $(CFLAGS) -c $< -o $@
-
-create_dirs:
-		@mkdir -p $(dir $(OBJS))
 
 clean:
 		@rm -rf $(OBJS)

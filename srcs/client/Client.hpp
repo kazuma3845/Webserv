@@ -12,11 +12,25 @@
 # include <fcntl.h>
 # include "../server/ListenSocket.hpp"
 
+#define HTML_CONTENT \
+"<!DOCTYPE html>\n" \
+"<html>\n" \
+"<head>\n" \
+"    <title>Example Page</title>\n" \
+"    <meta charset=\"UTF-8\">\n" \
+"</head>\n" \
+"<body>\n" \
+"    <img src=\"https://cdn.intra.42.fr/users/b744d09961e78146e695def8611033bb/tomuller.jpg\" alt=\"Example Image\" style=\"width : 200px;\" >\n" \
+"    <h1>Hello, moi c'est Tomtom !</h1>\n" \
+"    <p>Je rage quand je perds à Mariokart ... 😭</p>\n" \
+"</body>\n" \
+"</html>\n"
+
 class Server;
 
 class Client {
 	private :
-		int							_connected_fd;
+		int							_connected_sd;
 		ListenSocket*				_listen_socket;
 		std::string					_request_content;
 	public :
