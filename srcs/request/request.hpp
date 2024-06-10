@@ -3,6 +3,8 @@
 #include <map>
 #include <algorithm>
 #include <sstream>
+# include "../parsing/location.hpp"
+# include "../client/Client.hpp"
 
 class Request
 {
@@ -18,10 +20,18 @@ private:
 	std::string httpVersion;
 	std::map<std::string, std::string> headers;
 	std::string body;
+	location*						_curr_loc;
+	std::map<int, std::string>		_map_folders;
+	std::string						_file_name;
+	std::string						_file_path;
+	std::string						_full_path;
+	Client*							_client;
 
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);
+
+	void parseUri(void);
 
 	class bodySize : public std::exception
 	{
