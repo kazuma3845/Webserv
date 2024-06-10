@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Request.hpp"
+#include "../request/request.hpp"
 #include <iostream>
 
 class Path
 {
 	private:
-
+		bool checkfolder(std::string uri);
 	public:
 		Path();
 		~Path();

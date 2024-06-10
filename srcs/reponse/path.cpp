@@ -2,21 +2,33 @@
 
 void Path::path(Request &a)
 {
-	if (a.url() == folder)
+	if (checkfolder(a.getUri()))
 		folderpath(a);
 	else
-		cgi_ext(a.url());
+		cgi_ext(a.getUri());
 }
 
 void Path::folderpath(Request &a)
 {
-	if (a.getIndex().empty())
+	if (a.getCurr_loc().getIndex().empty())
 	{
-		if (b.getAutoindex() == true)
-			takefile();
+		if (a.getCurr_loc().getAutoindex() == true)
+			;//reponseliste;
 		else
-			takeerror(403);
+			error(403);
 	}
 	else
-		cgi_ext(a.url());
+		cgi_ext(a.getUri());
+}
+
+bool Path::checkfolder(std::string uri)
+{
+	for (unsigned int i = uri.size(); i != 0; i--)
+	{
+		if (uri[i] == '.')
+			return false;
+		if (uri[i] == '/')
+			return true;
+	}
+	return false;
 }

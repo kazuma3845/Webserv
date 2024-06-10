@@ -104,3 +104,8 @@ const char *Request::headerParsingError::what() const throw()
 {
 	return ("Header parsing error.");
 }
+
+std::string Request::getUri()
+{
+	return uri;
+}

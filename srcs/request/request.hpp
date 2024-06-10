@@ -12,6 +12,9 @@ public:
 	void parseRequest(std::string requestFile);
 	void printRequest();
 
+	//get
+	std::string getUri();
+
 private:
 	std::string method;
 	std::string uri;
