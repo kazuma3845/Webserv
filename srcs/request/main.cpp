@@ -8,8 +8,10 @@ int main() {
         "Content-Type: application/x-www-form-urlencoded\r\n"
         "Content-Length: 44\r\n"
         "Connection: keep-alive\r\n"
-        "\r\n"
-        "name=John+Doe&age=23&city=New+York&email=john.doe@example.com";    Request req;
+        "\r\n";
+        // "name=John+Doe&age=23&city=New+York&email=john.doe@example.com";    
+        
+    Request req;
     req.parseRequest(requestFile);
     req.printRequest();
     return 0;

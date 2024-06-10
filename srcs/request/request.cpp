@@ -70,11 +70,13 @@ void Request::parseRequest(std::string requestFile)
 		parseRequestLine(line);
 
 		// lecture des headers jusqu'à /r
-		while (std::getline(ss, line) && line != "\r") //"\r" fais séparation entre les headers et le body
+		 while (std::getline(ss, line) && line != "\r" && line != "\r\n" && line != "\n" && !line.empty())  //"\r" fais séparation entre les headers et le body
 			parseHeaders(line);
-
+		std::getline(ss, line);
 		// lecture du body si il reste qqchose dans le stringstream
-		// if (!ss.eof())
+		if (!line.empty())
+			{std::cout << "Current line is : " << line << std::endl;
+			std::cout << "Shoudl start parsing body." << std::endl;}
 		// parseBody(ss);
 	}
 	catch (std::exception &e)
