@@ -14,11 +14,11 @@ void Request::printRequest()
 {
 	std::cout << "Method : " << method << std::endl;
 	std::cout << "URI : " << uri << std::endl;
-	std::cout << "Version :" << httpVersion << std::endl;
+	std::cout << "Version : " << httpVersion << std::endl;
 	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
-		std::cout << it->first << ":" << it->second << std::endl;
+		std::cout << it->first << " : " << it->second << std::endl;
 	if (!body.empty())
-		std::cout << body << std::endl;
+		std::cout << "Body : " << body << std::endl;
 }
 
 void Request::parseRequestLine(std::string line)
@@ -38,25 +38,60 @@ void Request::parseHeaders(std::string line)
 	std::string key, value;
 
 	if (std::getline(ss, key, ':') && std::getline(ss, value))
+	{
+		size_t start = value.find_first_not_of(" \t\r\n");
+		if (start != std::string::npos)
+			value.erase(0, start);
+		size_t end = value.find_last_not_of(" \t\r\n");
+		if (end != std::string::npos)
+			value.erase(end + 1);
 		headers[key] = value;
+	}
 	else
 		throw headerParsingError();
 }
 
+void Request::parseChunkedBody(std::istringstream &ss)
+{
+	std::string line;
+	std::ostringstream bodyStream;
+
+	while (std::getline(ss, line))
+	{
+		std::stringstream lineStream(line);
+		int length;
+		lineStream >> std::hex >> length; // Lire la taille en hexadécimal
+		if (length == 0)
+			break;
+		std::vector<char> buffer(length);
+		ss.read(&buffer[0], length);
+		bodyStream.write(&buffer[0], length);
+		std::getline(ss, line);
+	}
+	body = bodyStream.str();
+	// std::cout << "Chunked body read successfully: " << body << std::endl;
+}
+
 void Request::parseBody(std::istringstream &ss)
 {
-	std::stringstream to_convert(headers["content-length"]); // Il se peut qu'il n'y ait pas de content length ...
+
+	if (headers.find("Content-Length") == headers.end())
+		throw contentLengthUnspecified();
+	std::stringstream to_convert(headers["Content-Length"]);
 	int length;
-	to_convert >> length;												// conversion en int en utilisant le stream
-	std::streamsize buffer_size = static_cast<std::streamsize>(length); // cast pour pouvoir le passer a read
-	char buffer[buffer_size + 1];
-
-	// lecture du nombre d'octets definis en amont
-	ss.read(buffer, buffer_size);
-	std::size_t bytes_read = ss.gcount(); // nombre de bytes reelement lus
-	buffer[bytes_read] = '\0';
-
-	body.append(&buffer[0], bytes_read); // conversion et placement dans le body
+	to_convert >> length;
+	if (length <= 0)
+		throw invalidContentLength();
+	char *buffer = new char[length + 1];
+	ss.read(buffer, length);
+	buffer[ss.gcount()] = '\0';
+	body.assign(buffer, ss.gcount());
+	if (ss.gcount() != length)
+		throw shorterBodyContent();
+	if (ss.get() != EOF)
+		throw longerBodyContent();
+	delete[] buffer;
+	// std::cout << "Body read successfully: " << body << std::endl;
 }
 
 void Request::parseRequest(std::string requestFile)
@@ -70,14 +105,19 @@ void Request::parseRequest(std::string requestFile)
 		parseRequestLine(line);
 
 		// lecture des headers jusqu'à /r
-		 while (std::getline(ss, line) && line != "\r" && line != "\r\n" && line != "\n" && !line.empty())  //"\r" fais séparation entre les headers et le body
+		while (std::getline(ss, line) && line != "\r" && line != "\r\n" && line != "\n" && !line.empty()) //"\r" fais séparation entre les headers et le body
 			parseHeaders(line);
-		std::getline(ss, line);
+
 		// lecture du body si il reste qqchose dans le stringstream
-		if (!line.empty())
-			{std::cout << "Current line is : " << line << std::endl;
-			std::cout << "Shoudl start parsing body." << std::endl;}
-		// parseBody(ss);
+		char next_char = ss.get();
+		ss.putback(next_char);
+		if (next_char != EOF)
+		{
+			if (headers.find("Transfer-Encoding") != headers.end() && headers["Transfer-Encoding"] == "chunked")
+				parseChunkedBody(ss);
+			else
+				parseBody(ss);
+		}
 	}
 	catch (std::exception &e)
 	{
@@ -103,4 +143,22 @@ const char *Request::unauthorizedMethod::what() const throw()
 const char *Request::headerParsingError::what() const throw()
 {
 	return ("Header parsing error.");
+}
+
+const char *Request::invalidContentLength::what() const throw()
+{
+	return ("Negative length content specified.");
+}
+
+const char *Request::shorterBodyContent::what() const throw()
+{
+	return ("Mismatch between specified content-length and actuel content size (shorter).");
+}
+const char *Request::longerBodyContent::what() const throw()
+{
+	return ("Mismatch between specified content-length and actuel content size (longer).");
+}
+const char *Request::contentLengthUnspecified::what() const throw()
+{
+	return ("Content-length was not specified.");
 }

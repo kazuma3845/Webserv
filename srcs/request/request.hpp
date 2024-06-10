@@ -22,6 +22,7 @@ private:
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);
+	void parseChunkedBody(std::istringstream &ss);
 
 	class bodySize : public std::exception
 	{
@@ -36,6 +37,23 @@ private:
 		const char *what() const throw();
 	};
 	class headerParsingError : public std::exception
+	{
+		const char *what() const throw();
+	};
+	class invalidContentLength : public std::exception
+	{
+		const char *what() const throw();
+	};
+	class shorterBodyContent : public std::exception
+	{
+		const char *what() const throw();
+	};
+
+	class longerBodyContent : public std::exception
+	{
+		const char *what() const throw();
+	};
+	class contentLengthUnspecified : public std::exception
 	{
 		const char *what() const throw();
 	};
