@@ -2,23 +2,24 @@
 
 void Path::path(Request &a)
 {
+	Reponse rep;
 	if (checkfolder(a.getUri()))
-		folderpath(a);
+		folderpath(a, rep);
 	else
-		cgi_ext(a.getUri());
+		rep.check_ext_cgi(a.getUri());
 }
 
-void Path::folderpath(Request &a)
+void Path::folderpath(Request &a, Reponse rep)
 {
 	if (a.getCurr_loc().getIndex().empty())
 	{
 		if (a.getCurr_loc().getAutoindex() == true)
-			;//reponseliste;
+			std::cout << "AutoIndex ON" << std::endl;
 		else
-			error(403);
+			std::cerr << "Error 403" << std::endl;
 	}
 	else
-		cgi_ext(a.getUri());
+		rep.check_ext_cgi(a.getUri());
 }
 
 bool Path::checkfolder(std::string uri)
