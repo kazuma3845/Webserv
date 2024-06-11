@@ -17,13 +17,19 @@
 
 class ListenSocket {
 	private :
-		int							_listen_sd;
-		int							_activity_mon;
-		std::string					_name;
-		std::string					_host;
-		std::string					_root;
-		int							_port;
-		struct sockaddr_in			_address;
+		int									_listen_sd;
+		int									_port;
+		struct sockaddr_in					_address;
+		std::string							_name;
+		std::string							_host;
+		std::string							_root;
+		bool								_autoindex;
+		unsigned int						_client_size;
+		std::string							_index;
+		std::string							_error;
+		std::map<std::string, std::string>	_errorpath;
+		std::vector<std::string>			_allow_methods;
+		std::vector<location>				_location;
 
 		ListenSocket(void);
 
@@ -36,15 +42,20 @@ class ListenSocket {
 
 		void					initSocket(void);
 
-		int						get_listen_fd(void);
-		int						get_activity_mon(void);
-		int						get_port(void);
-		std::string				get_root(void);
-		std::string				get_host(void);
-		std::string				get_name(void);
-		struct sockaddr_in		get_address(void);
+		int									get_listen_fd(void);
+		struct sockaddr_in					get_address(void);
+		int									get_port(void);
+		std::string							get_root(void);
+		std::string							get_host(void);
+		std::string							get_name(void);
+		bool								get_autoindex() const;
+		unsigned int						get_clientSize() const;
+		std::string							get_index() const;
+		std::string							get_error() const;
+		std::map<std::string, std::string>	get_error_path() const;
+		std::vector<std::string>			get_allow_methods() const;
+		std::vector<location>				get_location() const;
 
 };
 
-		void					test_connection(int value);
 #endif

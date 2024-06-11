@@ -34,9 +34,6 @@ class Server {
 		Server(const Server& copy);
 
 		Server&			operator=(const Server& ref);
-
-		void					test_connection(int value);
-
 		void					set_server(void);
 		void					run_server(void);
 		void					add_client(ListenSocket listen_socket);
