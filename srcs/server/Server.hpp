@@ -17,6 +17,9 @@ class Server;
 # include "../parsing/configserv.hpp"
 # include "../client/Client.hpp"
 # include "ListenSocket.hpp"
+#include "../reponse/reponse.hpp"
+# include "../reponse/path.hpp"
+
 
 class Server {
 	private :

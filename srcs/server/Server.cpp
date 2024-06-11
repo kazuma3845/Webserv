@@ -168,6 +168,30 @@ void Server::read_socket(Client client)
 void Server::write_socket(Client client)
 {
 	int				socket = client.get_fd();
+	Reponse rep;
+	try
+	{
+	//------------------------------------------------------
+	//			APPELLE FONCTION DE FRANCOIS
+	//------------------------------------------------------
+	//			APPEL REDIRECTION VERS REPONSE/ERROR
+	//------------------------------------------------------
+	//			CREATION REPONSE CGI/MIME
+	//------------------------------------------------------
+	}
+	catch(const std::exception &e)
+	{
+		std::cerr << "Error number: " << e.what() << std::endl;
+		// rep.reponseError();
+	//------------------------------------------------------
+	//			CREATION REPONSE ERROR
+	//------------------------------------------------------
+	}
+
+
+
+	//------------------------------------------------------------------------------
+	//												DELETE
 	// Calculer la longueur du contenu HTML
 	int content_length = strlen(HTML_CONTENT);
 
@@ -177,6 +201,11 @@ void Server::write_socket(Client client)
 								"Content-Length: " + std::to_string(content_length) + "\r\n"
 								"\r\n" +
 								HTML_CONTENT;
+	//												DELETE
+	//------------------------------------------------------------------------------
+
+
+
 
 	// Envoyer la réponse HTTP complète
 	write(socket, http_response.c_str(), http_response.length());

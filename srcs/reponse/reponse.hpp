@@ -6,6 +6,8 @@
 class Reponse
 {
 	private:
+		std::string reponse_html;
+
 		//check
 		bool checkCgiExt(std::string uri, Request a);
 		bool checkMimeExt(std::string uri);
@@ -13,6 +15,7 @@ class Reponse
 		//reponse
 		void reponseMime();
 		void reponseCGI();
+		void reponseError();
 	public:
 		Reponse(){};
 		~Reponse(){};

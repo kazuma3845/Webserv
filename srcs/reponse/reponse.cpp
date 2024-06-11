@@ -6,12 +6,12 @@ void Reponse::check_ext_cgi(std::string uri)
 	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(uri, a))
 	{
 		std::cout << "CGI" << std::endl;
-		// reponseCGI();
+		reponseCGI();
 	}
 	else if (checkMimeExt(uri))
 	{
 		std::cout << "MIME" << std::endl;
-		// reponseMime();
+		reponseMime();
 	}
 	else
 		std::cerr << "Error: 415" << std::endl;
@@ -59,4 +59,19 @@ bool Reponse::checkMimeExt(std::string uri)
 			return true;
 	}
 	return false;
+}
+
+void Reponse::reponseMime()
+{
+
+}
+
+void Reponse::reponseCGI()
+{
+
+}
+
+void Reponse::reponseError()
+{
+
 }
