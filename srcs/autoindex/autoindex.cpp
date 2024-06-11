@@ -18,7 +18,7 @@ std::string AutoIndex::create(const std::string& uri) {
            "    <body>\n"
            "        <h1>Index of " + dirName + "</h1>\n"
            "        <table>\n"
-           "            <tr><th>Name</th><th>Last modified</th><th>Size</th></tr>\n";
+           "            <tr><th>Name</th><th>Size</th></tr>\n";
 
     if (dir == NULL) {
         std::cerr << "Error: Directory not opened: " << path << std::endl;
@@ -46,25 +46,17 @@ std::string AutoIndex::addLine(const std::string& name, const std::string& path)
         perror("stat");
         return "";
     }
-
+    if (name[0] == '.')
+        return "";
     std::stringstream ss;
     ss << "            <tr>"
        << "<td><a href=\"" << name << "\">" << name << "</a></td>"
-       << "<td>" << formatTime(fileStat.st_mtime) << "</td>"
-       << "<td>" << ((S_ISDIR(fileStat.st_mode)) ? "-" : formatSize(fileStat.st_size)) << "</td>"
+       << "<td>" << ((S_ISDIR(fileStat.st_mode)) ? "-" : fileSize(fileStat.st_size)) << "</td>"
        << "</tr>\n";
-    
     return ss.str();
 }
 
-std::string AutoIndex::formatTime(time_t rawTime) {
-    struct tm* timeinfo = localtime(&rawTime);
-    char buffer[80];
-    strftime(buffer, 80, "%d-%b-%Y %H:%M", timeinfo);
-    return std::string(buffer);
-}
-
-std::string AutoIndex::formatSize(off_t size) {
+std::string AutoIndex::fileSize(off_t size) {
     std::stringstream ss;
     if (size >= 1024 * 1024) {
         ss << size / (1024 * 1024) << "M";
@@ -76,9 +68,9 @@ std::string AutoIndex::formatSize(off_t size) {
     return ss.str();
 }
 
-// int main() {
-//     AutoIndex ai;
-//     std::string uri = "./"; // Vous pouvez changer cela pour le répertoire que vous voulez lister
-//     std::cout << ai.create(uri) << std::endl;
-//     return 0;
-// }
+int main() {
+    AutoIndex ai;
+    std::string uri = "./Page";
+    std::cout << ai.create(uri) << std::endl;
+    return 0;
+}
