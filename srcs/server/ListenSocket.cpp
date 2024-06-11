@@ -14,6 +14,11 @@
 
 // // ------------------- Constructors -------------------
 
+ListenSocket::ListenSocket(void)
+{
+
+	// std::cout << "ListenSocket was called." << std::endl;
+}
 
 ListenSocket::ListenSocket(configserv config_serv, int port)
 {

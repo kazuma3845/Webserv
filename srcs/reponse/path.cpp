@@ -3,10 +3,10 @@
 void Path::path(Request &a)
 {
 	Reponse rep;
-	if (checkfolder(a.getUri()))
+	if (checkfolder(a.getURI()))
 		folderpath(a, rep);
 	else
-		rep.check_ext_cgi(a.getUri());
+		rep.check_ext_cgi(a.getURI());
 }
 
 void Path::folderpath(Request &a, Reponse rep)
