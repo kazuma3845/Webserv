@@ -1,12 +1,18 @@
 #pragma once
 
 #include <iostream>
-// #include "request.hpp"
+#include "../request/request.hpp"
 
 class Reponse
 {
 	private:
+		//check
+		bool checkCgiExt(std::string uri, Request a);
+		bool checkMimeExt(std::string uri);
 
+		//reponse
+		void reponseMime();
+		void reponseCGI();
 	public:
 		Reponse(){};
 		~Reponse(){};

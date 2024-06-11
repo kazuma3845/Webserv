@@ -24,6 +24,8 @@ public:
 	std::string getHttpVersion();
 	std::string getBody();
 	std::map<std::string, std::string> getHeaders();
+	std::string getFullPath();
+	location getCurr_loc();
 
 private:
 
@@ -40,7 +42,7 @@ private:
 	void parseChunkedBody(std::istringstream &ss);
 
 	//LOCATION
-	location*						_curr_loc;
+	location						_curr_loc;
 	std::map<int, std::string>		_map_folders;
 	std::string						_file_name;
 	std::string						_file_path;

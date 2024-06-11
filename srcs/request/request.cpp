@@ -35,6 +35,16 @@ std::map<std::string, std::string> Request::getHeaders()
 	return (_headers);
 }
 
+std::string Request::getFullPath()
+{
+	return _full_path;
+}
+
+location Request::getCurr_loc()
+{
+	return _curr_loc;
+}
+
 void Request::printRequest()
 {
 	std::cout << "Method : " << _method << std::endl;
