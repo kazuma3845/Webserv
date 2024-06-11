@@ -162,3 +162,40 @@ const char *Request::contentLengthUnspecified::what() const throw()
 {
 	return ("Content-length was not specified.");
 }
+void Request::parseUri(void)
+{
+	int slash_pos;
+	int end_pos;
+	std::string temp_loc_path;
+	std::string temp_file_path;
+
+//      /doc/doc2/pipou.txt
+
+	_full_path = this->uri;
+	end_pos = sizeof(_full_path);
+	slash_pos = _full_path.find_last_of('/');
+	if (slash_pos < end_pos)
+	{
+		temp_loc_path = _full_path.substr(0, slash_pos - 1);
+		temp_file_path = _full_path.substr(slash_pos + 1, end_pos);
+	}
+	while (1)
+	{
+		for (std::vector<location>::iterator it = _client->get_listen_socket()->get_location().begin(); it != _client->get_listen_socket()->get_location().end(); ++it)
+		{
+			if (it->getName() == temp_file_path)
+				this->_curr_loc = &(*it);
+		}
+		if (slash_pos <= 0)
+			break ;
+		if (this->_curr_loc == nullptr)
+		{
+			slash_pos = temp_loc_path.find_last_of('/');
+			temp_loc_path = _full_path.substr(0, slash_pos);
+			temp_file_path = _full_path.substr(slash_pos, end_pos);
+		}
+		else
+			break ;
+	}
+	_full_path = _client->get_listen_socket()->get_root() + _full_path;
+}

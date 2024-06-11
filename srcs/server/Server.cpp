@@ -44,15 +44,6 @@ Server& Server::operator=( const Server& ref )
 	return *this;
 }
 
-void Server::test_connection(int value)
-{
-	if (value < 0)
-	{
-		std::cerr << "A connection error occured" << std::endl;
-		exit(1);
-	}
-}
-
 void Server::set_server(void)
 {
 	int	current_fd;
@@ -161,7 +152,7 @@ void Server::read_socket(Client client)
 		std::istringstream contentStream(client.get_request_content());
 		std::string line;
 
-		std::cerr << "|" << std::endl << "|   CONTENT ->" << std::endl;
+		std::cerr << "|" << std::endl << "|   CONTENT READED ->" << std::endl;
 		while (std::getline(contentStream, line)) {
 			std::cerr << "|      " << line << std::endl;
 		}
@@ -194,7 +185,7 @@ void Server::write_socket(Client client)
 	std::istringstream contentStream(HTML_CONTENT);
 	std::string line;
 
-	std::cerr << "|" << std::endl << "|   CONTENT ->" << std::endl;
+	std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
 	while (std::getline(contentStream, line)) {
 		std::cerr << "|      " << line << std::endl;
 	}

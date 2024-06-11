@@ -11,12 +11,13 @@
 # include <arpa/inet.h>
 # include <fcntl.h>
 # include "../server/ListenSocket.hpp"
+# include "../request/request.hpp"
 
 #define HTML_CONTENT \
 "<!DOCTYPE html>\n" \
 "<html>\n" \
 "<head>\n" \
-"    <title>Example Page</title>\n" \
+"    <title>Webserv</title>\n" \
 "    <meta charset=\"UTF-8\">\n" \
 "</head>\n" \
 "<body>\n" \
@@ -33,6 +34,7 @@ class Client {
 		int							_connected_sd;
 		ListenSocket*				_listen_socket;
 		std::string					_request_content;
+		Request*					_request;
 	public :
 		Client(void);
 		Client(int fd, ListenSocket &listen_socket);
@@ -42,8 +44,10 @@ class Client {
 		Client&						operator=(const Client& ref);
 		int							get_fd(void);
 		std::string					get_request_content(void);
+		ListenSocket*				get_listen_socket(void);
 
 		void						set_request_content(std::string request_content);
+		void						set_request(Request &request);
 };
 
 #endif

@@ -47,7 +47,13 @@ std::string Client::get_request_content(void)
 	return this->_request_content;
 }
 
+ListenSocket* Client::get_listen_socket(void)
+{
+	return this->_listen_socket;
+}
+
 void Client::set_request_content(std::string request_content)
 {
 	this->_request_content = request_content;
 }
+
