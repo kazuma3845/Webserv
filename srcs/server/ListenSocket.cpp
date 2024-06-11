@@ -36,11 +36,18 @@ ListenSocket& ListenSocket::operator=( const ListenSocket& ref )
 	if ( this != &ref )
 	{
 		this->_listen_sd = ref._listen_sd;
-		this->_activity_mon = ref._activity_mon;
+		this->_port = ref._port;
 		this->_address = ref._address;
 		this->_name = ref._name;
-		this->_port = ref._port;
 		this->_host = ref._host;
+		this->_root = ref._root;
+		this->_autoindex = ref._autoindex;
+		this->_client_size = ref._client_size;
+		this->_index = ref._index;
+		this->_error = ref._error;
+		this->_errorpath = ref._errorpath;
+		this->_allow_methods = ref._allow_methods;
+		this->_location = ref._location;
 	}
 	return *this;
 }
@@ -98,11 +105,6 @@ int ListenSocket::get_listen_fd(void)
 	return this->_listen_sd;
 }
 
-int ListenSocket::get_activity_mon(void)
-{
-	return this->_activity_mon;
-}
-
 int ListenSocket::get_port(void)
 {
 	return this->_port;
@@ -128,11 +130,37 @@ std::string ListenSocket::get_name(void)
 	return this->_name;
 }
 
-void test_connection(int value)
+bool ListenSocket::get_autoindex() const
 {
-	if (value < 0)
-	{
-		std::cerr << "A connection error occured" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+	return _autoindex;
+}
+
+unsigned int ListenSocket::get_clientSize() const
+{
+	return _client_size;
+}
+
+std::string ListenSocket::get_index() const
+{
+	return _index;
+}
+
+std::string	ListenSocket::get_error() const
+{
+	return _error;
+}
+
+std::map<std::string, std::string> ListenSocket::get_error_path() const
+{
+	return _errorpath;
+}
+
+std::vector<std::string> ListenSocket::get_allow_methods() const
+{
+	return _allow_methods;
+}
+
+std::vector<location> ListenSocket::get_location() const
+{
+	return _location;
 }

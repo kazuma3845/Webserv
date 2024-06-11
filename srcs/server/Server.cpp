@@ -44,15 +44,6 @@ Server& Server::operator=( const Server& ref )
 	return *this;
 }
 
-void Server::test_connection(int value)
-{
-	if (value < 0)
-	{
-		std::cerr << "A connection error occured" << std::endl;
-		exit(1);
-	}
-}
-
 void Server::set_server(void)
 {
 	int	current_fd;
