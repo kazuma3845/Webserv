@@ -10,24 +10,49 @@ Request::~Request()
 	std::cout << "Request instance destroyed ..." << std::endl;
 }
 
+std::string Request::getMethod()
+{
+	return (_method);
+}
+
+std::string Request::getURI()
+{
+	return (_uri);
+}
+
+std::string Request::getHttpVersion()
+{
+	return (_httpVersion);
+}
+
+std::string Request::getBody()
+{
+	return (_body);
+}
+
+std::map<std::string, std::string> Request::getHeaders()
+{
+	return (_headers);
+}
+
 void Request::printRequest()
 {
-	std::cout << "Method : " << method << std::endl;
-	std::cout << "URI : " << uri << std::endl;
-	std::cout << "Version : " << httpVersion << std::endl;
-	for (std::map<std::string, std::string>::iterator it = headers.begin(); it != headers.end(); ++it)
+	std::cout << "Method : " << _method << std::endl;
+	std::cout << "URI : " << _uri << std::endl;
+	std::cout << "Version : " << _httpVersion << std::endl;
+	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
 		std::cout << it->first << " : " << it->second << std::endl;
-	if (!body.empty())
-		std::cout << "Body : " << body << std::endl;
+	if (!_body.empty())
+		std::cout << "Body : " << _body << std::endl;
 }
 
 void Request::parseRequestLine(std::string line)
 {
 	std::istringstream ss(line);
 
-	ss >> method >> uri >> httpVersion;
+	ss >> _method >> _uri >> _httpVersion;
 
-	if (method.empty() || uri.empty() || httpVersion.empty())
+	if (_method.empty() || _uri.empty() || _httpVersion.empty())
 		throw wrongRLInput();
 	// if (AllowdMethods != method) //A modifier pour checker les methodes autorisées par la config du serveur
 	// 	throw unauthorizedMethod();
@@ -45,7 +70,7 @@ void Request::parseHeaders(std::string line)
 		size_t end = value.find_last_not_of(" \t\r\n");
 		if (end != std::string::npos)
 			value.erase(end + 1);
-		headers[key] = value;
+		_headers[key] = value;
 	}
 	else
 		throw headerParsingError();
@@ -68,16 +93,16 @@ void Request::parseChunkedBody(std::istringstream &ss)
 		bodyStream.write(&buffer[0], length);
 		std::getline(ss, line);
 	}
-	body = bodyStream.str();
-	// std::cout << "Chunked body read successfully: " << body << std::endl;
+	_body = bodyStream.str();
+	// std::cout << "Chunked body read successfully: " << _body << std::endl;
 }
 
 void Request::parseBody(std::istringstream &ss)
 {
 
-	if (headers.find("Content-Length") == headers.end())
+	if (_headers.find("Content-Length") == _headers.end())
 		throw contentLengthUnspecified();
-	std::stringstream to_convert(headers["Content-Length"]);
+	std::stringstream to_convert(_headers["Content-Length"]);
 	int length;
 	to_convert >> length;
 	if (length <= 0)
@@ -85,13 +110,13 @@ void Request::parseBody(std::istringstream &ss)
 	char *buffer = new char[length + 1];
 	ss.read(buffer, length);
 	buffer[ss.gcount()] = '\0';
-	body.assign(buffer, ss.gcount());
+	_body.assign(buffer, ss.gcount());
 	if (ss.gcount() != length)
 		throw shorterBodyContent();
 	if (ss.get() != EOF)
 		throw longerBodyContent();
 	delete[] buffer;
-	// std::cout << "Body read successfully: " << body << std::endl;
+	// std::cout << "Body read successfully: " << _body << std::endl;
 }
 
 void Request::parseRequest(std::string requestFile)
@@ -113,7 +138,7 @@ void Request::parseRequest(std::string requestFile)
 		ss.putback(next_char);
 		if (next_char != EOF)
 		{
-			if (headers.find("Transfer-Encoding") != headers.end() && headers["Transfer-Encoding"] == "chunked")
+			if (_headers.find("Transfer-Encoding") != _headers.end() && _headers["Transfer-Encoding"] == "chunked")
 				parseChunkedBody(ss);
 			else
 				parseBody(ss);
@@ -124,6 +149,46 @@ void Request::parseRequest(std::string requestFile)
 		std::cout << "Request parsing error : " << e.what() << std::endl;
 	}
 }
+
+// void Request::parseUri(void)
+// {
+// 	int slash_pos;
+// 	int end_pos;
+// 	std::string temp_loc_path;
+// 	std::string temp_file_path;
+
+// 	//      /doc/doc2/pipou.txt
+
+// 	_full_path = this->_uri;
+// 	end_pos = sizeof(_full_path);
+// 	slash_pos = _full_path.find_last_of('/');
+// 	if (slash_pos < end_pos)
+// 	{
+// 		temp_loc_path = _full_path.substr(0, slash_pos - 1);
+// 		temp_file_path = _full_path.substr(slash_pos + 1, end_pos);
+// 	}
+// 	while (1)
+// 	{
+// 		for (std::vector<location>::iterator it = _client->get_listen_socket()->get_location().begin(); it != _client->get_listen_socket()->get_location().end(); ++it)
+// 		{
+// 			if (it->getName() == temp_file_path)
+// 				this->_curr_loc = &(*it);
+// 		}
+// 		if (slash_pos <= 0)
+// 			break;
+// 		if (this->_curr_loc == nullptr)
+// 		{
+// 			slash_pos = temp_loc_path.find_last_of('/');
+// 			temp_loc_path = _full_path.substr(0, slash_pos);
+// 			temp_file_path = _full_path.substr(slash_pos, end_pos);
+// 		}
+// 		else
+// 			break;
+// 	}
+// 	_full_path = _client->get_listen_socket()->get_root() + _full_path;
+// }
+
+/////////////////////////////////////////// ERROR /////////////////////////////////////////
 
 const char *Request::bodySize::what() const throw()
 {
@@ -161,41 +226,4 @@ const char *Request::longerBodyContent::what() const throw()
 const char *Request::contentLengthUnspecified::what() const throw()
 {
 	return ("Content-length was not specified.");
-}
-void Request::parseUri(void)
-{
-	int slash_pos;
-	int end_pos;
-	std::string temp_loc_path;
-	std::string temp_file_path;
-
-//      /doc/doc2/pipou.txt
-
-	_full_path = this->uri;
-	end_pos = sizeof(_full_path);
-	slash_pos = _full_path.find_last_of('/');
-	if (slash_pos < end_pos)
-	{
-		temp_loc_path = _full_path.substr(0, slash_pos - 1);
-		temp_file_path = _full_path.substr(slash_pos + 1, end_pos);
-	}
-	while (1)
-	{
-		for (std::vector<location>::iterator it = _client->get_listen_socket()->get_location().begin(); it != _client->get_listen_socket()->get_location().end(); ++it)
-		{
-			if (it->getName() == temp_file_path)
-				this->_curr_loc = &(*it);
-		}
-		if (slash_pos <= 0)
-			break ;
-		if (this->_curr_loc == nullptr)
-		{
-			slash_pos = temp_loc_path.find_last_of('/');
-			temp_loc_path = _full_path.substr(0, slash_pos);
-			temp_file_path = _full_path.substr(slash_pos, end_pos);
-		}
-		else
-			break ;
-	}
-	_full_path = _client->get_listen_socket()->get_root() + _full_path;
 }
