@@ -91,8 +91,8 @@ void Web::parsing(char **argv, int argc)
 		fileline.clear();
 	}
 	check();
-	for (unsigned int m = 0; m < _serv.size(); m++)
-		_serv[m].print();
+	// for (unsigned int m = 0; m < _serv.size(); m++)
+	// 	_serv[m].print();
 }
 
 void Web::run() const

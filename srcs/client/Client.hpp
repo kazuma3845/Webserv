@@ -10,6 +10,8 @@
 # include <unistd.h>
 # include <arpa/inet.h>
 # include <fcntl.h>
+
+class Client;
 # include "../server/ListenSocket.hpp"
 # include "../request/request.hpp"
 
