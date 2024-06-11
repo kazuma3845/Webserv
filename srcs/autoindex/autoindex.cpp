@@ -68,9 +68,9 @@ std::string AutoIndex::fileSize(off_t size) {
     return ss.str();
 }
 
-int main() {
-    AutoIndex ai;
-    std::string uri = "./Page";
-    std::cout << ai.create(uri) << std::endl;
-    return 0;
-}
+// int main() {
+//     AutoIndex ai;
+//     std::string uri = "./Page";
+//     std::cout << ai.create(uri) << std::endl;
+//     return 0;
+// }
