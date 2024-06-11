@@ -39,4 +39,6 @@ class location
 		std::vector<std::string> getAllowMethods() const;
 		std::vector<std::string> getCgiPath() const;
 		std::vector<std::string> getCgiExt() const;
+
+		bool empty();
 };
