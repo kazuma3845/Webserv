@@ -56,10 +56,10 @@ void Request::printRequest()
 void Request::isMethodAllowed()
 {
 	std::vector<std::string> methods;
-	if (_curr_loc->empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
-		methods = _client->get_listen_socket()->get_allow_methods();
+	if (_curr_loc.empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
+		methods = _client.get_listen_socket().get_allow_methods();
 	else
-		methods = _curr_loc->getAllowMethods();
+		methods = _curr_loc.getAllowMethods();
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 	{
 		if (_method == *it)
@@ -70,10 +70,10 @@ void Request::isMethodAllowed()
 
 void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
 {
-	if (_curr_loc->empty())
+	if (_curr_loc.empty())
 		return;
-	if (!_curr_loc->getReturn().empty())
-		_uri = _curr_loc->getReturn();
+	if (!_curr_loc.getReturn().empty())
+		_uri = _curr_loc.getReturn();
 }
 
 void Request::parseRequestLine(std::string line)
@@ -83,7 +83,7 @@ void Request::parseRequestLine(std::string line)
 	ss >> _method >> _uri >> _httpVersion;
 
 	if (_method.empty() || _uri.empty() || _httpVersion.empty())
-		throw wrongRLInput();
+		throw wrongRLInput(400);
 }
 void Request::parseHeaders(std::string line)
 {
@@ -101,7 +101,7 @@ void Request::parseHeaders(std::string line)
 		_headers[key] = value;
 	}
 	else
-		throw headerParsingError();
+		throw headerParsingError(400);
 }
 
 void Request::parseChunkedBody(std::istringstream &ss)
@@ -129,20 +129,20 @@ void Request::parseBody(std::istringstream &ss)
 {
 
 	if (_headers.find("Content-Length") == _headers.end())
-		throw contentLengthUnspecified();
+		throw contentLengthUnspecified(411);
 	std::stringstream to_convert(_headers["Content-Length"]);
 	int length;
 	to_convert >> length;
 	if (length <= 0)
-		throw invalidContentLength();
+		throw invalidContentLength(400);
 	char *buffer = new char[length + 1];
 	ss.read(buffer, length);
 	buffer[ss.gcount()] = '\0';
 	_body.assign(buffer, ss.gcount());
 	if (ss.gcount() != length)
-		throw shorterBodyContent(413);
+		throw shorterBodyContent(400);
 	if (ss.get() != EOF)
-		throw longerBodyContent(413);
+		throw longerBodyContent(400);
 	delete[] buffer;
 	// std::cout << "Body read successfully: " << _body << std::endl;
 }

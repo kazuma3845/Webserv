@@ -13,13 +13,9 @@ class Request;
 class Request
 {
 public:
-<<<<<<< HEAD
-	Request();
-=======
 
 	// Request();
 	Request(Client &client);
->>>>>>> origin/tom
 	~Request();
 	void parseRequest(std::string requestFile);
 	void printRequest();
