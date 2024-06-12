@@ -35,7 +35,7 @@ std::map<std::string, std::string> Request::getHeaders()
 	return (_headers);
 }
 
-void Request::printRequest()
+void Request::printRequest() 
 {
 	std::cout << "Method : " << _method << std::endl;
 	std::cout << "URI : " << _uri << std::endl;

@@ -6,13 +6,12 @@
 
 class Request;
 
-# include "../parsing/location.hpp"
-# include "../client/Client.hpp"
-
+#include "../parsing/location.hpp"
+#include "../client/Client.hpp"
+#include "../errors/ErrorWebServ.hpp"
 class Request
 {
 public:
-
 	Request();
 	~Request();
 	void parseRequest(std::string requestFile);
@@ -20,7 +19,7 @@ public:
 	void isMethodAllowed();
 	void redirectInURI();
 
-	//GET
+	// GET
 	std::string getMethod();
 	std::string getURI();
 	std::string getHttpVersion();
@@ -28,62 +27,69 @@ public:
 	std::map<std::string, std::string> getHeaders();
 
 private:
-
 	std::string _method;
 	std::string _uri;
 	std::string _httpVersion;
 	std::map<std::string, std::string> _headers;
 	std::string _body;
 
-	//REQUEST PARSING
+	// REQUEST PARSING
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);
 	void parseChunkedBody(std::istringstream &ss);
 
-	//LOCATION
-	location*						_curr_loc;
-	std::map<int, std::string>		_map_folders;
-	std::string						_file_name;
-	std::string						_file_path;
-	std::string						_full_path;
+	// LOCATION
+	location *_curr_loc;
+	std::map<int, std::string> _map_folders;
+	std::string _file_name;
+	std::string _file_path;
+	std::string _full_path;
 
-	Client*							_client;
+	Client *_client;
 
 	void parseUri(void);
 
-	//ERROR
-	class bodySize : public std::exception
+	// ERROR
+	class bodySize : public ErrorWebServ
 	{
+		bodySize(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class wrongRLInput : public std::exception
+	class wrongRLInput : public ErrorWebServ
 	{
+		wrongRLInput(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class unauthorizedMethod : public std::exception
+	class unauthorizedMethod : public ErrorWebServ
 	{
+		unauthorizedMethod(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class headerParsingError : public std::exception
+	class headerParsingError : public ErrorWebServ
 	{
+		headerParsingError(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class invalidContentLength : public std::exception
+	class invalidContentLength : public ErrorWebServ
 	{
+		invalidContentLength(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class shorterBodyContent : public std::exception
+	class shorterBodyContent : public ErrorWebServ
 	{
+		shorterBodyContent(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 
-	class longerBodyContent : public std::exception
+	class longerBodyContent : public ErrorWebServ
 	{
+		longerBodyContent(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class contentLengthUnspecified : public std::exception
+	class contentLengthUnspecified : public ErrorWebServ
 	{
+		contentLengthUnspecified(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 };
