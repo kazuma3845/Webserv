@@ -58,10 +58,10 @@ void Request::isMethodAllowed()
 		if (_method == *it)
 			return ;
 	}
-	throw unauthorizedMethod();
+	throw unauthorizedMethod(405);
 }
 
-void Request::redirectInURI()
+void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
 {
 	if (_curr_loc->empty())
 		return;
@@ -133,9 +133,9 @@ void Request::parseBody(std::istringstream &ss)
 	buffer[ss.gcount()] = '\0';
 	_body.assign(buffer, ss.gcount());
 	if (ss.gcount() != length)
-		throw shorterBodyContent();
+		throw shorterBodyContent(413);
 	if (ss.get() != EOF)
-		throw longerBodyContent();
+		throw longerBodyContent(413);
 	delete[] buffer;
 	// std::cout << "Body read successfully: " << _body << std::endl;
 }

@@ -53,42 +53,50 @@ private:
 	// ERROR
 	class bodySize : public ErrorWebServ
 	{
+	public:
 		bodySize(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 	class wrongRLInput : public ErrorWebServ
 	{
+	public:
 		wrongRLInput(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 	class unauthorizedMethod : public ErrorWebServ
 	{
+	public:
 		unauthorizedMethod(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 	class headerParsingError : public ErrorWebServ
 	{
+	public:
 		headerParsingError(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 	class invalidContentLength : public ErrorWebServ
 	{
+	public:
 		invalidContentLength(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 	class shorterBodyContent : public ErrorWebServ
 	{
+	public:
 		shorterBodyContent(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 
 	class longerBodyContent : public ErrorWebServ
 	{
+	public:
 		longerBodyContent(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 	class contentLengthUnspecified : public ErrorWebServ
 	{
+	public:
 		contentLengthUnspecified(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
