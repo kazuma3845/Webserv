@@ -90,7 +90,11 @@ void Server::run_server(void)
 		for(int i = 0; i <= this->_max_sd; ++i)
 		{
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
+			{
+				std::cerr << "------>> ENTRE" << std::endl;
 				read_socket(this->_client_sds_map[i]);
+				// this->_client_sds_map[i].get_request()->printRequest();
+			}
 		}
 		// Writing request response
 		for(int i = 0; i <= this->_max_sd; ++i)
@@ -103,7 +107,7 @@ void Server::run_server(void)
 	std::cerr << "SERVER END " << std::endl << std::endl;
 }
 
-void Server::add_client(ListenSocket listen_socket)
+void Server::add_client(ListenSocket &listen_socket)
 {
 	struct sockaddr_in	address;
 	int					addrlen;
@@ -138,7 +142,7 @@ void Server::add_client(ListenSocket listen_socket)
 	// this->_Clients.push_back(new_client);
 }
 
-void Server::read_socket(Client client)
+void Server::read_socket(Client& client)
 {
 	char			buffer[MESSAGE_BUFFER];
 	int				socket = client.get_fd();
@@ -147,17 +151,21 @@ void Server::read_socket(Client client)
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content)
 	{
-		client.set_request_content(buffer);
+		Request req(client);
+		req.parseRequest(buffer);
+		client.set_request(req);
+		req.printRequest();
 		// Only to show the request content;
-		std::istringstream contentStream(client.get_request_content());
-		std::string line;
+		// std::istringstream contentStream(buffer);
+		// std::string line;
 
-		std::cerr << "|" << std::endl << "|   CONTENT READED ->" << std::endl;
-		while (std::getline(contentStream, line)) {
-			std::cerr << "|      " << line << std::endl;
-		}
+		// std::cerr << "|" << std::endl << "|   CONTENT READED ->" << std::endl;
+		// while (std::getline(contentStream, line)) {
+		// 	std::cerr << "|      " << line << std::endl;
+		// }
+		client.get_request()->printRequest();
 	}
-
+	client.get_request()->printRequest();
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_read_sds);
 	FD_SET(socket, &this->_write_sds);
@@ -165,21 +173,26 @@ void Server::read_socket(Client client)
 	// this->_client_sds_map.erase(socket);
 }
 
-void Server::write_socket(Client client)
+void Server::write_socket(Client &client)
 {
 	int				socket = client.get_fd();
-	// Calculer la longueur du contenu HTML
-	int content_length = strlen(HTML_CONTENT);
-
-	// Préparer la réponse HTTP avec l'en-tête Content-Length correct
-	std::string http_response = "HTTP/1.1 200 OK\r\n"
-								"Content-Type: text/html\r\n"
-								"Content-Length: " + std::to_string(content_length) + "\r\n"
-								"\r\n" +
-								HTML_CONTENT;
-
+	Reponse rep;
+	Request request;
+	try
+	{
+	//FIXME:------------------------------------------------------
+	//			APPELLE FONCTION DE FRANCOIS
+	//------------------------------------------------------
+		//TODO: rep.callPath(request);
+		rep.reponseCGI(request);
+	}
+	catch(const std::exception &e)
+	{
+		std::cerr << "Error number: " << e.what() << std::endl;
+		rep.reponseError();
+	}
 	// Envoyer la réponse HTTP complète
-	write(socket, http_response.c_str(), http_response.length());
+	write(socket, rep.getRep().c_str(), rep.getRep().length());
 	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
 	// Only to show the request content;
 	std::istringstream contentStream(HTML_CONTENT);

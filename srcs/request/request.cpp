@@ -1,6 +1,11 @@
 #include "request.hpp"
 
-Request::Request()
+// Request::Request()
+// {
+// 	std::cout << "Request instance created." << std::endl;
+// }
+
+Request::Request(Client &client) : _client(client)
 {
 	std::cout << "Request instance created." << std::endl;
 }
@@ -37,6 +42,7 @@ std::map<std::string, std::string> Request::getHeaders()
 
 void Request::printRequest() 
 {
+	std::cerr << "------>> debut" << std::endl;
 	std::cout << "Method : " << _method << std::endl;
 	std::cout << "URI : " << _uri << std::endl;
 	std::cout << "Version : " << _httpVersion << std::endl;
@@ -44,6 +50,7 @@ void Request::printRequest()
 		std::cout << it->first << " : " << it->second << std::endl;
 	if (!_body.empty())
 		std::cout << "Body : " << _body << std::endl;
+	std::cerr << "------>> fin" << std::endl;
 }
 
 void Request::isMethodAllowed()
@@ -171,43 +178,43 @@ void Request::parseRequest(std::string requestFile)
 	}
 }
 
-// void Request::parseUri(void)
-// {
-// 	int slash_pos;
-// 	int end_pos;
-// 	std::string temp_loc_path;
-// 	std::string temp_file_path;
+void Request::parseUri(void)
+{
+	int slash_pos;
+	int end_pos;
+	std::string temp_loc_path;
+	std::string temp_file_path;
 
-// 	//      /doc/doc2/pipou.txt
+	//      /doc/doc2/pipou.txt
 
-// 	_full_path = this->_uri;
-// 	end_pos = sizeof(_full_path);
-// 	slash_pos = _full_path.find_last_of('/');
-// 	if (slash_pos < end_pos)
-// 	{
-// 		temp_loc_path = _full_path.substr(0, slash_pos - 1);
-// 		temp_file_path = _full_path.substr(slash_pos + 1, end_pos);
-// 	}
-// 	while (1)
-// 	{
-// 		for (std::vector<location>::iterator it = _client->get_listen_socket()->get_location().begin(); it != _client->get_listen_socket()->get_location().end(); ++it)
-// 		{
-// 			if (it->getName() == temp_file_path)
-// 				this->_curr_loc = &(*it);
-// 		}
-// 		if (slash_pos <= 0)
-// 			break;
-// 		if (this->_curr_loc == nullptr)
-// 		{
-// 			slash_pos = temp_loc_path.find_last_of('/');
-// 			temp_loc_path = _full_path.substr(0, slash_pos);
-// 			temp_file_path = _full_path.substr(slash_pos, end_pos);
-// 		}
-// 		else
-// 			break;
-// 	}
-// 	_full_path = _client->get_listen_socket()->get_root() + _full_path;
-// }
+	_full_path = this->_uri;
+	end_pos = sizeof(_full_path);
+	slash_pos = _full_path.find_last_of('/');
+	if (slash_pos < end_pos)
+	{
+		temp_loc_path = _full_path.substr(0, slash_pos);
+		temp_file_path = _full_path.substr(slash_pos + 1, end_pos - slash_pos);
+	}
+	while (1)
+	{
+		for (size_t i = 0; i < _client.get_listen_socket().get_location().size(); ++i)
+		{
+			if ((this->_client.get_listen_socket().get_location()[i]).getName() == temp_file_path)
+				this->_curr_loc = this->_client.get_listen_socket().get_location()[i];
+		}
+		if (slash_pos <= 0)
+			break;
+		if (1) /*this->_curr_loc*/
+		{
+			slash_pos = temp_loc_path.find_last_of('/');
+			temp_loc_path = _full_path.substr(0, slash_pos + 1);
+			temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
+		}
+		else
+			break;
+	}
+	_full_path = _client.get_listen_socket().get_root() + _full_path;
+}
 
 /////////////////////////////////////////// ERROR /////////////////////////////////////////
 

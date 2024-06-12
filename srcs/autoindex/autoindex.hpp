@@ -14,8 +14,7 @@ class AutoIndex
 {
 	private:
 		std::string addLine(const std::string& name, const std::string& path);
-   		std::string formatTime(time_t rawTime);
-    	std::string formatSize(off_t size);
+    	std::string fileSize(off_t size);
 	public:
 		AutoIndex(){};
 		~AutoIndex(){};

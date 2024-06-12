@@ -199,3 +199,9 @@ void configserv::setName(std::string str)
 {
 	_name = str;
 }
+
+void configserv::setMethod()
+{
+	_allow_methods.push_back("GET");
+	_allow_methods.push_back("HEAD");
+}

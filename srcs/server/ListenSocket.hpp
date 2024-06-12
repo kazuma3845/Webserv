@@ -31,9 +31,9 @@ class ListenSocket {
 		std::vector<std::string>			_allow_methods;
 		std::vector<location>				_location;
 
-		ListenSocket(void);
 
 	public :
+		ListenSocket(void);
 		ListenSocket(configserv config_serv, int port);
 		~ListenSocket(void){};
 		ListenSocket(const ListenSocket& copy);

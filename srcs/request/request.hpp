@@ -5,6 +5,7 @@
 #include <sstream>
 
 class Request;
+// class Client;
 
 #include "../parsing/location.hpp"
 #include "../client/Client.hpp"
@@ -12,7 +13,13 @@ class Request;
 class Request
 {
 public:
+<<<<<<< HEAD
 	Request();
+=======
+
+	// Request();
+	Request(Client &client);
+>>>>>>> origin/tom
 	~Request();
 	void parseRequest(std::string requestFile);
 	void printRequest();
@@ -25,6 +32,8 @@ public:
 	std::string getHttpVersion();
 	std::string getBody();
 	std::map<std::string, std::string> getHeaders();
+	std::string getFullPath();
+	location getCurr_loc();
 
 private:
 	std::string _method;
@@ -39,14 +48,13 @@ private:
 	void parseBody(std::istringstream &ss);
 	void parseChunkedBody(std::istringstream &ss);
 
-	// LOCATION
-	location *_curr_loc;
-	std::map<int, std::string> _map_folders;
-	std::string _file_name;
-	std::string _file_path;
-	std::string _full_path;
-
-	Client *_client;
+	//LOCATION
+	location						_curr_loc;
+	std::map<int, std::string>		_map_folders;
+	std::string						_file_name;
+	std::string						_file_path;
+	std::string						_full_path;
+	Client&							_client;
 
 	void parseUri(void);
 
