@@ -165,3 +165,8 @@ std::vector<std::string> location::getCgiExt() const
 {
 	return _cgi_ext;
 }
+
+bool location::empty()
+{
+	return (_name.empty());
+}

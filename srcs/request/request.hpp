@@ -17,6 +17,8 @@ public:
 	~Request();
 	void parseRequest(std::string requestFile);
 	void printRequest();
+	void isMethodAllowed();
+	void redirectInURI();
 
 	//GET
 	std::string getMethod();
@@ -51,7 +53,6 @@ private:
 	Client*							_client;
 
 	void parseUri(void);
-
 
 	//ERROR
 	class bodySize : public std::exception

@@ -56,6 +56,29 @@ void Request::printRequest()
 		std::cout << "Body : " << _body << std::endl;
 }
 
+void Request::isMethodAllowed()
+{
+	std::vector<std::string> methods;
+	if (_curr_loc->empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
+		methods = _client->get_listen_socket()->get_allow_methods();
+	else
+		methods = _curr_loc->getAllowMethods();
+	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
+	{
+		if (_method == *it)
+			return ;
+	}
+	throw unauthorizedMethod();
+}
+
+void Request::redirectInURI()
+{
+	if (_curr_loc->empty())
+		return;
+	if (!_curr_loc->getReturn().empty())
+		_uri = _curr_loc->getReturn();
+}
+
 void Request::parseRequestLine(std::string line)
 {
 	std::istringstream ss(line);
@@ -64,8 +87,6 @@ void Request::parseRequestLine(std::string line)
 
 	if (_method.empty() || _uri.empty() || _httpVersion.empty())
 		throw wrongRLInput();
-	// if (AllowdMethods != method) //A modifier pour checker les methodes autorisées par la config du serveur
-	// 	throw unauthorizedMethod();
 }
 void Request::parseHeaders(std::string line)
 {
