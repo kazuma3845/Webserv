@@ -5,6 +5,7 @@
 #include <sstream>
 
 class Request;
+// class Client;
 
 # include "../parsing/location.hpp"
 # include "../client/Client.hpp"
@@ -13,7 +14,8 @@ class Request
 {
 public:
 
-	Request();
+	// Request();
+	Request(Client &client);
 	~Request();
 	void parseRequest(std::string requestFile);
 	void printRequest();
@@ -49,8 +51,8 @@ private:
 	std::string						_file_name;
 	std::string						_file_path;
 	std::string						_full_path;
+	Client&							_client;
 
-	Client*							_client;
 
 	void parseUri(void);
 

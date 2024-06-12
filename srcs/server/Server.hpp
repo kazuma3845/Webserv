@@ -16,6 +16,7 @@ class Server;
 # include <iomanip>
 # include "../parsing/configserv.hpp"
 # include "../client/Client.hpp"
+# include "../request/request.hpp"
 # include "ListenSocket.hpp"
 #include "../reponse/reponse.hpp"
 # include "../reponse/path.hpp"
@@ -39,9 +40,9 @@ class Server {
 		Server&			operator=(const Server& ref);
 		void					set_server(void);
 		void					run_server(void);
-		void					add_client(ListenSocket listen_socket);
-		void					read_socket(Client client);
-		void					write_socket(Client client);
+		void					add_client(ListenSocket& listen_socket);
+		void					read_socket(Client& client);
+		void					write_socket(Client& client);
 };
 
 #endif

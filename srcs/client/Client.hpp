@@ -1,5 +1,4 @@
-#ifndef CLIENT_HPP
-# define CLIENT_HPP
+#pragma once
 # include <iostream>
 # include <sys/socket.h>
 # include <netinet/in.h>
@@ -10,7 +9,6 @@
 # include <unistd.h>
 # include <arpa/inet.h>
 # include <fcntl.h>
-
 class Client;
 # include "../server/ListenSocket.hpp"
 # include "../request/request.hpp"
@@ -29,16 +27,13 @@ class Client;
 "</body>\n" \
 "</html>\n"
 
-class Server;
-
 class Client {
 	private :
 		int							_connected_sd;
-		ListenSocket*				_listen_socket;
-		std::string					_request_content;
-		Request*					_request;
+		ListenSocket				_listen_socket;
+		Request						_request;
 	public :
-		Client(void);
+		// Client(void);
 		Client(int fd, ListenSocket &listen_socket);
 		~Client(void);
 		Client(const Client& copy);
@@ -46,10 +41,7 @@ class Client {
 		Client&						operator=(const Client& ref);
 		int							get_fd(void);
 		std::string					get_request_content(void);
-		ListenSocket*				get_listen_socket(void);
-
-		void						set_request_content(std::string request_content);
-		void						set_request(Request &request);
+		ListenSocket				get_listen_socket(void);
+		Request*						get_request(void);
+		void						set_request(Request& request);
 };
-
-#endif
