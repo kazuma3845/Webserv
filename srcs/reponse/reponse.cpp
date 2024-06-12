@@ -6,15 +6,19 @@ void Reponse::check_ext_cgi(std::string uri)
 	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(uri, a))
 	{
 		std::cout << "CGI" << std::endl;
-		reponseCGI();
+		reponseCGI(a);
 	}
 	else if (checkMimeExt(uri))
 	{
 		std::cout << "MIME" << std::endl;
-		reponseMime();
+		reponseMime(a);
 	}
 	else
+	{
 		std::cerr << "Error: 415" << std::endl;
+		throw std::exception();
+	}
+
 }
 
 bool Reponse::checkCgiExt(std::string uri, Request a)
@@ -61,17 +65,54 @@ bool Reponse::checkMimeExt(std::string uri)
 	return false;
 }
 
-void Reponse::reponseMime()
+void Reponse::reponseMime(Request &a)
 {
-
+	(void)a;
 }
 
-void Reponse::reponseCGI()
+void Reponse::reponseCGI(Request &a)
 {
-
+	(void)a;
+	_reponse_html =	"HTTP/1.1 200 ok\r\n"
+					"Date: " + takeTime() + "\r\n"
+					"Content-Type: text/html\r\n"
+					"\r\n"
+					"<html><body>"
+					"<h1>" + takeTime() + "</h1>"
+					"</body></html>";
 }
 
 void Reponse::reponseError()
 {
 
+}
+
+std::string Reponse::getRep() const
+{
+	return _reponse_html;
+}
+
+std::string Reponse::takeTime()
+{
+	time_t raw_time;
+    struct tm *time_info;
+    char buffer[80];
+
+    time(&raw_time);
+    time_info = localtime(&raw_time);
+
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S %Z", time_info);
+	std::string str_buffer(buffer);
+	return str_buffer;
+}
+
+void Reponse::callPath(Request &req)
+{
+	Path a;
+	a.path(req);
+}
+
+void Reponse::setBody(std::string newRep)
+{
+	_body = newRep;
 }

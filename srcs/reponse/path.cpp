@@ -16,13 +16,13 @@ void Path::folderpath(Request &a, Reponse rep)
 		if (a.getCurr_loc().getAutoindex() == true)
 		{
 			AutoIndex index;
-			std::string file = index.create(a.getFullPath());
-			std::cout << "AutoIndex ON" << std::endl;
+			rep.setBody(index.create(a.getFullPath()));
+			rep.reponseMime(a);
 		}
 		else
 		{
-			//path = ./Page/error/400/403.html
 			std::cerr << "Error 403" << std::endl;
+			throw std::exception();
 		}
 
 	}

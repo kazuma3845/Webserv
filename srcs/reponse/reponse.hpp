@@ -1,24 +1,41 @@
 #pragma once
 
+class Reponse;
+
 #include <iostream>
+#include <ctime>
+#include <cstring>
+# include "path.hpp"
 #include "../request/request.hpp"
 
 class Reponse
 {
 	private:
-		std::string reponse_html;
+		std::string _reponse_html;
+		std::string _body;
 
 		//check
 		bool checkCgiExt(std::string uri, Request a);
 		bool checkMimeExt(std::string uri);
 
-		//reponse
-		void reponseMime();
-		void reponseCGI();
-		void reponseError();
+		//additional
+		std::string takeTime();
 	public:
 		Reponse(){};
 		~Reponse(){};
 
+		//reponse
+		void reponseError();
+		void reponseMime(Request &a);
+		void reponseCGI(Request &a);
+
+		void callPath(Request &req);
+
 		void check_ext_cgi(std::string uri);
+
+		//get
+		std::string getRep() const;
+
+		//set
+		void setBody(std::string newRep);
 };

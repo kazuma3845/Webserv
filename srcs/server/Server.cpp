@@ -169,46 +169,22 @@ void Server::write_socket(Client client)
 {
 	int				socket = client.get_fd();
 	Reponse rep;
+	Request request;
 	try
 	{
 	//------------------------------------------------------
 	//			APPELLE FONCTION DE FRANCOIS
 	//------------------------------------------------------
-	//			APPEL REDIRECTION VERS REPONSE/ERROR
-	//------------------------------------------------------
-	//			CREATION REPONSE CGI/MIME
-	//------------------------------------------------------
+		// rep.callPath(request);
+		rep.reponseCGI(request);
 	}
 	catch(const std::exception &e)
 	{
 		std::cerr << "Error number: " << e.what() << std::endl;
-		// rep.reponseError();
-	//------------------------------------------------------
-	//			CREATION REPONSE ERROR
-	//------------------------------------------------------
+		rep.reponseError();
 	}
-
-
-
-	//------------------------------------------------------------------------------
-	//												DELETE
-	// Calculer la longueur du contenu HTML
-	int content_length = strlen(HTML_CONTENT);
-
-	// Préparer la réponse HTTP avec l'en-tête Content-Length correct
-	std::string http_response = "HTTP/1.1 200 OK\r\n"
-								"Content-Type: text/html\r\n"
-								"Content-Length: " + std::to_string(content_length) + "\r\n"
-								"\r\n" +
-								HTML_CONTENT;
-	//												DELETE
-	//------------------------------------------------------------------------------
-
-
-
-
 	// Envoyer la réponse HTTP complète
-	write(socket, http_response.c_str(), http_response.length());
+	write(socket, rep.getRep().c_str(), rep.getRep().length());
 	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
 	// Only to show the request content;
 	std::istringstream contentStream(HTML_CONTENT);
