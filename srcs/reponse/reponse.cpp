@@ -79,7 +79,7 @@ void Reponse::reponseCGI(Request &a)
 					"\r\n"
 					"<html><body>"
 					"<h1>" + takeTime() + "</h1>"
-					//FIXME: "<h1>" + cgi.execute() + "</h1>"
+					// FIXME: "<h1>" + cgi.execute() + "</h1>"
 					"</body></html>";
 }
 
