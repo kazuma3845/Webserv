@@ -172,10 +172,10 @@ void Server::write_socket(Client client)
 	Request request;
 	try
 	{
-	//------------------------------------------------------
+	//FIXME:------------------------------------------------------
 	//			APPELLE FONCTION DE FRANCOIS
 	//------------------------------------------------------
-		// rep.callPath(request);
+		//TODO: rep.callPath(request);
 		rep.reponseCGI(request);
 	}
 	catch(const std::exception &e)

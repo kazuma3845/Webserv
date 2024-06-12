@@ -7,6 +7,7 @@ class Reponse;
 #include <cstring>
 # include "path.hpp"
 #include "../request/request.hpp"
+#include "../CgiHandler/CgiHandler.hpp"
 
 class Reponse
 {

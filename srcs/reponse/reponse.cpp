@@ -72,13 +72,14 @@ void Reponse::reponseMime(Request &a)
 
 void Reponse::reponseCGI(Request &a)
 {
-	(void)a;
+	CgiHandler cgi(a);
 	_reponse_html =	"HTTP/1.1 200 ok\r\n"
 					"Date: " + takeTime() + "\r\n"
 					"Content-Type: text/html\r\n"
 					"\r\n"
 					"<html><body>"
 					"<h1>" + takeTime() + "</h1>"
+					//FIXME: "<h1>" + cgi.execute() + "</h1>"
 					"</body></html>";
 }
 
