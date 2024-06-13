@@ -53,18 +53,6 @@ std::string CgiHandler::execute(std::string Script)
 	pid_t pid;
 	std::string newbody;
 
-	int saveStdin = dup(STDIN_FILENO);
-	int saveStdout = dup(STDOUT_FILENO);
-
-	FILE	*fIn = tmpfile();
-	FILE	*fOut = tmpfile();
-	long	fdIn = fileno(fIn);
-	long	fdOut = fileno(fOut);
-	int		ret = 1;
-
-	write(fdIn, _body.c_str(), _body.size());
-	lseek(fdIn, 0, SEEK_SET);
-
 	pid = fork();
 	if (pid == -1)
 	{
@@ -72,36 +60,14 @@ std::string CgiHandler::execute(std::string Script)
 	}
 	else if (!pid)
 	{
-		char **a = NULL;
-		dup2(fdIn, STDIN_FILENO);
-		dup2(fdOut, STDOUT_FILENO);
-		execve(Script.c_str(), a, env);
-		write(STDERR_FILENO, "500", 4);
+
+		execve(Script.c_str(), , env);
 	}
 	else
 	{
-		char	buffer[BUFFER] = {NULL};
-
 		waitpid(-1, NULL, 0);
-		lseek(fdOut, 0, SEEK_SET);
 
-		ret = 1;
-		while (ret > 0)
-		{
-			memset(buffer, 0, BUFFER);
-			ret = read(fdOut, buffer, BUFFER - 1);
-			newbody += buffer;
-		}
 	}
-
-	dup2(saveStdin, STDIN_FILENO);
-	dup2(saveStdout, STDOUT_FILENO);
-	fclose(fIn);
-	fclose(fOut);
-	close(fdIn);
-	close(fdOut);
-	close(saveStdin);
-	close(saveStdout);
 
 	for (unsigned int i = 0; env[i]; i++)
 		delete[] env[i];
