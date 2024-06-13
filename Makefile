@@ -25,6 +25,7 @@ clean:
 fclean:
 		@rm -rf $(OBJS)
 		@rm -rf $(NAME)
+		@rm -rf $(OBJ_DIR)
 		@echo "\033[0;31mClean all files\033[0m"
 
 re: fclean all
