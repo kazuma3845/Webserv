@@ -50,6 +50,11 @@ ListenSocket Client::get_listen_socket(void)
 	return this->_listen_socket;
 }
 
+Request Client::get_request(void)
+{
+	return this->_request;
+}
+
 void Client::isMethodAllowed()
 {
 	std::vector<std::string> methods;

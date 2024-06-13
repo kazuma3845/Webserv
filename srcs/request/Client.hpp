@@ -20,6 +20,7 @@ class Client {
 	private :
 		int							_connected_sd;
 		ListenSocket				_listen_socket;
+		Request						_request;
 		std::string _rep;
 	public :
 		Client();
@@ -31,6 +32,7 @@ class Client {
 		int							get_fd(void);
 		std::string					get_request_content(void);
 		ListenSocket				get_listen_socket(void);
+		Request						get_request(void);
 		void isMethodAllowed();
 		void redirectInURI();
 
