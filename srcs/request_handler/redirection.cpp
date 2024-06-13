@@ -1,24 +1,21 @@
 #include "redirection.hpp"
 
-void Redirection::check_ext_cgi(std::string uri, Client &client)
+void Redirection::check_ext_cgi(std::string uri)
 {
-	Request a(client);
+	Request a;
 	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(uri, a))
 	{
 		std::cout << "CGI" << std::endl;
-		reponseCGI(a);
 	}
 	else if (checkMimeExt(uri))
 	{
 		std::cout << "MIME" << std::endl;
-		// RMime(a);
 	}
 	else
 	{
 		std::cerr << "Error: 415" << std::endl;
-		throw std::exception();
+		throw std::exception();		//FIXME: Mettre bon throw error
 	}
-
 }
 
 bool Redirection::checkCgiExt(std::string uri, Request a)
@@ -98,9 +95,9 @@ std::string Redirection::takeTime()
 	return str_buffer;
 }
 
-void Redirection::callPath(Request &req, Client &client)
+void Redirection::callPath(Request &req)
 {
 	Path a;
-	a.path(req, client);
+	a.path(req);
 }
 

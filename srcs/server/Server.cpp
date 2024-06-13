@@ -10,13 +10,12 @@ Server::Server(void)
 Server::Server(std::vector<configserv>	config_servs) : _max_sd(0)
 {
 	int nb_ports;
-
-	for (std::vector<configserv>::iterator it = config_servs.begin(); it != config_servs.end(); ++it)
+	for(unsigned int i = 0; i < config_servs.size(); ++i)
 	{
-		nb_ports = (it->getListen()).size();
+		nb_ports = (config_servs[i].getListen()).size();
 		for (int i_port = 0; i_port != nb_ports; i_port++)
 		{
-			ListenSocket curr_listen_socket = ListenSocket(*it, it->getListen()[i_port]);
+			ListenSocket curr_listen_socket(config_servs[i], config_servs[i].getListen()[i_port]);
 			this->_ListenSockets.push_back(curr_listen_socket);
 		}
 	}
@@ -80,10 +79,10 @@ void Server::run_server(void)
 		// Wait for an activity on one of the , select return the value of readies FD
 		if (select(this->_max_sd + 1, &temp_read_sds, NULL, NULL, NULL) <= 0)
 			exit(1);
-		for(std::vector<ListenSocket>::iterator it = this->_ListenSockets.begin(); it != this->_ListenSockets.end(); ++it)
+		for(unsigned int i = 0; i < this->_ListenSockets.size(); ++i)
 		{
-			if (FD_ISSET(it->get_listen_fd(), &temp_read_sds))
-				this->add_client(*it);
+			if (FD_ISSET(this->_ListenSockets[i].get_listen_fd(), &temp_read_sds))
+				this->add_client(_ListenSockets[i]);
 		}
 		
 		// Reading new request
@@ -130,7 +129,7 @@ void Server::add_client(ListenSocket &listen_socket)
 		std::cerr << "Issue setting O_NONBLOCK" << std::endl;
 		exit(1);
 	}
-	Client new_client = Client(new_socket, listen_socket);
+	Client new_client(new_socket, listen_socket);
 	// ------------- Message for testing
 	std::cout << "|" << std::endl << "|   New connection: socket fd is " << new_socket << " | " << inet_ntoa(listen_socket.get_address().sin_addr) << " | "<< ntohs(listen_socket.get_address().sin_port) << std::endl << "|" << std::endl;
 
@@ -138,7 +137,9 @@ void Server::add_client(ListenSocket &listen_socket)
 	FD_SET(new_socket, &this->_read_sds);
 	if (new_socket > this->_max_sd)
 			this->_max_sd = new_socket;
-	this->_client_sds_map.insert(std::make_pair(new_socket, new_client));
+	std::cerr << "#########" << std::endl;
+	this->_client_sds_map[new_socket] = new_client;
+	std::cerr << "-----" << std::endl;
 	// this->_Clients.push_back(new_client);
 }
 
@@ -146,24 +147,27 @@ void Server::read_socket(Client& client)
 {
 	char			buffer[MESSAGE_BUFFER];
 	int				socket = client.get_fd();
-
 	memset(buffer, 0, sizeof(buffer));
+
+	Request 		req;
+	Redirection 	handler;
+	Response		response;
+
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content)
 	{
-		Request req(client);
+		try
+		{
 		req.parseRequest(buffer);
-		//TODO: client.set_request(req);
 		req.printRequest();
-		// Only to show the request content;
-		// std::istringstream contentStream(buffer);
-		// std::string line;
-
-		// std::cerr << "|" << std::endl << "|   CONTENT READED ->" << std::endl;
-		// while (std::getline(contentStream, line)) {
-		// 	std::cerr << "|      " << line << std::endl;
-		// }
-		// client.get_request()->printRequest();
+		// handler.callPath(req);
+		}
+		catch(const ErrorWebServ &e)
+		{
+			std::cerr << "Error number: " << e.getErrorCode() << std::endl;
+			std::cerr << "What happened : " << e.what() << std::endl;
+			// rep.reponseError();
+		}
 	}
 	// client.get_request()->printRequest();
 	// Remove socket from read to write
@@ -176,24 +180,20 @@ void Server::read_socket(Client& client)
 void Server::write_socket(Client &client)
 {
 	int				socket = client.get_fd();
+	//--------------------------------DELETE-----------------------------------
 	Redirection rep;
-	Request request(client);
-	try
-	{
-	//FIXME:------------------------------------------------------
-	//			APPELLE FONCTION DE FRANCOIS
-	//------------------------------------------------------
-		//TODO: rep.callPath(request);
-		rep.reponseCGI(request);
-	}
-	catch(const std::exception &e)
-	{
-		std::cerr << "Error number: " << e.what() << std::endl;
-		// rep.reponseError();
-	}
+	Request request;
+	rep.reponseCGI(request);
 	// Envoyer la réponse HTTP complète
 	write(socket, rep.getRep().c_str(), rep.getRep().length());
 	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
+	//-------------------------------------------------------------------------
+
+
+
+	// write(socket, client.getRep().c_str(), client.getRep().length());
+
+
 
 	//-----------------------------------------------------------------------
 	// Only to show the request content; PRINT REPONSE

@@ -5,7 +5,7 @@ class Path;
 #include "../request/request.hpp"
 #include "redirection.hpp"
 #include "autoindex.hpp"
-# include "../client/Client.hpp"
+# include "../request/Client.hpp"
 
 #include <iostream>
 
@@ -16,6 +16,6 @@ class Path
 	public:
 		Path(){};
 		~Path(){};
-		void path(Request &a,  Client &client);
-		void folderpath(Request &a, Redirection &rep, Client &client);
+		void path(Request &a);
+		void folderpath(Request &a, Redirection &rep);
 };

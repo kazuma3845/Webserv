@@ -15,11 +15,12 @@ class Server;
 # include <fcntl.h>
 # include <iomanip>
 # include "../parsing/configserv.hpp"
-# include "../client/Client.hpp"
+# include "../request/Client.hpp"
 # include "../request/request.hpp"
 # include "ListenSocket.hpp"
 #include "../request_handler/redirection.hpp"
 # include "../request_handler/path.hpp"
+# include "../response/response.hpp"
 
 
 class Server {

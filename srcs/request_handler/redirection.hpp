@@ -8,7 +8,7 @@ class Redirection;
 # include "path.hpp"
 #include "../request/request.hpp"
 #include "CgiHandler.hpp"
-# include "../client/Client.hpp"
+# include "../request/Client.hpp"
 
 class Redirection
 {
@@ -26,10 +26,10 @@ class Redirection
 		Redirection(){};
 		~Redirection(){};
 
-		void reponseCGI(Request &a);
-		void callPath(Request &req,  Client &client);
-		void check_ext_cgi(std::string uri, Client &client);
+		void reponseCGI(Request &a); // A SUPPRIMER
+		void callPath(Request &req);
+		void check_ext_cgi(std::string uri);
 
 		//get
-		std::string getRep() const;
+		std::string getRep() const; // A SUPPRIMER
 };

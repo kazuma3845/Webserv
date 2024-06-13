@@ -1,15 +1,15 @@
 # include "path.hpp"
 
-void Path::path(Request &a,  Client &client)
+void Path::path(Request &a)
 {
 	Redirection rep;
 	if (checkfolder(a.getURI()))
-		folderpath(a, rep, client);
+		folderpath(a, rep);
 	else
-		rep.check_ext_cgi(a.getURI(), client);
+		rep.check_ext_cgi(a.getURI());
 }
 
-void Path::folderpath(Request &a, Redirection &rep, Client &client)
+void Path::folderpath(Request &a, Redirection &rep)
 {
 	if (a.getCurr_loc().getIndex().empty())
 	{
@@ -17,19 +17,18 @@ void Path::folderpath(Request &a, Redirection &rep, Client &client)
 		{
 			AutoIndex index;
 			// rep.setBody(index.create(a.getFullPath()));
-			// rep.reponseMime(a);
 		}
 		else
 		{
 			std::cerr << "Error 403" << std::endl;
-			throw std::exception();
+			throw std::exception();		//FIXME: Mettre bon throw error
 		}
 
 	}
 	else
 	{
 		std::string path = a.getURI() + a.getCurr_loc().getIndex();
-		rep.check_ext_cgi(path, client);
+		rep.check_ext_cgi(path);
 	}
 }
 

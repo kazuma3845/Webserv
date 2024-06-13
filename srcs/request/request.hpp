@@ -5,22 +5,18 @@
 #include <sstream>
 
 class Request;
-// class Client;
 
 #include "../parsing/location.hpp"
-#include "../client/Client.hpp"
 #include "../errors/ErrorWebServ.hpp"
+
 class Request
 {
 public:
 
-	// Request();
-	Request(Client &client);
+	Request();
 	~Request();
 	void parseRequest(std::string requestFile);
 	void printRequest();
-	void isMethodAllowed();
-	void redirectInURI();
 
 	// GET
 	std::string getMethod();
@@ -31,6 +27,7 @@ public:
 	std::string getFullPath();
 	location getCurr_loc();
 
+	void setURI(std::string uri);
 private:
 	std::string _method;
 	std::string _uri;
@@ -50,9 +47,8 @@ private:
 	std::string						_file_name;
 	std::string						_file_path;
 	std::string						_full_path;
-	Client&							_client;
 
-	void parseUri(void);
+	// void parseUri(Client &client);
 
 	// ERROR
 	class bodySize : public ErrorWebServ
@@ -67,12 +63,7 @@ private:
 		wrongRLInput(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class unauthorizedMethod : public ErrorWebServ
-	{
-	public:
-		unauthorizedMethod(int errorCode) : ErrorWebServ(errorCode) {}
-		const char *what() const throw();
-	};
+
 	class headerParsingError : public ErrorWebServ
 	{
 	public:

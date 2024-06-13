@@ -23,6 +23,7 @@ public:
 	std::string getStatusMessage();
 	std::map<std::string, std::string> getHeaders();
 	std::string getBody();
+	std::string getResp();
 
 	// SETTERS
 	void setHTTPVersion(std::string version);
@@ -32,6 +33,7 @@ public:
 	void setBody(std::string body);
 
 	void printResponse() const;
+	void formatResponse();
 
 private:
 	std::string _httpVersion;
@@ -39,6 +41,7 @@ private:
 	std::string _statusMessage;
 	std::map<std::string, std::string> _headers;
 	std::string _body;
+	std::string _resp;
 
 	class settingHeadersError : public ErrorWebServ
 	{

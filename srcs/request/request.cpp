@@ -1,18 +1,18 @@
 #include "request.hpp"
 
-// Request::Request()
+Request::Request()
+{
+	// std::cout << "Request instance created." << std::endl;
+}
+
+// Request::Request(Client &client) : _client(client)
 // {
 // 	std::cout << "Request instance created." << std::endl;
 // }
 
-Request::Request(Client &client) : _client(client)
-{
-	std::cout << "Request instance created." << std::endl;
-}
-
 Request::~Request()
 {
-	std::cout << "Request instance destroyed ..." << std::endl;
+	// std::cout << "Request instance destroyed ..." << std::endl;
 }
 
 std::string Request::getMethod()
@@ -50,9 +50,13 @@ std::string Request::getFullPath()
 	return (_full_path);
 }
 
+void Request::setURI(std::string uri)
+{
+	_uri=uri;
+}
+
 void Request::printRequest() 
 {
-	std::cerr << "------>> debut" << std::endl;
 	std::cout << "Method : " << _method << std::endl;
 	std::cout << "URI : " << _uri << std::endl;
 	std::cout << "Version : " << _httpVersion << std::endl;
@@ -60,30 +64,6 @@ void Request::printRequest()
 		std::cout << it->first << " : " << it->second << std::endl;
 	if (!_body.empty())
 		std::cout << "Body : " << _body << std::endl;
-	std::cerr << "------>> fin" << std::endl;
-}
-
-void Request::isMethodAllowed()
-{
-	std::vector<std::string> methods;
-	if (_curr_loc.empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
-		methods = _client.get_listen_socket().get_allow_methods();
-	else
-		methods = _curr_loc.getAllowMethods();
-	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
-	{
-		if (_method == *it)
-			return ;
-	}
-	throw unauthorizedMethod(405);
-}
-
-void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
-{
-	if (_curr_loc.empty())
-		return;
-	if (!_curr_loc.getReturn().empty())
-		_uri = _curr_loc.getReturn();
 }
 
 void Request::parseRequestLine(std::string line)
@@ -161,8 +141,7 @@ void Request::parseRequest(std::string requestFile)
 {
 	std::istringstream ss(requestFile);
 	std::string line;
-	try
-	{
+
 		// extraction de la première ligne qui est la RequestLine
 		std::getline(ss, line);
 		parseRequestLine(line);
@@ -181,50 +160,48 @@ void Request::parseRequest(std::string requestFile)
 			else
 				parseBody(ss);
 		}
-	}
-	catch (std::exception &e)
-	{
-		std::cout << "Request parsing error : " << e.what() << std::endl;
-	}
+
+
+	
 }
 
-void Request::parseUri(void)
-{
-	int slash_pos;
-	int end_pos;
-	std::string temp_loc_path;
-	std::string temp_file_path;
+// void Request::parseUri(Client &client)
+// {
+// 	int slash_pos;
+// 	int end_pos;
+// 	std::string temp_loc_path;
+// 	std::string temp_file_path;
 
-	//      /doc/doc2/pipou.txt
+// 	//      /doc/doc2/pipou.txt
 
-	_full_path = this->_uri;
-	end_pos = sizeof(_full_path);
-	slash_pos = _full_path.find_last_of('/');
-	if (slash_pos < end_pos)
-	{
-		temp_loc_path = _full_path.substr(0, slash_pos);
-		temp_file_path = _full_path.substr(slash_pos + 1, end_pos - slash_pos);
-	}
-	while (1)
-	{
-		for (size_t i = 0; i < _client.get_listen_socket().get_location().size(); ++i)
-		{
-			if ((this->_client.get_listen_socket().get_location()[i]).getName() == temp_file_path)
-				this->_curr_loc = this->_client.get_listen_socket().get_location()[i];
-		}
-		if (slash_pos <= 0)
-			break;
-		if (1) /*this->_curr_loc*/
-		{
-			slash_pos = temp_loc_path.find_last_of('/');
-			temp_loc_path = _full_path.substr(0, slash_pos + 1);
-			temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
-		}
-		else
-			break;
-	}
-	_full_path = _client.get_listen_socket().get_root() + _full_path;
-}
+// 	_full_path = this->_uri;
+// 	end_pos = sizeof(_full_path);
+// 	slash_pos = _full_path.find_last_of('/');
+// 	if (slash_pos < end_pos)
+// 	{
+// 		temp_loc_path = _full_path.substr(0, slash_pos);
+// 		temp_file_path = _full_path.substr(slash_pos + 1, end_pos - slash_pos);
+// 	}
+// 	while (1)
+// 	{
+// 		for (size_t i = 0; i < client.get_listen_socket().get_location().size(); ++i)
+// 		{
+// 			if ((client.get_listen_socket().get_location()[i]).getName() == temp_file_path)
+// 				this->_curr_loc = client.get_listen_socket().get_location()[i];
+// 		}
+// 		if (slash_pos <= 0)
+// 			break;
+// 		if (1) /*this->_curr_loc*/
+// 		{
+// 			slash_pos = temp_loc_path.find_last_of('/');
+// 			temp_loc_path = _full_path.substr(0, slash_pos + 1);
+// 			temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
+// 		}
+// 		else
+// 			break;
+// 	}
+// 	_full_path = client.get_listen_socket().get_root() + _full_path;
+// }
 
 /////////////////////////////////////////// ERROR /////////////////////////////////////////
 
@@ -238,10 +215,7 @@ const char *Request::wrongRLInput::what() const throw()
 	return ("Request line arguments doesn't fit format.");
 }
 
-const char *Request::unauthorizedMethod::what() const throw()
-{
-	return ("Unauthorized method requested.");
-}
+
 
 const char *Request::headerParsingError::what() const throw()
 {
