@@ -50,36 +50,3 @@ ListenSocket Client::get_listen_socket(void)
 	return this->_listen_socket;
 }
 
-Request Client::get_request(void)
-{
-	return this->_request;
-}
-
-void Client::isMethodAllowed()
-{
-	std::vector<std::string> methods;
-	if (this->_request.getCurr_loc().empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
-		methods = this->get_listen_socket().get_allow_methods();
-	else
-		methods = this->_request.getCurr_loc().getAllowMethods();
-	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
-	{
-		if (this->_request.getMethod() == *it)
-			return ;
-	}
-	throw unauthorizedMethod(405);
-}
-
-void Client::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
-{
-	if (this->_request.getCurr_loc().empty())
-		return;
-	if (!this->_request.getCurr_loc().getReturn().empty())
-		this->_request.setURI(this->_request.getCurr_loc().getReturn());
-}
-
-
-const char *Client::unauthorizedMethod::what() const throw()
-{
-	return ("Unauthorized method requested.");
-}

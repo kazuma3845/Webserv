@@ -26,6 +26,7 @@ ListenSocket::ListenSocket(configserv config_serv, int port)
 	this->_name = config_serv.getName();
 	this->_host = config_serv.getHost();
 	this->_root = config_serv.getRoot();
+	this->_location = config_serv.getLocation();
 	// std::cout << "ListenSocket was called." << std::endl;
 }
 

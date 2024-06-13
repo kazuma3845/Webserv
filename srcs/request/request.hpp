@@ -8,6 +8,7 @@ class Request;
 
 #include "../parsing/location.hpp"
 #include "../errors/ErrorWebServ.hpp"
+#include "Client.hpp"
 
 class Request
 {
@@ -17,6 +18,10 @@ public:
 	~Request();
 	void parseRequest(std::string requestFile);
 	void printRequest();
+
+	void isMethodAllowed(Client &client);
+	void redirectInURI();
+	void parseUri(Client &client);
 
 	// GET
 	std::string getMethod();
@@ -47,8 +52,6 @@ private:
 	std::string						_file_name;
 	std::string						_file_path;
 	std::string						_full_path;
-
-	// void parseUri(Client &client);
 
 	// ERROR
 	class bodySize : public ErrorWebServ
@@ -93,6 +96,13 @@ private:
 	{
 	public:
 		contentLengthUnspecified(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
+
+	class unauthorizedMethod : public ErrorWebServ
+	{
+	public:
+		unauthorizedMethod(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 };

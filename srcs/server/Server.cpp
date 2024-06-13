@@ -160,6 +160,7 @@ void Server::read_socket(Client& client)
 		{
 			req.parseRequest(buffer);
 			req.printRequest();
+			req.parseUri(client);
 			redirect.path(req, response);
 		}
 		catch(const ErrorWebServ &e)

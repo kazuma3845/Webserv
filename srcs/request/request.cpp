@@ -160,48 +160,69 @@ void Request::parseRequest(std::string requestFile)
 			else
 				parseBody(ss);
 		}
-
-
-	
 }
 
-// void Request::parseUri(Client &client)
-// {
-// 	int slash_pos;
-// 	int end_pos;
-// 	std::string temp_loc_path;
-// 	std::string temp_file_path;
+void Request::parseUri(Client &client)
+{
+	int slash_pos;
+	int end_pos;
+	std::string temp_loc_path;
+	std::string temp_file_path;
 
-// 	//      /doc/doc2/pipou.txt
+	_full_path = this->_uri;
+	end_pos = sizeof(_full_path);
+	slash_pos = _full_path.find_last_of('/');
+	if (slash_pos < end_pos)
+	{
+		temp_loc_path = _full_path.substr(0, slash_pos);
+		temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
+	}
+	while (1)
+	{
+		for (size_t i = 0; i < client.get_listen_socket().get_location().size(); ++i)
+		{
+			if (temp_file_path.compare((client.get_listen_socket().get_location()[i]).getName()) == 0)
+			{
+				this->_curr_loc = client.get_listen_socket().get_location()[i];
+				break ;
+			}
+		}
+		if (slash_pos <= 0)
+			break;
+		if (this->_curr_loc.empty())
+		{
+			slash_pos = temp_loc_path.find_last_of('/');
+			temp_loc_path = _full_path.substr(0, slash_pos);
+			temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
+		}
+		else
+			break;
+	}
+	_full_path = client.get_listen_socket().get_root() + _full_path;
+}
 
-// 	_full_path = this->_uri;
-// 	end_pos = sizeof(_full_path);
-// 	slash_pos = _full_path.find_last_of('/');
-// 	if (slash_pos < end_pos)
-// 	{
-// 		temp_loc_path = _full_path.substr(0, slash_pos);
-// 		temp_file_path = _full_path.substr(slash_pos + 1, end_pos - slash_pos);
-// 	}
-// 	while (1)
-// 	{
-// 		for (size_t i = 0; i < client.get_listen_socket().get_location().size(); ++i)
-// 		{
-// 			if ((client.get_listen_socket().get_location()[i]).getName() == temp_file_path)
-// 				this->_curr_loc = client.get_listen_socket().get_location()[i];
-// 		}
-// 		if (slash_pos <= 0)
-// 			break;
-// 		if (1) /*this->_curr_loc*/
-// 		{
-// 			slash_pos = temp_loc_path.find_last_of('/');
-// 			temp_loc_path = _full_path.substr(0, slash_pos + 1);
-// 			temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
-// 		}
-// 		else
-// 			break;
-// 	}
-// 	_full_path = client.get_listen_socket().get_root() + _full_path;
-// }
+void Request::isMethodAllowed(Client &client)
+{
+	std::vector<std::string> methods;
+	if (getCurr_loc().empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
+		methods = client.get_listen_socket().get_allow_methods();
+	else
+		methods = getCurr_loc().getAllowMethods();
+	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
+	{
+		if (getMethod() == *it)
+			return ;
+	}
+	throw unauthorizedMethod(405);
+}
+
+void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
+{
+	if (getCurr_loc().empty())
+		return;
+	if (!getCurr_loc().getReturn().empty())
+		setURI(getCurr_loc().getReturn());
+}
 
 /////////////////////////////////////////// ERROR /////////////////////////////////////////
 
@@ -238,4 +259,9 @@ const char *Request::longerBodyContent::what() const throw()
 const char *Request::contentLengthUnspecified::what() const throw()
 {
 	return ("Content-length was not specified.");
+}
+
+const char *Request::unauthorizedMethod::what() const throw()
+{
+	return ("Unauthorized method requested.");
 }

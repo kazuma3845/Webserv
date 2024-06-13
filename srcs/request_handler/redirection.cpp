@@ -36,6 +36,7 @@ void Redirection::folderpath(Request &a, Response &resp)
 	else
 	{
 		std::string path = a.getURI() + a.getCurr_loc().getIndex();
+		a.setURI(path);
 		check_ext_cgi(a, resp);
 	}
 }
