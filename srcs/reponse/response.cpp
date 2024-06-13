@@ -1,0 +1,235 @@
+#include "response.hpp"
+
+//////////////////////// -------- COPLIEN DECLARATION -------- ////////////////////////////
+
+Response::Response()
+{
+	// Default constructor implementation
+}
+
+Response::Response(const Response &other)
+{
+	// Copy constructor implementation
+	*this = other;
+}
+
+Response &Response::operator=(const Response &other)
+{
+	// Copy assignment operator implementation
+	if (this != &other)
+	{
+		// Example: this->attribute = other.attribute;
+	}
+	return *this;
+}
+
+Response::~Response()
+{
+	// Destructor implementation
+}
+
+//////////////////////////////// -------- GETTERS -------- ////////////////////////////////
+
+std::string Response::getHTTPVersion()
+{
+	return (_httpVersion);
+}
+
+int Response::getStatusCode()
+{
+	return (_statusCode);
+}
+
+std::string Response::getStatusMessage()
+{
+	return (_statusMessage);
+}
+
+std::map<std::string, std::string> Response::getHeaders()
+{
+	return (_headers);
+}
+
+std::string Response::getBody()
+{
+	return (_body);
+}
+
+/////////////////////////////// ------------ SETTERS -------------- ///////////////////////
+
+void Response::setHTTPVersion(std::string version)
+{
+	this->_httpVersion = version;
+}
+void Response::setStatusCode(int code)
+{
+	this->_statusCode = code;
+
+	switch (code)
+	{
+	case 100:
+		this->_statusMessage = "Continue";
+		break;
+	case 101:
+		this->_statusMessage = "Switching Protocols";
+		break;
+	case 200:
+		this->_statusMessage = "OK";
+		break;
+	case 201:
+		this->_statusMessage = "Created";
+		break;
+	case 202:
+		this->_statusMessage = "Accepted";
+		break;
+	case 203:
+		this->_statusMessage = "Non-Authoritative Information";
+		break;
+	case 204:
+		this->_statusMessage = "No Content";
+		break;
+	case 205:
+		this->_statusMessage = "Reset Content";
+		break;
+	case 206:
+		this->_statusMessage = "Partial Content";
+		break;
+	case 300:
+		this->_statusMessage = "Multiple Choices";
+		break;
+	case 301:
+		this->_statusMessage = "Moved Permanently";
+		break;
+	case 302:
+		this->_statusMessage = "Found";
+		break;
+	case 303:
+		this->_statusMessage = "See Other";
+		break;
+	case 304:
+		this->_statusMessage = "Not Modified";
+		break;
+	case 305:
+		this->_statusMessage = "Use Proxy";
+		break;
+	case 307:
+		this->_statusMessage = "Temporary Redirect";
+		break;
+	case 308:
+		this->_statusMessage = "Permanent Redirect";
+		break;
+	case 400:
+		this->_statusMessage = "Bad Request";
+		break;
+	case 401:
+		this->_statusMessage = "Unauthorized";
+		break;
+	case 403:
+		this->_statusMessage = "Forbidden";
+		break;
+	case 404:
+		this->_statusMessage = "Not Found";
+		break;
+	case 405:
+		this->_statusMessage = "Method Not Allowed";
+		break;
+	case 406:
+		this->_statusMessage = "Not Acceptable";
+		break;
+	case 407:
+		this->_statusMessage = "Proxy Authentication Required";
+		break;
+	case 408:
+		this->_statusMessage = "Request Timeout";
+		break;
+	case 409:
+		this->_statusMessage = "Conflict";
+		break;
+	case 410:
+		this->_statusMessage = "Gone";
+		break;
+	case 411:
+		this->_statusMessage = "Length Required";
+		break;
+	case 412:
+		this->_statusMessage = "Precondition Failed";
+		break;
+	case 413:
+		this->_statusMessage = "Payload Too Large";
+		break;
+	case 414:
+		this->_statusMessage = "URI Too Long";
+		break;
+	case 415:
+		this->_statusMessage = "Unsupported Media Type";
+		break;
+	case 416:
+		this->_statusMessage = "Range Not Satisfiable";
+		break;
+	case 417:
+		this->_statusMessage = "Expectation Failed";
+		break;
+	case 426:
+		this->_statusMessage = "Upgrade Required";
+		break;
+	case 500:
+		this->_statusMessage = "Internal Server Error";
+		break;
+	case 501:
+		this->_statusMessage = "Not Implemented";
+		break;
+	case 502:
+		this->_statusMessage = "Bad Gateway";
+		break;
+	case 503:
+		this->_statusMessage = "Service Unavailable";
+		break;
+	case 504:
+		this->_statusMessage = "Gateway Timeout";
+		break;
+	case 505:
+		this->_statusMessage = "HTTP Version Not Supported";
+		break;
+	default:
+		this->_statusMessage = "Unknown Status";
+		break;
+	}
+}
+
+void Response::setStatusMessage(std::string message)
+{
+	this->_statusMessage = message;
+}
+
+void Response::setHeaders(std::istringstream& ss)
+{
+	std::string key;
+	std::string value;
+	while (std::getline(ss, key, ':') && std::getline(ss, value))
+		_headers[key] = value;
+	if (ss.get() != EOF)
+		throw settingHeadersError(400); // FIXME: need to be corrected
+}
+
+void Response::setBody(std::string body)
+{
+	this->_body = body;
+}
+
+void Response::printResponse() const
+{
+	std::cout << "HTTP Version: " << _httpVersion << std::endl;
+	std::cout << "Status Code: " << _statusCode << " " << _statusMessage << std::endl;
+	std::cout << "Headers:" << std::endl;
+	for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it)
+		std::cout << it->first << ": " << it->second << std::endl;
+	std::cout << "----------------------------------------" << std::endl;
+	std::cout << "Body:" << _body << std::endl;
+}
+
+///////////////////// --------------- ERRORS ---------------- //////////////////////////
+
+const char *Response::settingHeadersError::what() const throw()
+{
+	return ("Setting headers durign response failed.");
+}

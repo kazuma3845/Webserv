@@ -40,17 +40,7 @@ std::map<std::string, std::string> Request::getHeaders()
 	return (_headers);
 }
 
-std::string Request::getFullPath()
-{
-	return _full_path;
-}
-
-location Request::getCurr_loc()
-{
-	return _curr_loc;
-}
-
-void Request::printRequest()
+void Request::printRequest() 
 {
 	std::cerr << "------>> debut" << std::endl;
 	std::cout << "Method : " << _method << std::endl;
@@ -75,10 +65,10 @@ void Request::isMethodAllowed()
 		if (_method == *it)
 			return ;
 	}
-	throw unauthorizedMethod();
+	throw unauthorizedMethod(405);
 }
 
-void Request::redirectInURI()
+void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
 {
 	if (_curr_loc.empty())
 		return;
@@ -93,7 +83,7 @@ void Request::parseRequestLine(std::string line)
 	ss >> _method >> _uri >> _httpVersion;
 
 	if (_method.empty() || _uri.empty() || _httpVersion.empty())
-		throw wrongRLInput();
+		throw wrongRLInput(400);
 }
 void Request::parseHeaders(std::string line)
 {
@@ -111,7 +101,7 @@ void Request::parseHeaders(std::string line)
 		_headers[key] = value;
 	}
 	else
-		throw headerParsingError();
+		throw headerParsingError(400);
 }
 
 void Request::parseChunkedBody(std::istringstream &ss)
@@ -139,20 +129,20 @@ void Request::parseBody(std::istringstream &ss)
 {
 
 	if (_headers.find("Content-Length") == _headers.end())
-		throw contentLengthUnspecified();
+		throw contentLengthUnspecified(411);
 	std::stringstream to_convert(_headers["Content-Length"]);
 	int length;
 	to_convert >> length;
 	if (length <= 0)
-		throw invalidContentLength();
+		throw invalidContentLength(400);
 	char *buffer = new char[length + 1];
 	ss.read(buffer, length);
 	buffer[ss.gcount()] = '\0';
 	_body.assign(buffer, ss.gcount());
 	if (ss.gcount() != length)
-		throw shorterBodyContent();
+		throw shorterBodyContent(400);
 	if (ss.get() != EOF)
-		throw longerBodyContent();
+		throw longerBodyContent(400);
 	delete[] buffer;
 	// std::cout << "Body read successfully: " << _body << std::endl;
 }
