@@ -1,24 +1,65 @@
 #include "redirection.hpp"
 
-void Redirection::check_ext_cgi(std::string uri)
+void Redirection::path(Request &a, Response &resp)
 {
-	Request a;
-	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(uri, a))
+	if (checkfolder(a.getURI()))
+		folderpath(a, resp);
+	else
+		check_ext_cgi(a, resp);
+}
+
+bool Redirection::checkfolder(std::string uri)
+{
+	for (unsigned int i = uri.size(); i != 0; i--)
 	{
-		std::cout << "CGI" << std::endl;
+		if (uri[i - 1] == '.')
+			return false;
+		if (uri[i - 1] == '/')
+			return true;
 	}
-	else if (checkMimeExt(uri))
+	return false;
+}
+
+void Redirection::folderpath(Request &a, Response &resp)
+{
+	if (a.getCurr_loc().getIndex().empty())
 	{
-		std::cout << "MIME" << std::endl;
+		if (a.getCurr_loc().getAutoindex() == true)
+		{
+			std::cout << "AutoIndex" << std::endl;
+			// AutoIndex index;
+			// resp.setBody(index.create(a.getFullPath()));
+		}
+		else
+			throw Forbidden(403);
 	}
 	else
 	{
-		std::cerr << "Error: 415" << std::endl;
-		throw std::exception();		//FIXME: Mettre bon throw error
+		std::string path = a.getURI() + a.getCurr_loc().getIndex();
+		check_ext_cgi(a, resp);
 	}
 }
 
-bool Redirection::checkCgiExt(std::string uri, Request a)
+void Redirection::check_ext_cgi(Request &a, Response &resp)
+{
+	(void)resp;
+	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(a.getURI(), a))
+	{
+		std::cout << "CGI" << std::endl;
+		// CgiHandler cgi(a);
+		// resp.setBody(cgi.execute("/time.py"));
+	}
+	else if (checkMimeExt(a.getURI()))
+	{
+		std::cout << "MIME" << std::endl;
+		//TODO: Call Reponse Fonction
+		// resp.setBody(...);
+	}
+	else
+		throw UnsupportedMediaType(415);
+}
+
+bool Redirection::checkCgiExt(std::string uri, Request &a)
 {
 	std::string ext = uri.substr(uri.find('.'), uri.size());
 	std::vector<std::string> cgiext = a.getCurr_loc().getCgiExt();
@@ -41,7 +82,7 @@ bool Redirection::checkMimeExt(std::string uri)
 	".doc", ".docx",\
 	".eot", ".epub",\
 	".gz", ".gif",\
-	".htm", ".html"\
+	".htm", ".html",\
 	".ico", ".ics",\
 	".jar", ".jpeg", ".jpg", ".js", ".json", ".jsonld",\
 	".mid", ".midi", ".mjs", ".mp3", ".mp4", ".mpeg", ".mpkg",\
@@ -62,10 +103,11 @@ bool Redirection::checkMimeExt(std::string uri)
 	return false;
 }
 
+//FIXME: DELETE----------------------------
 void Redirection::reponseCGI(Request &a)
 {
 	CgiHandler cgi(a);
-	_reponse_html =	"HTTP/1.1 200 ok\r\n"
+	_body =	"HTTP/1.1 200 ok\r\n"
 					"Date: " + takeTime() + "\r\n"
 					"Content-Type: text/html\r\n"
 					"\r\n"
@@ -75,11 +117,11 @@ void Redirection::reponseCGI(Request &a)
 					"</body></html>";
 }
 
-
 std::string Redirection::getRep() const
 {
-	return _reponse_html;
+	return _body;
 }
+//FIXME: DELETE----------------------------
 
 std::string Redirection::takeTime()
 {
@@ -95,9 +137,12 @@ std::string Redirection::takeTime()
 	return str_buffer;
 }
 
-void Redirection::callPath(Request &req)
+const char* Redirection::UnsupportedMediaType::what() const throw()
 {
-	Path a;
-	a.path(req);
+    return "Unsupported Media Type";
 }
 
+const char* Redirection::Forbidden::what() const throw()
+{
+    return "Forbidden";
+}

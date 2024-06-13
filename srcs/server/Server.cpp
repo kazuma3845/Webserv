@@ -150,7 +150,7 @@ void Server::read_socket(Client& client)
 	memset(buffer, 0, sizeof(buffer));
 
 	Request 		req;
-	Redirection 	handler;
+	Redirection 	redirect;
 	Response		response;
 
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
@@ -158,9 +158,9 @@ void Server::read_socket(Client& client)
 	{
 		try
 		{
-		req.parseRequest(buffer);
-		req.printRequest();
-		// handler.callPath(req);
+			req.parseRequest(buffer);
+			req.printRequest();
+			redirect.path(req, response);
 		}
 		catch(const ErrorWebServ &e)
 		{

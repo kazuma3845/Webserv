@@ -19,8 +19,7 @@ class Server;
 # include "../request/request.hpp"
 # include "ListenSocket.hpp"
 #include "../request_handler/redirection.hpp"
-# include "../request_handler/path.hpp"
-# include "../response/response.hpp"
+#include "../response/response.hpp"
 
 
 class Server {
