@@ -194,14 +194,17 @@ void Server::write_socket(Client &client)
 	// Envoyer la réponse HTTP complète
 	write(socket, rep.getRep().c_str(), rep.getRep().length());
 	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
-	// Only to show the request content;
-	std::istringstream contentStream(HTML_CONTENT);
+
+	//-----------------------------------------------------------------------
+	// Only to show the request content; PRINT REPONSE
+	std::istringstream contentStream(rep.getRep());
 	std::string line;
 
 	std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
 	while (std::getline(contentStream, line)) {
 		std::cerr << "|      " << line << std::endl;
 	}
+	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_write_sds);
