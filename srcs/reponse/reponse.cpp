@@ -1,8 +1,8 @@
 #include "reponse.hpp"
 
-void Reponse::check_ext_cgi(std::string uri)
+void Reponse::check_ext_cgi(std::string uri, Client &client)
 {
-	Request a;
+	Request a(client);
 	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(uri, a))
 	{
 		std::cout << "CGI" << std::endl;
@@ -107,10 +107,10 @@ std::string Reponse::takeTime()
 	return str_buffer;
 }
 
-void Reponse::callPath(Request &req)
+void Reponse::callPath(Request &req, Client &client)
 {
 	Path a;
-	a.path(req);
+	a.path(req, client);
 }
 
 void Reponse::setBody(std::string newRep)

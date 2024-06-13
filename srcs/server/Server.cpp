@@ -153,7 +153,7 @@ void Server::read_socket(Client& client)
 	{
 		Request req(client);
 		req.parseRequest(buffer);
-		client.set_request(req);
+		//TODO: client.set_request(req);
 		req.printRequest();
 		// Only to show the request content;
 		// std::istringstream contentStream(buffer);
@@ -163,9 +163,9 @@ void Server::read_socket(Client& client)
 		// while (std::getline(contentStream, line)) {
 		// 	std::cerr << "|      " << line << std::endl;
 		// }
-		client.get_request()->printRequest();
+		// client.get_request()->printRequest();
 	}
-	client.get_request()->printRequest();
+	// client.get_request()->printRequest();
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_read_sds);
 	FD_SET(socket, &this->_write_sds);
@@ -177,7 +177,7 @@ void Server::write_socket(Client &client)
 {
 	int				socket = client.get_fd();
 	Reponse rep;
-	Request request;
+	Request request(client);
 	try
 	{
 	//FIXME:------------------------------------------------------

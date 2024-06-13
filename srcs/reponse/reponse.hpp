@@ -8,6 +8,7 @@ class Reponse;
 # include "path.hpp"
 #include "../request/request.hpp"
 #include "../CgiHandler/CgiHandler.hpp"
+# include "../client/Client.hpp"
 
 class Reponse
 {
@@ -30,9 +31,9 @@ class Reponse
 		void reponseMime(Request &a);
 		void reponseCGI(Request &a);
 
-		void callPath(Request &req);
+		void callPath(Request &req,  Client &client);
 
-		void check_ext_cgi(std::string uri);
+		void check_ext_cgi(std::string uri, Client &client);
 
 		//get
 		std::string getRep() const;

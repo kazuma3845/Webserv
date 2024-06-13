@@ -66,10 +66,10 @@ void Request::printRequest()
 void Request::isMethodAllowed()
 {
 	std::vector<std::string> methods;
-	if (_curr_loc->empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
-		methods = _client->get_listen_socket()->get_allow_methods();
+	if (_curr_loc.empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
+		methods = _client.get_listen_socket().get_allow_methods();
 	else
-		methods = _curr_loc->getAllowMethods();
+		methods = _curr_loc.getAllowMethods();
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 	{
 		if (_method == *it)
@@ -80,10 +80,10 @@ void Request::isMethodAllowed()
 
 void Request::redirectInURI()
 {
-	if (_curr_loc->empty())
+	if (_curr_loc.empty())
 		return;
-	if (!_curr_loc->getReturn().empty())
-		_uri = _curr_loc->getReturn();
+	if (!_curr_loc.getReturn().empty())
+		_uri = _curr_loc.getReturn();
 }
 
 void Request::parseRequestLine(std::string line)

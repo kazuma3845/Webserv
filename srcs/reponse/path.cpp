@@ -1,15 +1,15 @@
 # include "path.hpp"
 
-void Path::path(Request &a)
+void Path::path(Request &a,  Client &client)
 {
 	Reponse rep;
 	if (checkfolder(a.getURI()))
-		folderpath(a, rep);
+		folderpath(a, rep, client);
 	else
-		rep.check_ext_cgi(a.getURI());
+		rep.check_ext_cgi(a.getURI(), client);
 }
 
-void Path::folderpath(Request &a, Reponse rep)
+void Path::folderpath(Request &a, Reponse &rep, Client &client)
 {
 	if (a.getCurr_loc().getIndex().empty())
 	{
@@ -29,7 +29,7 @@ void Path::folderpath(Request &a, Reponse rep)
 	else
 	{
 		std::string path = a.getURI() + a.getCurr_loc().getIndex();
-		rep.check_ext_cgi(path);
+		rep.check_ext_cgi(path, client);
 	}
 }
 

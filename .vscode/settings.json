@@ -65,9 +65,7 @@
 		"tuple": "cpp",
 		"type_traits": "cpp",
 		"typeinfo": "cpp",
-		"unordered_map": "cpp",
 		"utility": "cpp",
-		"vector": "cpp",
 		"filesystem": "cpp",
 		"__verbose_abort": "cpp",
 		"charconv": "cpp",
@@ -76,6 +74,8 @@
 		"__bits": "cpp",
 		"compare": "cpp",
 		"concepts": "cpp",
-		"execution": "cpp"
+		"execution": "cpp",
+		"__functional_03": "cpp",
+		"memory_resource": "cpp"
 	}
 }

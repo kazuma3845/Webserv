@@ -31,9 +31,9 @@ class Client {
 	private :
 		int							_connected_sd;
 		ListenSocket				_listen_socket;
-		Request						_request;
+		// Request						_request;
 	public :
-		// Client(void);
+		Client(void){};
 		Client(int fd, ListenSocket &listen_socket);
 		~Client(void);
 		Client(const Client& copy);
@@ -42,6 +42,6 @@ class Client {
 		int							get_fd(void);
 		std::string					get_request_content(void);
 		ListenSocket				get_listen_socket(void);
-		Request*						get_request(void);
-		void						set_request(Request& request);
+		// Request*						get_request(void);
+		// void						set_request(Request& request);
 };

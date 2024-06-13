@@ -7,7 +7,7 @@
 // 	// std::cout << "New Client called" << std::endl;
 // }
 
-Client::Client(int fd, ListenSocket &listen_socket) : _request(Request(*this))
+Client::Client(int fd, ListenSocket &listen_socket)
 {
 	this->_listen_socket = listen_socket;
 	this->_connected_sd = fd;
@@ -19,23 +19,23 @@ Client::~Client(void)
 	// std::cout << "Client was destroyed." << std::endl;
 }
 
-// Client::Client( const Client& copy )
-// {
-// 	// std::cout << "Client copy constructor called" << std::endl;
-// 	*this = copy;
-// }
+Client::Client( const Client& copy )
+{
+	// std::cout << "Client copy constructor called" << std::endl;
+	*this = copy;
+}
 
-// Client& Client::operator=( const Client& ref )
-// {
-// 	// std::cout << "Client assignment operator called" << std::endl;
-// 	if ( this != &ref )
-// 	{
-// 		this->_connected_sd = ref._connected_sd;
-// 		this->_listen_socket = ref._listen_socket;
-// 		// this->_request = ref._request;
-// 	}
-// 	return *this;
-// }
+Client& Client::operator=( const Client& ref )
+{
+	// std::cout << "Client assignment operator called" << std::endl;
+	if ( this != &ref )
+	{
+		this->_connected_sd = ref._connected_sd;
+		this->_listen_socket = ref._listen_socket;
+		// this->_request = ref._request;
+	}
+	return *this;
+}
 
 int Client::get_fd(void)
 {
@@ -52,13 +52,13 @@ ListenSocket Client::get_listen_socket(void)
 	return this->_listen_socket;
 }
 
-Request* Client::get_request(void)
-{
-	return this->_request;
-}
+// Request* Client::get_request(void)
+// {
+// 	return this->_request;
+// }
 
-void Client::set_request(Request& request)
-{
-	this->_request = &request;
-}
+// void Client::set_request(Request& request)
+// {
+// 	this->_request = &request;
+// }
 
