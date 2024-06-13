@@ -1,6 +1,6 @@
-#include "reponse.hpp"
+#include "redirection.hpp"
 
-void Reponse::check_ext_cgi(std::string uri, Client &client)
+void Redirection::check_ext_cgi(std::string uri, Client &client)
 {
 	Request a(client);
 	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(uri, a))
@@ -11,7 +11,7 @@ void Reponse::check_ext_cgi(std::string uri, Client &client)
 	else if (checkMimeExt(uri))
 	{
 		std::cout << "MIME" << std::endl;
-		reponseMime(a);
+		// RMime(a);
 	}
 	else
 	{
@@ -21,7 +21,7 @@ void Reponse::check_ext_cgi(std::string uri, Client &client)
 
 }
 
-bool Reponse::checkCgiExt(std::string uri, Request a)
+bool Redirection::checkCgiExt(std::string uri, Request a)
 {
 	std::string ext = uri.substr(uri.find('.'), uri.size());
 	std::vector<std::string> cgiext = a.getCurr_loc().getCgiExt();
@@ -35,7 +35,7 @@ bool Reponse::checkCgiExt(std::string uri, Request a)
 	return false;
 }
 
-bool Reponse::checkMimeExt(std::string uri)
+bool Redirection::checkMimeExt(std::string uri)
 {
 	std::string ext = uri.substr(uri.find('.'), uri.size());
 	std::string mime[77] = {".aac", ".abw", ".apng", ".arc", ".avif", ".avi", ".azw",\
@@ -65,12 +65,7 @@ bool Reponse::checkMimeExt(std::string uri)
 	return false;
 }
 
-void Reponse::reponseMime(Request &a)
-{
-	(void)a;
-}
-
-void Reponse::reponseCGI(Request &a)
+void Redirection::reponseCGI(Request &a)
 {
 	CgiHandler cgi(a);
 	_reponse_html =	"HTTP/1.1 200 ok\r\n"
@@ -83,17 +78,13 @@ void Reponse::reponseCGI(Request &a)
 					"</body></html>";
 }
 
-void Reponse::reponseError()
-{
 
-}
-
-std::string Reponse::getRep() const
+std::string Redirection::getRep() const
 {
 	return _reponse_html;
 }
 
-std::string Reponse::takeTime()
+std::string Redirection::takeTime()
 {
 	time_t raw_time;
     struct tm *time_info;
@@ -107,13 +98,9 @@ std::string Reponse::takeTime()
 	return str_buffer;
 }
 
-void Reponse::callPath(Request &req, Client &client)
+void Redirection::callPath(Request &req, Client &client)
 {
 	Path a;
 	a.path(req, client);
 }
 
-void Reponse::setBody(std::string newRep)
-{
-	_body = newRep;
-}

@@ -3,8 +3,8 @@
 class Path;
 
 #include "../request/request.hpp"
-#include "reponse.hpp"
-#include "../autoindex/autoindex.hpp"
+#include "redirection.hpp"
+#include "autoindex.hpp"
 # include "../client/Client.hpp"
 
 #include <iostream>
@@ -17,5 +17,5 @@ class Path
 		Path(){};
 		~Path(){};
 		void path(Request &a,  Client &client);
-		void folderpath(Request &a, Reponse &rep, Client &client);
+		void folderpath(Request &a, Redirection &rep, Client &client);
 };

@@ -40,6 +40,16 @@ std::map<std::string, std::string> Request::getHeaders()
 	return (_headers);
 }
 
+location Request::getCurr_loc()
+{
+    return _curr_loc;
+}
+
+std::string Request::getFullPath()
+{
+	return (_full_path);
+}
+
 void Request::printRequest() 
 {
 	std::cerr << "------>> debut" << std::endl;

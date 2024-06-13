@@ -176,7 +176,7 @@ void Server::read_socket(Client& client)
 void Server::write_socket(Client &client)
 {
 	int				socket = client.get_fd();
-	Reponse rep;
+	Redirection rep;
 	Request request(client);
 	try
 	{
@@ -189,7 +189,7 @@ void Server::write_socket(Client &client)
 	catch(const std::exception &e)
 	{
 		std::cerr << "Error number: " << e.what() << std::endl;
-		rep.reponseError();
+		// rep.reponseError();
 	}
 	// Envoyer la réponse HTTP complète
 	write(socket, rep.getRep().c_str(), rep.getRep().length());
