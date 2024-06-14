@@ -27,8 +27,8 @@ void Redirection::folderpath(Request &a, Response &resp)
 		if (a.getCurr_loc().getAutoindex() == true)
 		{
 			std::cout << "AutoIndex" << std::endl;
-			// AutoIndex index;
-			// resp.setBody(index.create(a.getFullPath()));
+			AutoIndex index;
+			resp.setBody(index.create(a.getFullPath()));
 		}
 		else
 			throw Forbidden(403);
@@ -43,12 +43,11 @@ void Redirection::folderpath(Request &a, Response &resp)
 
 void Redirection::check_ext_cgi(Request &a, Response &resp)
 {
-	(void)resp;
 	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(a.getURI(), a))
 	{
 		std::cout << "CGI" << std::endl;
-		// CgiHandler cgi(a);
-		// resp.setBody(cgi.execute("/time.py"));
+		CgiHandler cgi(a);
+		resp.setBody(cgi.execute(a.getFilePath()));
 	}
 	else if (checkMimeExt(a.getURI()))
 	{
@@ -102,40 +101,6 @@ bool Redirection::checkMimeExt(std::string uri)
 			return true;
 	}
 	return false;
-}
-
-//FIXME: DELETE----------------------------
-void Redirection::reponseCGI(Request &a)
-{
-	CgiHandler cgi(a);
-	_body =	"HTTP/1.1 200 ok\r\n"
-					"Date: " + takeTime() + "\r\n"
-					"Content-Type: text/html\r\n"
-					"\r\n"
-					"<html><body>"
-					"<h1>" + takeTime() + "</h1>"
-					// FIXME: "<h1>" + cgi.execute() + "</h1>"
-					"</body></html>";
-}
-
-std::string Redirection::getRep() const
-{
-	return _body;
-}
-//FIXME: DELETE----------------------------
-
-std::string Redirection::takeTime()
-{
-	time_t raw_time;
-    struct tm *time_info;
-    char buffer[80];
-
-    time(&raw_time);
-    time_info = localtime(&raw_time);
-
-    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S %Z", time_info);
-	std::string str_buffer(buffer);
-	return str_buffer;
 }
 
 const char* Redirection::UnsupportedMediaType::what() const throw()

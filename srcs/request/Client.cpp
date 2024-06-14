@@ -50,3 +50,12 @@ ListenSocket Client::get_listen_socket(void)
 	return this->_listen_socket;
 }
 
+void Client::setResp(std::string rep)
+{
+	_rep = rep;
+}
+
+std::string Client::getResp() const
+{
+	return _rep;
+}

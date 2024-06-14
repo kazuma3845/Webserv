@@ -34,6 +34,8 @@ public:
 
 	void printResponse() const;
 	void formatResponse();
+	
+	void ErrorBody(int error_code);
 
 private:
 	std::string _httpVersion;
@@ -42,6 +44,9 @@ private:
 	std::map<std::string, std::string> _headers;
 	std::string _body;
 	std::string _resp;
+
+	std::string takeTime() const;
+
 
 	class settingHeadersError : public ErrorWebServ
 	{

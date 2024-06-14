@@ -38,7 +38,7 @@ Server& Server::operator=( const Server& ref )
 	std::cout << "Server assignment operator called" << std::endl;
 	if ( this != &ref )
 	{
-		
+
 	}
 	return *this;
 }
@@ -84,7 +84,7 @@ void Server::run_server(void)
 			if (FD_ISSET(this->_ListenSockets[i].get_listen_fd(), &temp_read_sds))
 				this->add_client(_ListenSockets[i]);
 		}
-		
+
 		// Reading new request
 		for(int i = 0; i <= this->_max_sd; ++i)
 		{
@@ -116,7 +116,7 @@ void Server::add_client(ListenSocket &listen_socket)
 	new_socket = accept(listen_socket.get_listen_fd(), (struct sockaddr *)&address, (socklen_t*)&addrlen);
 	if (new_socket == -1)
 	{
-		std::cerr << "Issue accepting new_socket :" << new_socket 
+		std::cerr << "Issue accepting new_socket :" << new_socket
 		<< " " << listen_socket.get_listen_fd()
 		<< " " << strerror(errno)
 		<< std::endl;
@@ -137,9 +137,7 @@ void Server::add_client(ListenSocket &listen_socket)
 	FD_SET(new_socket, &this->_read_sds);
 	if (new_socket > this->_max_sd)
 			this->_max_sd = new_socket;
-	std::cerr << "#########" << std::endl;
 	this->_client_sds_map[new_socket] = new_client;
-	std::cerr << "-----" << std::endl;
 	// this->_Clients.push_back(new_client);
 }
 
@@ -153,56 +151,55 @@ void Server::read_socket(Client& client)
 	Redirection 	redirect;
 	Response		response;
 
+	response.setHTTPVersion("HTTP/1.1");
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content)
 	{
 		try
 		{
 			req.parseRequest(buffer);
+			req.parseUri();
+			redirect.path(req, response);
 			req.printRequest();
-			// req.parseUri();
-			// redirect.path(req, response);
 			// req.isMethodAllowed();
-			// req.redirectInURI();
+			req.redirectInURI();
 		}
 		catch(const ErrorWebServ &e)
 		{
 			std::cerr << "Error number: " << e.getErrorCode() << std::endl;
 			std::cerr << "What happened : " << e.what() << std::endl;
-			// rep.reponseError();
+			response.setStatusCode(e.getErrorCode());
+			response.setStatusMessage(e.what());
+			response.ErrorBody(e.getErrorCode());
+			response.formatResponse();
+			client.setResp(response.getResp());
 		}
 	}
 	// client.get_request()->printRequest();
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_read_sds);
 	FD_SET(socket, &this->_write_sds);
-	// close(socket);
+	// close(socket); 
 	// this->_client_sds_map.erase(socket);
 }
 
 void Server::write_socket(Client &client)
 {
 	int				socket = client.get_fd();
-	//--------------------------------DELETE-----------------------------------
-	Redirection rep;
-	Request request;
-	rep.reponseCGI(request);
-	// Envoyer la réponse HTTP complète
-	write(socket, rep.getRep().c_str(), rep.getRep().length());
-	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
-	//-------------------------------------------------------------------------
 
-	// write(socket, client.getRep().c_str(), client.getRep().length());
+	write(socket, client.getResp().c_str(), client.getResp().length());
 
 	//-----------------------------------------------------------------------
 	// Only to show the request content; PRINT REPONSE
-	std::istringstream contentStream(rep.getRep());
+	std::istringstream contentStream(client.getResp());
 	std::string line;
+	// std::istringstream contentStream(rep.getRep());
+	// std::string line;
 
-	std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
-	while (std::getline(contentStream, line)) {
-		std::cerr << "|      " << line << std::endl;
-	}
+	// std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
+	// while (std::getline(contentStream, line)) {
+	// 	std::cerr << "|      " << line << std::endl;
+	// }
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write
