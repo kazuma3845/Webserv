@@ -65,6 +65,7 @@ private:
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);
 	void parseChunkedBody(std::istringstream &ss);
+	void extractQueryString();
 
 	// ---------------------------------- ERROR
 

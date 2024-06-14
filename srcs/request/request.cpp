@@ -7,7 +7,7 @@ Request::Request()
 	// std::cout << "Request instance created." << std::endl;
 }
 
-Request::Request(Client* client) : client(client) 
+Request::Request(Client *client) : client(client)
 {
 	// std::cout << "Request instance with pointer on client created." << std::endl;
 }
@@ -59,7 +59,7 @@ std::string Request::getFullPath()
 }
 
 std::string Request::getQueryString()
-{	
+{
 	return (_queryString);
 }
 
@@ -113,6 +113,16 @@ void Request::printRequest()
 		std::cout << "Location : " << _curr_loc.getName() << std::endl;
 	std::cout << "File_path : " << _file_path << std::endl;
 	std::cout << "Full_path : " << _full_path << std::endl;
+	if (!_queryString.empty())
+		std::cout << "Query String : " << _queryString << std::endl;
+}
+
+void Request::extractQueryString()
+{
+	size_t pos = _uri.find('?');
+	std::string tmp = _uri.substr(0, pos);
+    _queryString = _uri.substr(pos + 1);
+	_uri = tmp;
 }
 
 void Request::parseRequestLine(std::string line)
@@ -121,8 +131,12 @@ void Request::parseRequestLine(std::string line)
 
 	ss >> _method >> _uri >> _httpVersion;
 
+	if (_uri.find('?') != std::string::npos)
+		extractQueryString();
 	if (_method.empty() || _uri.empty() || _httpVersion.empty())
 		throw wrongRLInput(400);
+	// if (ss.get() != EOF)
+	// 	throw wrongRLInput(400);
 }
 void Request::parseHeaders(std::string line)
 {
