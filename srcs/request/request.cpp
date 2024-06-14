@@ -1,19 +1,22 @@
 #include "request.hpp"
 
+// -- COPLIEN -- //
+
 Request::Request()
 {
 	// std::cout << "Request instance created." << std::endl;
 }
 
-// Request::Request(Client &client) : _client(client)
-// {
-// 	std::cout << "Request instance created." << std::endl;
-// }
+Request::Request(Client* client) : client(client) 
+{
+	// std::cout << "Request instance with pointer on client created." << std::endl;
+}
 
 Request::~Request()
 {
 	// std::cout << "Request instance destroyed ..." << std::endl;
 }
+// -- GETTERS -- //
 
 std::string Request::getMethod()
 {
@@ -42,7 +45,7 @@ std::map<std::string, std::string> Request::getHeaders()
 
 location Request::getCurr_loc()
 {
-    return _curr_loc;
+	return _curr_loc;
 }
 
 std::string Request::getFullPath()
@@ -50,12 +53,49 @@ std::string Request::getFullPath()
 	return (_full_path);
 }
 
-void Request::setURI(std::string uri)
-{
-	_uri=uri;
+std::string Request::getQueryString()
+{	
+	return (_queryString);
 }
 
-void Request::printRequest() 
+// -- SETTERS -- //
+
+void Request::setURI(std::string uri)
+{
+	_uri = uri;
+}
+void Request::setLocation(location &loc)
+{
+	_curr_loc = loc;
+}
+
+void Request::setMapFolders(std::map<int, std::string> mapFolders)
+{
+	_map_folders = mapFolders;
+}
+
+void Request::setFileName(std::string fileName)
+{
+	_file_name = fileName;
+}
+
+void Request::setFilePath(std::string filePath)
+{
+	_file_path = filePath;
+}
+
+void Request::setFullPath(std::string fullPath)
+{
+	_full_path = fullPath;
+}
+
+void Request::setQueryString(std::string queryString)
+{
+	_queryString = queryString;
+}
+// -- OTHER FUNCTIONS -- //
+
+void Request::printRequest()
 {
 	std::cout << "Method : " << _method << std::endl;
 	std::cout << "URI : " << _uri << std::endl;
@@ -142,27 +182,27 @@ void Request::parseRequest(std::string requestFile)
 	std::istringstream ss(requestFile);
 	std::string line;
 
-		// extraction de la première ligne qui est la RequestLine
-		std::getline(ss, line);
-		parseRequestLine(line);
+	// extraction de la première ligne qui est la RequestLine
+	std::getline(ss, line);
+	parseRequestLine(line);
 
-		// lecture des headers jusqu'à /r
-		while (std::getline(ss, line) && line != "\r" && line != "\r\n" && line != "\n" && !line.empty()) //"\r" fais séparation entre les headers et le body
-			parseHeaders(line);
+	// lecture des headers jusqu'à /r
+	while (std::getline(ss, line) && line != "\r" && line != "\r\n" && line != "\n" && !line.empty()) //"\r" fais séparation entre les headers et le body
+		parseHeaders(line);
 
-		// lecture du body si il reste qqchose dans le stringstream
-		char next_char = ss.get();
-		ss.putback(next_char);
-		if (next_char != EOF)
-		{
-			if (_headers.find("Transfer-Encoding") != _headers.end() && _headers["Transfer-Encoding"] == "chunked")
-				parseChunkedBody(ss);
-			else
-				parseBody(ss);
-		}
+	// lecture du body si il reste qqchose dans le stringstream
+	char next_char = ss.get();
+	ss.putback(next_char);
+	if (next_char != EOF)
+	{
+		if (_headers.find("Transfer-Encoding") != _headers.end() && _headers["Transfer-Encoding"] == "chunked")
+			parseChunkedBody(ss);
+		else
+			parseBody(ss);
+	}
 }
 
-void Request::parseUri(Client &client)
+void Request::parseUri()
 {
 	int slash_pos;
 	int end_pos;
@@ -179,12 +219,12 @@ void Request::parseUri(Client &client)
 	}
 	while (1)
 	{
-		for (size_t i = 0; i < client.get_listen_socket().get_location().size(); ++i)
+		for (size_t i = 0; i < client->get_listen_socket().get_location().size(); ++i)
 		{
-			if (temp_file_path.compare((client.get_listen_socket().get_location()[i]).getName()) == 0)
+			if (temp_file_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
 			{
-				this->_curr_loc = client.get_listen_socket().get_location()[i];
-				break ;
+				this->_curr_loc = client->get_listen_socket().get_location()[i];
+				break;
 			}
 		}
 		if (slash_pos <= 0)
@@ -198,25 +238,25 @@ void Request::parseUri(Client &client)
 		else
 			break;
 	}
-	_full_path = client.get_listen_socket().get_root() + _full_path;
+	_full_path = client->get_listen_socket().get_root() + _full_path;
 }
 
-void Request::isMethodAllowed(Client &client)
+void Request::isMethodAllowed()
 {
 	std::vector<std::string> methods;
 	if (getCurr_loc().empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
-		methods = client.get_listen_socket().get_allow_methods();
+		methods = client->get_listen_socket().get_allow_methods();
 	else
 		methods = getCurr_loc().getAllowMethods();
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 	{
 		if (getMethod() == *it)
-			return ;
+			return;
 	}
 	throw unauthorizedMethod(405);
 }
 
-void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
+void Request::redirectInURI() //  FIXME: A voir si on veut bien remplacer complètement l'URI
 {
 	if (getCurr_loc().empty())
 		return;
@@ -224,7 +264,7 @@ void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complèt
 		setURI(getCurr_loc().getReturn());
 }
 
-/////////////////////////////////////////// ERROR /////////////////////////////////////////
+// -- ERROR -- //
 
 const char *Request::bodySize::what() const throw()
 {
@@ -235,8 +275,6 @@ const char *Request::wrongRLInput::what() const throw()
 {
 	return ("Request line arguments doesn't fit format.");
 }
-
-
 
 const char *Request::headerParsingError::what() const throw()
 {

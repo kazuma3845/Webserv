@@ -149,7 +149,7 @@ void Server::read_socket(Client& client)
 	int				socket = client.get_fd();
 	memset(buffer, 0, sizeof(buffer));
 
-	Request 		req;
+	Request 		req(&client);
 	Redirection 	redirect;
 	Response		response;
 
@@ -160,8 +160,10 @@ void Server::read_socket(Client& client)
 		{
 			req.parseRequest(buffer);
 			req.printRequest();
-			req.parseUri(client);
-			redirect.path(req, response);
+			// req.parseUri();
+			// redirect.path(req, response);
+			// req.isMethodAllowed();
+			// req.redirectInURI();
 		}
 		catch(const ErrorWebServ &e)
 		{
@@ -190,11 +192,7 @@ void Server::write_socket(Client &client)
 	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
 	//-------------------------------------------------------------------------
 
-
-
 	// write(socket, client.getRep().c_str(), client.getRep().length());
-
-
 
 	//-----------------------------------------------------------------------
 	// Only to show the request content; PRINT REPONSE
