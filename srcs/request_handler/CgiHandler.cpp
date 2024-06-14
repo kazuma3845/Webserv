@@ -81,15 +81,15 @@ std::string CgiHandler::execute(std::string Script)
 	}
 	else
 	{
-		char	buffer[1000] = {0};
+		char	buffer[BUFFER] = {0};
 		waitpid(-1, NULL, 0);
 		lseek(fdOut, 0, SEEK_SET);
 
 		ret = 1;
 		while (ret > 0)
 		{
-			memset(buffer, 0, 1000);
-			ret = read(fdOut, buffer, 1000 - 1);
+			memset(buffer, 0, BUFFER);
+			ret = read(fdOut, buffer, BUFFER - 1);
 			newbody += buffer;
 		}		
 	}

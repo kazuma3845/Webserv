@@ -151,6 +151,7 @@ void Server::read_socket(Client& client)
 	Redirection 	redirect;
 	Response		response;
 
+	response.setHTTPVersion("HTTP/1.1");
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content)
 	{
@@ -160,6 +161,8 @@ void Server::read_socket(Client& client)
 			req.printRequest();
 			req.parseUri(client);
 			redirect.path(req, response);
+			response.setStatusCode(200);
+			response.setStatusMessage("OK");
 			response.formatResponse();
 			client.setResp(response.getResp());
 		}
@@ -167,7 +170,11 @@ void Server::read_socket(Client& client)
 		{
 			std::cerr << "Error number: " << e.getErrorCode() << std::endl;
 			std::cerr << "What happened : " << e.what() << std::endl;
-			// rep.reponseError();
+			response.setStatusCode(e.getErrorCode());
+			response.setStatusMessage(e.what());
+			response.ErrorBody(e.getErrorCode());
+			response.formatResponse();
+			client.setResp(response.getResp());
 		}
 	}
 	// client.get_request()->printRequest();

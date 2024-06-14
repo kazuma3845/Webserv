@@ -34,6 +34,8 @@ public:
 
 	void printResponse() const;
 	void formatResponse();
+	
+	void ErrorBody(int error_code);
 
 private:
 	std::string _httpVersion;

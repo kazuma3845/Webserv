@@ -258,10 +258,28 @@ std::string Response::takeTime() const
 
 void Response::formatResponse()
 {
-	_resp += "HTTP/1.1 200 ok\r\n"
-	// _resp += _httpVersion + " " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
+	// _resp += "HTTP/1.1 200 ok\r\n"
+	_resp += _httpVersion + " " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
 	"Date: " + takeTime() + "\r\n"
 	"Content-Type: " + "text/html" + "\r\n"
 	"\r\n";
 	_resp += _body;
+}
+
+void Response::ErrorBody(int error_code)
+{
+    std::string path;
+
+    if (error_code % 400 < 100)
+        path = "Page/error/400/" + std::to_string(error_code) + ".html";
+    else if (error_code % 500 < 100)
+        path = "Page/error/500/" + std::to_string(error_code) + ".html";
+    std::ifstream file(path);
+    if (!file) {
+        std::cerr << "Failed to open file: " << path << '\n';
+        return;
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    _body = buffer.str();
 }
