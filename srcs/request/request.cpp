@@ -254,8 +254,8 @@ void Request::parseUri()
 	if (_curr_loc.getName().empty())
 		_file_path = uri;
 	_full_path = temp_root + uri.substr(1, end_pos - 1);
-	std::cerr << "temp_loc_path : '" << temp_loc_path << "' temp_file_path : '" << temp_file_path << std::endl;
-	std::cerr << "_full_path : '" << _full_path << "' _file_path : '" << _file_path << std::endl;
+	std::cerr << "temp_loc_path : " << temp_loc_path << " | temp_file_path : " << temp_file_path << std::endl;
+	std::cerr << "_full_path : " << _full_path << " | _file_path : " << _file_path << std::endl;
 }
 
 void Request::isMethodAllowed()
