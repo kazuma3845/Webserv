@@ -223,12 +223,11 @@ void Request::parseUri()
 	end_pos = sizeof(uri);
 	slash_pos = end_pos;
 	temp_loc_path = uri;
-	std::cout << "###### --->la : " << std::endl;
 	while (1)
 	{
 		for (size_t i = 0; i < client->get_listen_socket().get_location().size(); ++i)
 		{
-			if (temp_file_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
+			if (temp_loc_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
 			{
 				this->_curr_loc = client->get_listen_socket().get_location()[i];
 				break;
@@ -240,11 +239,11 @@ void Request::parseUri()
 		{
 			slash_pos = temp_loc_path.find_last_of('/');
 			temp_loc_path = uri.substr(0, slash_pos);
-			temp_file_path = uri.substr(slash_pos, end_pos - slash_pos);
+			temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
 			if (slash_pos == 0)
 			{
 				temp_loc_path = "/";
-				temp_file_path = uri.substr(slash_pos, end_pos - slash_pos);
+				temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
 			}
 		}
 	}
@@ -254,12 +253,19 @@ void Request::parseUri()
 	_file_path = temp_file_path;
 	if (!_curr_loc.getIndex().empty() && _file_path.empty())
 			_file_path = _curr_loc.getIndex();
-	if (_curr_loc.getName().empty())
+	if (_curr_loc.empty())
 		_file_path = uri;
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
 	std::cout << "----> Location : " << _curr_loc.getName() << std::endl;
-	redirectInURI(client);
+	redirectInURI();
+}
+
+void Request::checkFile(int mode)
+{
+	if (access(_full_path.c_str(), mode))
+		throw fileNotFound(404);
+	return ;
 }
 
 void Request::isMethodAllowed()
@@ -277,7 +283,7 @@ void Request::isMethodAllowed()
 	throw unauthorizedMethod(405);
 }
 
-void Request::redirectInURI(Client &client) //FIXME: A voir si on veut bien remplacer complètement l'URI
+void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
 {
 	if (_curr_loc.empty())
 		return;
@@ -288,7 +294,7 @@ void Request::redirectInURI(Client &client) //FIXME: A voir si on veut bien remp
 		_curr_loc = location();
 		_file_path.clear();
 		_full_path.clear();
-		parseUri(client);
+		parseUri();
 	}
 
 }
@@ -331,6 +337,11 @@ const char *Request::contentLengthUnspecified::what() const throw()
 const char *Request::unauthorizedMethod::what() const throw()
 {
 	return ("Unauthorized method requested.");
+}
+
+const char *Request::fileNotFound::what() const throw()
+{
+	return ("File not found");
 }
 
 void replaceDoubleSlashes(std::string& str)

@@ -160,6 +160,7 @@ void Server::read_socket(Client& client)
 			req.parseRequest(buffer);
 			req.parseUri();
 			req.printRequest();
+			req.checkFile(F_OK);
 			redirect.path(req, response);
 			// req.isMethodAllowed();
 			req.redirectInURI();
