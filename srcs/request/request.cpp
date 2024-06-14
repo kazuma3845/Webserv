@@ -227,17 +227,10 @@ void Request::parseUri()
 	{
 		for (size_t i = 0; i < client->get_listen_socket().get_location().size(); ++i)
 		{
-<<<<<<< HEAD
-			if (temp_loc_path.compare((client.get_listen_socket().get_location()[i]).getName()) == 0)
-			{
-				_curr_loc = client.get_listen_socket().get_location()[i];
-				break ;
-=======
 			if (temp_file_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
 			{
 				this->_curr_loc = client->get_listen_socket().get_location()[i];
 				break;
->>>>>>> 0428368 (workign on request check)
 			}
 		}
 		if (slash_pos <= 0 || !this->_curr_loc.getName().empty())
@@ -254,8 +247,7 @@ void Request::parseUri()
 			}
 		}
 	}
-<<<<<<< HEAD
-	std::string temp_root = client.get_listen_socket().get_root();
+	std::string temp_root = client->get_listen_socket().get_root();
 	if (!_curr_loc.getRoot().empty())
 		temp_root = _curr_loc.getRoot();
 	_file_path = temp_file_path;
@@ -264,9 +256,6 @@ void Request::parseUri()
 	_full_path = temp_root + uri.substr(1, end_pos - 1);
 	std::cerr << "temp_loc_path : '" << temp_loc_path << "' temp_file_path : '" << temp_file_path << std::endl;
 	std::cerr << "_full_path : '" << _full_path << "' _file_path : '" << _file_path << std::endl;
-=======
-	_full_path = client->get_listen_socket().get_root() + _full_path;
->>>>>>> 0428368 (workign on request check)
 }
 
 void Request::isMethodAllowed()
