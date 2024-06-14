@@ -137,9 +137,7 @@ void Server::add_client(ListenSocket &listen_socket)
 	FD_SET(new_socket, &this->_read_sds);
 	if (new_socket > this->_max_sd)
 			this->_max_sd = new_socket;
-	std::cerr << "#########" << std::endl;
 	this->_client_sds_map[new_socket] = new_client;
-	std::cerr << "-----" << std::endl;
 	// this->_Clients.push_back(new_client);
 }
 
@@ -162,6 +160,8 @@ void Server::read_socket(Client& client)
 			req.printRequest();
 			req.parseUri(client);
 			redirect.path(req, response);
+			response.formatResponse();
+			client.setResp(response.getResp());
 		}
 		catch(const ErrorWebServ &e)
 		{
@@ -174,31 +174,19 @@ void Server::read_socket(Client& client)
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_read_sds);
 	FD_SET(socket, &this->_write_sds);
-	// close(socket);
+	// close(socket); 
 	// this->_client_sds_map.erase(socket);
 }
 
 void Server::write_socket(Client &client)
 {
 	int				socket = client.get_fd();
-	//--------------------------------DELETE-----------------------------------
-	Redirection rep;
-	Request request;
-	rep.reponseCGI(request);
-	// Envoyer la réponse HTTP complète
-	write(socket, rep.getRep().c_str(), rep.getRep().length());
-	// write(socket, HTML_CONTENT, strlen(HTML_CONTENT));
-	//-------------------------------------------------------------------------
 
-
-
-	// write(socket, client.getRep().c_str(), client.getRep().length());
-
-
+	write(socket, client.getResp().c_str(), client.getResp().length());
 
 	//-----------------------------------------------------------------------
 	// Only to show the request content; PRINT REPONSE
-	std::istringstream contentStream(rep.getRep());
+	std::istringstream contentStream(client.getResp());
 	std::string line;
 
 	std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;

@@ -29,6 +29,7 @@ public:
 	std::string getHttpVersion();
 	std::string getBody();
 	std::map<std::string, std::string> getHeaders();
+	std::string getFilePath();
 	std::string getFullPath();
 	location getCurr_loc();
 

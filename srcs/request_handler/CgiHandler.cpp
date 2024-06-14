@@ -11,25 +11,24 @@ CgiHandler::~CgiHandler()
 
 void CgiHandler::initenv(Request &request)
 {
-	(void)request;
-    // _env["AUTH_TYPE"] = ;  // Type d'authentification utilisée
-    // _env["CONTENT_LENGTH"] = ;  // Longueur du corps de la requête
-    // _env["CONTENT_TYPE"] = ;  // Type de contenu du corps de la requête
-    // _env["GATEWAY_INTERFACE"] = "CGI/1.1";
-    // _env["PATH_INFO"] = ;  // Chemin de la ressource demandée
-    // _env["PATH_TRANSLATED"] = ;  // Chemin absolu traduit du système de fichiers
-    // _env["QUERY_STRING"] = ;  // Chaîne de requête
-    // _env["REMOTE_ADDR"] = ;  // Adresse IP du client
-    // _env["REMOTE_IDENT"] = ;  // Nom d'utilisateur pour l'identification distante
-    // _env["REMOTE_USER"] = ;  // Nom d'utilisateur pour l'authentification distante
-    // _env["REQUEST_METHOD"] = ;  // Méthode HTTP utilisée pour la requête
-    // _env["REQUEST_URI"] = ;  // URI de la requête
-    // _env["SCRIPT_NAME"] = ;  // Chemin du script CGI
-    // _env["SERVER_NAME"] = ;  // Nom du serveur
-    // _env["SERVER_PORT"] = ;  // Port sur lequel le serveur écoute
-    // _env["SERVER_PROTOCOL"] = "HTTP/1.1";
-    // _env["SERVER_SOFTWARE"] = "Weebserv/1.0";
-    // _env["REDIRECT_STATUS"] = "200";
+    _env["AUTH_TYPE"] = request.getHeaders()["Authorization"];  // Type d'authentification utilisée
+    _env["CONTENT_LENGTH"] = request.getBody().size();  // Longueur du corps de la requête
+    _env["CONTENT_TYPE"] =request.getHeaders()["Content-Type"];  // Type de contenu du corps de la requête
+    _env["GATEWAY_INTERFACE"] = "CGI/1.1";
+    _env["PATH_INFO"] = request.getFilePath() + request.getCurr_loc().getIndex();  // Chemin de la ressource demandée
+    _env["PATH_TRANSLATED"] = request.getFullPath();  // Chemin absolu traduit du système de fichiers
+    // _env["QUERY_STRING"] = request.getQueryString();  // Chaîne de requête (after ? in url)
+    // _env["REMOTE_ADDR"] = request.getHost();  // Adresse IP du client (host)
+    _env["REMOTE_IDENT"] = request.getHeaders()["Authorization"];  // Nom d'utilisateur pour l'identification distante
+    _env["REMOTE_USER"] = request.getHeaders()["Authorization"];  // Nom d'utilisateur pour l'authentification distante
+    _env["REQUEST_METHOD"] = request.getMethod();  // Méthode HTTP utilisée pour la requête
+    _env["REQUEST_URI"] = request.getURI();  // URI de la requête
+    _env["SCRIPT_NAME"] = request.getFilePath() + request.getCurr_loc().getIndex();;  // Chemin du script CGI
+    // _env["SERVER_NAME"] = request.getServName;  // Nom du serveur (name)
+    // _env["SERVER_PORT"] = request.getPort;  // Port sur lequel le serveur écoute (listen)
+    _env["SERVER_PROTOCOL"] = "HTTP/1.1";
+    _env["SERVER_SOFTWARE"] = "Weebserv/1.0";
+    _env["REDIRECT_STATUS"] = "200";
 }
 
 char **CgiHandler::EnvToArray() const
@@ -49,30 +48,72 @@ char **CgiHandler::EnvToArray() const
 
 std::string CgiHandler::execute(std::string Script)
 {
-	(void)Script;
 	char **env = EnvToArray();
-	// pid_t pid;
+	pid_t pid;
 	std::string newbody;
+	int fdin = dup(STDIN_FILENO);
+	int fdout = dup(STDOUT_FILENO);
 
-	// pid = fork();
-	// if (pid == -1)
-	// {
-	// 	return "500";
-	// }
-	// else if (!pid)
-	// {
+	FILE	*fIn = tmpfile();
+	FILE	*fOut = tmpfile();
+	long	fdIn = fileno(fIn);
+	long	fdOut = fileno(fOut);
+	int		ret = 1;
 
-	// 	execve(Script.c_str(), , env);
-	// }
-	// else
-	// {
-	// 	waitpid(-1, NULL, 0);
+	write(fdIn, _body.c_str(), _body.size());
+	lseek(fdIn, 0, SEEK_SET);
 
-	// }
+	pid = fork();
+	if (pid == -1)
+	{
+		std::cerr << "Error Fork";
+		throw InternalServerError(500);
+	}
+	else if (!pid)
+	{
+		char **tmp = NULL;
+
+		dup2(fdIn, STDIN_FILENO);
+		dup2(fdOut, STDOUT_FILENO);
+		execve(Script.c_str(), tmp, env);
+		std::cerr << "Execution failed" << std::endl;
+		write(STDOUT_FILENO, "Code 500\n", 10);
+	}
+	else
+	{
+		char	buffer[1000] = {0};
+		waitpid(-1, NULL, 0);
+		lseek(fdOut, 0, SEEK_SET);
+
+		ret = 1;
+		while (ret > 0)
+		{
+			memset(buffer, 0, 1000);
+			ret = read(fdOut, buffer, 1000 - 1);
+			newbody += buffer;
+		}		
+	}
+
+	dup2(fdin, STDIN_FILENO);
+	dup2(fdout, STDOUT_FILENO);
+	fclose(fIn);
+	fclose(fOut);
+	close(fdIn);
+	close(fdOut);
+	close(fdin);
+	close(fdout);
 
 	for (unsigned int i = 0; env[i]; i++)
 		delete[] env[i];
 	delete[] env;
 
+	if (newbody.compare("Code 500\n") == 0)
+		throw InternalServerError(500);
+
 	return newbody;
+}
+
+const char* CgiHandler::InternalServerError::what() const throw()
+{
+    return "Internal Server Error";
 }

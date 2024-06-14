@@ -26,6 +26,9 @@ class Client {
 		~Client(void);
 		// Client(const Client& copy);
 
+		void setResp(std::string rep);
+		std::string getResp() const;
+
 		Client&						operator=(const Client& ref);
 		int							get_fd(void);
 		std::string					get_request_content(void);

@@ -45,6 +45,11 @@ location Request::getCurr_loc()
     return _curr_loc;
 }
 
+std::string Request::getFilePath()
+{
+	return (_file_path);
+}
+
 std::string Request::getFullPath()
 {
 	return (_full_path);

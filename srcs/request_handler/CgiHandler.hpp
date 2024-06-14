@@ -19,4 +19,11 @@ class CgiHandler
 		~CgiHandler();
 		
 		std::string execute(std::string Script);
+
+        class InternalServerError : public ErrorWebServ
+        {
+            public:
+                InternalServerError(int errorCode) : ErrorWebServ(errorCode) {}
+                const char *what() const throw();
+        };
 };

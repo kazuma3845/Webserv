@@ -55,6 +55,12 @@ std::string Response::getBody()
 	return (_body);
 }
 
+std::string Response::getResp()
+{
+	return (_resp);
+}
+
+
 /////////////////////////////// ------------ SETTERS -------------- ///////////////////////
 
 void Response::setHTTPVersion(std::string version)
@@ -232,4 +238,30 @@ void Response::printResponse() const
 const char *Response::settingHeadersError::what() const throw()
 {
 	return ("Setting headers durign response failed.");
+}
+
+///////////////////// --------------- ADDITIONNAL FONCTION ---------------- //////////////////////////
+
+std::string Response::takeTime() const
+{
+	time_t raw_time;
+    struct tm *time_info;
+    char buffer[80];
+
+    time(&raw_time);
+    time_info = localtime(&raw_time);
+
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S %Z", time_info);
+	std::string str_buffer(buffer);
+	return str_buffer;
+}
+
+void Response::formatResponse()
+{
+	_resp += "HTTP/1.1 200 ok\r\n"
+	// _resp += _httpVersion + " " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
+	"Date: " + takeTime() + "\r\n"
+	"Content-Type: " + "text/html" + "\r\n"
+	"\r\n";
+	_resp += _body;
 }

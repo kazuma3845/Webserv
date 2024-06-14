@@ -43,6 +43,9 @@ private:
 	std::string _body;
 	std::string _resp;
 
+	std::string takeTime() const;
+
+
 	class settingHeadersError : public ErrorWebServ
 	{
 	public:

@@ -35,8 +35,6 @@ std::string AutoIndex::create(const std::string& uri) {
             "    </body>\n"
             "</html>\n";
     closedir(dir);
-	std::ofstream outfile("test.html");
-	outfile << page;
     return page;
 }
 
