@@ -66,6 +66,8 @@ void Request::printRequest()
 		std::cout << "Body : " << _body << std::endl;
 	if (!_curr_loc.empty())
 		std::cout << "Location : " << _curr_loc.getName() << std::endl;
+	std::cout << "File_path : " << _file_path << std::endl;
+	std::cout << "Full_path : " << _full_path << std::endl;
 }
 
 void Request::parseRequestLine(std::string line)
@@ -170,23 +172,12 @@ void Request::parseUri(Client &client)
 	int end_pos;
 	std::string temp_loc_path;
 	std::string temp_file_path;
+	std::string uri;
 
-	_full_path = this->_uri;
-	end_pos = sizeof(_full_path);
-	slash_pos = _full_path.find_last_of('/');
-	slash_pos = 2;
-
-	temp_loc_path = _full_path;
-	// if (slash_pos < end_pos)
-	// {
-	// 	temp_loc_path = _full_path.substr(0, slash_pos);
-	// 	temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
-	// 	if (slash_pos == 0 && )
-	// 	{
-	// 		temp_loc_path = "/";
-	// 		temp_file_path = _full_path.substr(slash_pos + 1, end_pos - slash_pos);
-	// 	}
-	// }
+	uri = this->_uri;
+	end_pos = sizeof(uri);
+	slash_pos = end_pos;
+	temp_loc_path = uri;
 	while (1)
 	{
 		for (size_t i = 0; i < client.get_listen_socket().get_location().size(); ++i)
@@ -197,31 +188,27 @@ void Request::parseUri(Client &client)
 				break ;
 			}
 		}
-		if (slash_pos <= 0)
+		if (slash_pos <= 0 || !this->_curr_loc.getName().empty())
 			break;
-		if (this->_curr_loc.getName().empty())
+		else
 		{
 			slash_pos = temp_loc_path.find_last_of('/');
-			temp_loc_path = _full_path.substr(0, slash_pos);
-			temp_file_path = _full_path.substr(slash_pos, end_pos - slash_pos);
-			std::cerr << "##### temp_loc_path : '" << temp_loc_path << "' temp_file_path : '" << temp_file_path << std::endl;
+			temp_loc_path = uri.substr(0, slash_pos);
+			temp_file_path = uri.substr(slash_pos, end_pos - slash_pos);
 			if (slash_pos == 0)
 			{
 				temp_loc_path = "/";
-				temp_file_path = _full_path.substr(slash_pos + 1, end_pos - slash_pos);
+				temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
 			}
 		}
-		else
-			break;
 	}
 	std::string temp_root = client.get_listen_socket().get_root();
 	if (!_curr_loc.getRoot().empty())
 		temp_root = _curr_loc.getRoot();
 	_file_path = temp_file_path;
-	if (!_curr_loc.getName().empty())
-		_file_path = _full_path;
-	std::cerr << "_file_path : '" << _file_path << std::endl;
-	_full_path = temp_root + _full_path.substr(1, end_pos - 1);
+	if (_curr_loc.getName().empty())
+		_file_path = uri;
+	_full_path = temp_root + uri.substr(1, end_pos - 1);
 	std::cerr << "temp_loc_path : '" << temp_loc_path << "' temp_file_path : '" << temp_file_path << std::endl;
 	std::cerr << "_full_path : '" << _full_path << "' _file_path : '" << _file_path << std::endl;
 }
