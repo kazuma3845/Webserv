@@ -147,7 +147,7 @@ void Server::read_socket(Client& client)
 	int				socket = client.get_fd();
 	memset(buffer, 0, sizeof(buffer));
 
-	Request 		req;
+	Request 		req(&client);
 	Redirection 	redirect;
 	Response		response;
 
@@ -158,13 +158,11 @@ void Server::read_socket(Client& client)
 		try
 		{
 			req.parseRequest(buffer);
-			req.parseUri(client);
 			req.printRequest();
-			redirect.path(req, response);
-			response.setStatusCode(200);
-			response.setStatusMessage("OK");
-			response.formatResponse();
-			client.setResp(response.getResp());
+			// req.parseUri();
+			// redirect.path(req, response);
+			// req.isMethodAllowed();
+			// req.redirectInURI();
 		}
 		catch(const ErrorWebServ &e)
 		{
