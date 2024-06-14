@@ -183,6 +183,7 @@ void Request::parseUri(Client &client)
 	end_pos = sizeof(uri);
 	slash_pos = end_pos;
 	temp_loc_path = uri;
+	std::cout << "###### --->la : " << std::endl;
 	while (1)
 	{
 		for (size_t i = 0; i < client.get_listen_socket().get_location().size(); ++i)
@@ -193,7 +194,7 @@ void Request::parseUri(Client &client)
 				break ;
 			}
 		}
-		if (slash_pos <= 0 || !this->_curr_loc.getName().empty())
+		if (slash_pos <= 0 || !_curr_loc.getName().empty())
 			break;
 		else
 		{
@@ -211,11 +212,14 @@ void Request::parseUri(Client &client)
 	if (!_curr_loc.getRoot().empty())
 		temp_root = _curr_loc.getRoot();
 	_file_path = temp_file_path;
+	if (!_curr_loc.getIndex().empty() && _file_path.empty())
+			_file_path = _curr_loc.getIndex();
 	if (_curr_loc.getName().empty())
 		_file_path = uri;
-	_full_path = temp_root + uri.substr(1, end_pos - 1);
-	std::cerr << "temp_loc_path : '" << temp_loc_path << "' temp_file_path : '" << temp_file_path << std::endl;
-	std::cerr << "_full_path : '" << _full_path << "' _file_path : '" << _file_path << std::endl;
+	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+	replaceDoubleSlashes(_full_path);
+	std::cout << "----> Location : " << _curr_loc.getName() << std::endl;
+	redirectInURI(client);
 }
 
 void Request::isMethodAllowed(Client &client)
@@ -233,12 +237,20 @@ void Request::isMethodAllowed(Client &client)
 	throw unauthorizedMethod(405);
 }
 
-void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
+void Request::redirectInURI(Client &client) //FIXME: A voir si on veut bien remplacer complètement l'URI
 {
-	if (getCurr_loc().empty())
+	if (_curr_loc.empty())
 		return;
-	if (!getCurr_loc().getReturn().empty())
-		setURI(getCurr_loc().getReturn());
+	if (!_curr_loc.getReturn().empty())
+	{
+		setURI(_curr_loc.getReturn());
+		std::cout << "----> getCurr_loc().getReturn() : " << _curr_loc.getReturn() << std::endl;
+		_curr_loc = location();
+		_file_path.clear();
+		_full_path.clear();
+		parseUri(client);
+	}
+
 }
 
 /////////////////////////////////////////// ERROR /////////////////////////////////////////
@@ -281,4 +293,12 @@ const char *Request::contentLengthUnspecified::what() const throw()
 const char *Request::unauthorizedMethod::what() const throw()
 {
 	return ("Unauthorized method requested.");
+}
+
+void replaceDoubleSlashes(std::string& str)
+{
+	std::string::size_type pos = 0;
+	while ((pos = str.find("//", pos)) != std::string::npos) {
+		str.replace(pos, 2, "/");
+	}
 }

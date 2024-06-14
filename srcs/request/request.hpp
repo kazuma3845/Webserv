@@ -20,7 +20,7 @@ public:
 	void printRequest();
 
 	void isMethodAllowed(Client &client);
-	void redirectInURI();
+	void redirectInURI(Client &client);
 	void parseUri(Client &client);
 
 	// GET
@@ -105,3 +105,5 @@ private:
 		const char *what() const throw();
 	};
 };
+
+void replaceDoubleSlashes(std::string& str);
