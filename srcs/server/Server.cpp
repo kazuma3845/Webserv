@@ -159,10 +159,12 @@ void Server::read_socket(Client& client)
 		{
 			req.parseRequest(buffer);
 			req.parseUri();
-			redirect.path(req, response);
 			req.printRequest();
+			redirect.path(req, response);
 			// req.isMethodAllowed();
 			req.redirectInURI();
+			response.formatResponse();
+			client.setResp(response.getResp());
 		}
 		catch(const ErrorWebServ &e)
 		{
