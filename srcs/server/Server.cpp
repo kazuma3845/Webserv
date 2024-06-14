@@ -163,6 +163,8 @@ void Server::read_socket(Client& client)
 			redirect.path(req, response);
 			// req.isMethodAllowed();
 			req.redirectInURI();
+			response.setStatusCode(200);
+			response.setStatusMessage("OK");
 			response.formatResponse();
 			client.setResp(response.getResp());
 		}
