@@ -49,8 +49,6 @@ private:
 
 	//LOCATION
 	location						_curr_loc;
-	std::map<int, std::string>		_map_folders;
-	std::string						_file_name;
 	std::string						_file_path;
 	std::string						_full_path;
 

@@ -38,7 +38,7 @@ Server& Server::operator=( const Server& ref )
 	std::cout << "Server assignment operator called" << std::endl;
 	if ( this != &ref )
 	{
-		
+
 	}
 	return *this;
 }
@@ -84,7 +84,7 @@ void Server::run_server(void)
 			if (FD_ISSET(this->_ListenSockets[i].get_listen_fd(), &temp_read_sds))
 				this->add_client(_ListenSockets[i]);
 		}
-		
+
 		// Reading new request
 		for(int i = 0; i <= this->_max_sd; ++i)
 		{
@@ -116,7 +116,7 @@ void Server::add_client(ListenSocket &listen_socket)
 	new_socket = accept(listen_socket.get_listen_fd(), (struct sockaddr *)&address, (socklen_t*)&addrlen);
 	if (new_socket == -1)
 	{
-		std::cerr << "Issue accepting new_socket :" << new_socket 
+		std::cerr << "Issue accepting new_socket :" << new_socket
 		<< " " << listen_socket.get_listen_fd()
 		<< " " << strerror(errno)
 		<< std::endl;
@@ -158,8 +158,8 @@ void Server::read_socket(Client& client)
 		try
 		{
 			req.parseRequest(buffer);
-			req.printRequest();
 			req.parseUri(client);
+			req.printRequest();
 			redirect.path(req, response);
 			response.setStatusCode(200);
 			response.setStatusMessage("OK");
@@ -195,11 +195,13 @@ void Server::write_socket(Client &client)
 	// Only to show the request content; PRINT REPONSE
 	std::istringstream contentStream(client.getResp());
 	std::string line;
+	// std::istringstream contentStream(rep.getRep());
+	// std::string line;
 
-	std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
-	while (std::getline(contentStream, line)) {
-		std::cerr << "|      " << line << std::endl;
-	}
+	// std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
+	// while (std::getline(contentStream, line)) {
+	// 	std::cerr << "|      " << line << std::endl;
+	// }
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write
