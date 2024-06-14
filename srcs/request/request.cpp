@@ -243,7 +243,7 @@ void Request::parseUri()
 			if (slash_pos == 0)
 			{
 				temp_loc_path = "/";
-				temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
+				temp_file_path = uri.substr(slash_pos, end_pos - slash_pos);
 			}
 		}
 	}
