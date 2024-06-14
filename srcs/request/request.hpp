@@ -13,17 +13,18 @@ class Request;
 class Request
 {
 public:
-
 	Request();
+	Request(Client *client);
 	~Request();
 	void parseRequest(std::string requestFile);
 	void printRequest();
 
-	void isMethodAllowed(Client &client);
-	void redirectInURI(Client &client);
-	void parseUri(Client &client);
+	void isMethodAllowed();
+	void redirectInURI();
+	void parseUri();
 
-	// GET
+	// ---------------------------------- GETTERS
+
 	std::string getMethod();
 	std::string getURI();
 	std::string getHttpVersion();
@@ -32,27 +33,41 @@ public:
 	std::string getFilePath();
 	std::string getFullPath();
 	location getCurr_loc();
+	std::string getQueryString();
+
+	// ---------------------------------- SETTERS
 
 	void setURI(std::string uri);
+	void setLocation(location &loc);
+	void setMapFolders(std::map<int, std::string> mapFolders);
+	void setFileName(std::string fileName);
+	void setFilePath(std::string filePath);
+	void setFullPath(std::string fullPath);
+	void setQueryString(std::string queryString);
+
 private:
 	std::string _method;
 	std::string _uri;
 	std::string _httpVersion;
 	std::map<std::string, std::string> _headers;
 	std::string _body;
+	std::string _queryString;
+	location _curr_loc;
+	std::map<int, std::string> _map_folders;
+	std::string _file_name;
+	std::string _file_path;
+	std::string _full_path;
+	Client *client;
 
-	// REQUEST PARSING
+	// ---------------------------------- REQUEST PARSING FUNCTIONS
+
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);
 	void parseChunkedBody(std::istringstream &ss);
 
-	//LOCATION
-	location						_curr_loc;
-	std::string						_file_path;
-	std::string						_full_path;
+	// ---------------------------------- ERROR
 
-	// ERROR
 	class bodySize : public ErrorWebServ
 	{
 	public:
