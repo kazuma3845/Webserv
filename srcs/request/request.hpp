@@ -22,6 +22,7 @@ public:
 	void isMethodAllowed();
 	void redirectInURI();
 	void parseUri();
+	void checkFile(int mode);
 
 	// ---------------------------------- GETTERS
 
@@ -53,8 +54,6 @@ private:
 	std::string _body;
 	std::string _queryString;
 	location _curr_loc;
-	std::map<int, std::string> _map_folders;
-	std::string _file_name;
 	std::string _file_path;
 	std::string _full_path;
 	Client *client;
@@ -65,6 +64,7 @@ private:
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);
 	void parseChunkedBody(std::istringstream &ss);
+	void extractQueryString();
 
 	// ---------------------------------- ERROR
 
@@ -119,4 +119,13 @@ private:
 		unauthorizedMethod(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
+
+	class fileNotFound : public ErrorWebServ
+	{
+	public:
+		fileNotFound(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
 };
+
+void replaceDoubleSlashes(std::string& str);

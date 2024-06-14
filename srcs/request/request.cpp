@@ -7,7 +7,7 @@ Request::Request()
 	// std::cout << "Request instance created." << std::endl;
 }
 
-Request::Request(Client* client) : client(client) 
+Request::Request(Client *client) : client(client)
 {
 	// std::cout << "Request instance with pointer on client created." << std::endl;
 }
@@ -16,7 +16,7 @@ Request::~Request()
 {
 	// std::cout << "Request instance destroyed ..." << std::endl;
 }
-// -- GETTERS -- //
+// ---------------------------------- GETTERS -- //
 
 std::string Request::getMethod()
 {
@@ -59,11 +59,11 @@ std::string Request::getFullPath()
 }
 
 std::string Request::getQueryString()
-{	
+{
 	return (_queryString);
 }
 
-// -- SETTERS -- //
+// ---------------------------------- SETTERS -- //
 
 void Request::setURI(std::string uri)
 {
@@ -72,16 +72,6 @@ void Request::setURI(std::string uri)
 void Request::setLocation(location &loc)
 {
 	_curr_loc = loc;
-}
-
-void Request::setMapFolders(std::map<int, std::string> mapFolders)
-{
-	_map_folders = mapFolders;
-}
-
-void Request::setFileName(std::string fileName)
-{
-	_file_name = fileName;
 }
 
 void Request::setFilePath(std::string filePath)
@@ -98,7 +88,7 @@ void Request::setQueryString(std::string queryString)
 {
 	_queryString = queryString;
 }
-// -- OTHER FUNCTIONS -- //
+// ---------------------------------- OTHER FUNCTIONS -- //
 
 void Request::printRequest()
 {
@@ -113,6 +103,16 @@ void Request::printRequest()
 		std::cout << "Location : " << _curr_loc.getName() << std::endl;
 	std::cout << "File_path : " << _file_path << std::endl;
 	std::cout << "Full_path : " << _full_path << std::endl;
+	if (!_queryString.empty())
+		std::cout << "Query String : " << _queryString << std::endl;
+}
+
+void Request::extractQueryString()
+{
+	size_t pos = _uri.find('?');
+	std::string tmp = _uri.substr(0, pos);
+	_queryString = _uri.substr(pos + 1);
+	_uri = tmp;
 }
 
 void Request::parseRequestLine(std::string line)
@@ -121,7 +121,10 @@ void Request::parseRequestLine(std::string line)
 
 	ss >> _method >> _uri >> _httpVersion;
 
-	if (_method.empty() || _uri.empty() || _httpVersion.empty())
+	if (_uri.find('?') != std::string::npos)
+		extractQueryString();
+	char extra;
+	if (_method.empty() || _uri.empty() || _uri.front() != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/" || ss >> extra)
 		throw wrongRLInput(400);
 }
 void Request::parseHeaders(std::string line)
@@ -209,6 +212,10 @@ void Request::parseRequest(std::string requestFile)
 		else
 			parseBody(ss);
 	}
+	// * CHECKING REQUEST //
+	parseUri(); //Get location from URI
+	// isMethodAllowed(); // Check that method called is allowed in the directory // FIXME: currently not working because no location is found
+	redirectInURI(); // Check if there is a return in the directory
 }
 
 void Request::parseUri()
@@ -227,61 +234,88 @@ void Request::parseUri()
 	{
 		for (size_t i = 0; i < client->get_listen_socket().get_location().size(); ++i)
 		{
-			if (temp_file_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
+			if (temp_loc_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
 			{
 				this->_curr_loc = client->get_listen_socket().get_location()[i];
 				break;
 			}
 		}
-		if (slash_pos <= 0 || !this->_curr_loc.getName().empty())
+		if (slash_pos <= 0 || !_curr_loc.getName().empty())
 			break;
 		else
 		{
 			slash_pos = temp_loc_path.find_last_of('/');
 			temp_loc_path = uri.substr(0, slash_pos);
-			temp_file_path = uri.substr(slash_pos, end_pos - slash_pos);
+			temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
 			if (slash_pos == 0)
 			{
 				temp_loc_path = "/";
-				temp_file_path = uri.substr(slash_pos, end_pos - slash_pos);
+				temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
 			}
-		}
+		} 
 	}
 	std::string temp_root = client->get_listen_socket().get_root();
 	if (!_curr_loc.getRoot().empty())
 		temp_root = _curr_loc.getRoot();
 	_file_path = temp_file_path;
-	if (_curr_loc.getName().empty())
+	if (!_curr_loc.getIndex().empty() && _file_path.empty())
+			_file_path = _curr_loc.getIndex();
+	if (_curr_loc.empty())
 		_file_path = uri;
-	_full_path = temp_root + uri.substr(1, end_pos - 1);
-	std::cerr << "temp_loc_path : " << temp_loc_path << " | temp_file_path : " << temp_file_path << std::endl;
-	std::cerr << "_full_path : " << _full_path << " | _file_path : " << _file_path << std::endl;
+	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+	replaceDoubleSlashes(_full_path);
+	std::cout << "----> Location : " << _curr_loc.getName() << std::endl;
+	redirectInURI();
+}
+
+void Request::checkFile(int mode)
+{
+	if (access(_full_path.c_str(), mode))
+		throw fileNotFound(404);
+	return ;
 }
 
 void Request::isMethodAllowed()
 {
 	std::vector<std::string> methods;
-	if (getCurr_loc().empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
+	if (_curr_loc.empty()) // si il n'y a pas de location, alors on va chercher les allowed method a la racine
 		methods = client->get_listen_socket().get_allow_methods();
 	else
-		methods = getCurr_loc().getAllowMethods();
+		methods = _curr_loc.getAllowMethods();
+
+	if (methods.empty())
+{		std::cout << "LOCATION ASSOCIATED WITH REQUEST IS : " << _curr_loc.getName() << std::endl;
+		std::cout << "METHODS ARE EMPTY" << std::endl;}
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 	{
-		if (getMethod() == *it)
+		if (_method == *it)
+		{
+			// std::cout << "AUTHORIZED METHOD " << *it << " IN LOCATION : " << _curr_loc.getName() << std::endl;
 			return;
+		}
+		std::cout << _method << " DOES NOT EQUAL TO " << *it << std::endl;
+
 	}
 	throw unauthorizedMethod(405);
 }
 
-void Request::redirectInURI() //  FIXME: A voir si on veut bien remplacer complètement l'URI
+void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
 {
-	if (getCurr_loc().empty())
+	if (_curr_loc.empty())
 		return;
-	if (!getCurr_loc().getReturn().empty())
-		setURI(getCurr_loc().getReturn());
+	if (!_curr_loc.getReturn().empty())
+	{
+		setURI(_curr_loc.getReturn());
+		std::cout << "----> getCurr_loc().getReturn() : " << _curr_loc.getReturn() << std::endl;
+		_curr_loc = location();
+		_file_path.clear();
+		_full_path.clear();
+		parseUri();
+	}
+
 }
 
-// -- ERROR -- //
+// ---------------------------------- ERROR -- //
 
 const char *Request::bodySize::what() const throw()
 {
@@ -319,4 +353,17 @@ const char *Request::contentLengthUnspecified::what() const throw()
 const char *Request::unauthorizedMethod::what() const throw()
 {
 	return ("Unauthorized method requested.");
+}
+
+const char *Request::fileNotFound::what() const throw()
+{
+	return ("File not found");
+}
+
+void replaceDoubleSlashes(std::string& str)
+{
+	std::string::size_type pos = 0;
+	while ((pos = str.find("//", pos)) != std::string::npos) {
+		str.replace(pos, 2, "/");
+	}
 }

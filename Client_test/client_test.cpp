@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
 	int sockfd;
 	struct sockaddr_in server_addr;
 	char buffer[BUFFER_SIZE];
-	std::string request = "GET /cgi HTTP/1.1\r\nHost: " + ip_address + "\r\nConnection: close\r\n\r\n";
+	std::string request = "GET / HTTP/1.1\r\nHost: " + ip_address + "\r\nConnection: close\r\n\r\n";
 
 	// Create socket
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {

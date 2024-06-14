@@ -8,16 +8,12 @@
 class Response
 {
 public:
-	// Default constructor
 	Response();
-	// Copy constructor
 	Response(const Response &other);
-	// Copy assignment operator
 	Response &operator=(const Response &other);
-	// Destructor
 	~Response();
 
-	// GETTERS
+	// ----------------------------------- GETTERS
 	std::string getHTTPVersion();
 	int getStatusCode();
 	std::string getStatusMessage();
@@ -25,19 +21,22 @@ public:
 	std::string getBody();
 	std::string getResp();
 
-	// SETTERS
+	// ---------------------------------- SETTERS
 	void setHTTPVersion(std::string version);
 	void setStatusCode(int code);
 	void setStatusMessage(std::string message);
-	void setHeaders(std::istringstream& ss);
+	void setHeaders(std::istringstream &ss);
 	void setBody(std::string body);
 
+	// ------------------------------------ FUNCTIONS
 	void printResponse() const;
 	void formatResponse();
-	
+	void loadHTMLContent(const std::string &filePath);
+
 	void ErrorBody(int error_code);
 
 private:
+	// --------------------------------------- ATTRIBUTES
 	std::string _httpVersion;
 	int _statusCode;
 	std::string _statusMessage;
@@ -47,11 +46,18 @@ private:
 
 	std::string takeTime() const;
 
-
+	// -------------------------------------- ERRORS
 	class settingHeadersError : public ErrorWebServ
 	{
 	public:
 		settingHeadersError(int code) : ErrorWebServ(code) {}
+		const char *what() const throw();
+	};
+
+		class cantLoadFile : public ErrorWebServ
+	{
+	public:
+		cantLoadFile(int code) : ErrorWebServ(code) {}
 		const char *what() const throw();
 	};
 };
