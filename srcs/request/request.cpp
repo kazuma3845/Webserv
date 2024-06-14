@@ -74,16 +74,6 @@ void Request::setLocation(location &loc)
 	_curr_loc = loc;
 }
 
-void Request::setMapFolders(std::map<int, std::string> mapFolders)
-{
-	_map_folders = mapFolders;
-}
-
-void Request::setFileName(std::string fileName)
-{
-	_file_name = fileName;
-}
-
 void Request::setFilePath(std::string filePath)
 {
 	_file_path = filePath;
