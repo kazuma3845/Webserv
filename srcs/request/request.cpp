@@ -252,7 +252,7 @@ void Request::parseUri()
 				temp_loc_path = "/";
 				temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
 			}
-		} 
+		}
 	}
 	std::string temp_root = client->get_listen_socket().get_root();
 	if (!_curr_loc.getRoot().empty())
@@ -264,7 +264,6 @@ void Request::parseUri()
 		_file_path = uri;
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
-	std::cout << "----> Location : " << _curr_loc.getName() << std::endl;
 	redirectInURI();
 }
 
@@ -306,7 +305,6 @@ void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complèt
 	if (!_curr_loc.getReturn().empty())
 	{
 		setURI(_curr_loc.getReturn());
-		std::cout << "----> getCurr_loc().getReturn() : " << _curr_loc.getReturn() << std::endl;
 		_curr_loc = location();
 		_file_path.clear();
 		_full_path.clear();

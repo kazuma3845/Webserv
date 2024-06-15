@@ -93,11 +93,7 @@ void Server::run_server(void)
 		for (int i = 0; i <= this->_max_sd; ++i)
 		{
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
-			{
-				std::cerr << "------>> ENTRE" << std::endl;
 				read_socket(this->_client_sds_map[i]);
-				// this->_client_sds_map[i].get_request()->printRequest();
-			}
 		}
 		// Writing request response
 		for (int i = 0; i <= this->_max_sd; ++i)
@@ -165,11 +161,9 @@ void Server::read_socket(Client &client)
 		{
 			req.parseRequest(buffer);
 			response.setHTTPVersion(req.getHttpVersion());
-			req.parseUri();
 			req.printRequest();
 			req.checkFile(F_OK);
 			redirect.path(req, response);
-			// req.printRequest();
 			if (req.getFilePath().find("html") != std::string::npos)
 				response.loadHTMLContent(req.getFullPath()); // ! NEED TO BE CONDITIONNAL, CURRENTLY PRINT AN HTML PAGE
 			response.formatResponse();
