@@ -40,11 +40,10 @@ public:
 
 	void setURI(std::string uri);
 	void setLocation(location &loc);
-	void setMapFolders(std::map<int, std::string> mapFolders);
-	void setFileName(std::string fileName);
 	void setFilePath(std::string filePath);
 	void setFullPath(std::string fullPath);
 	void setQueryString(std::string queryString);
+	void setClient(Client* client);
 
 private:
 	std::string _method;

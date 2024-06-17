@@ -1,9 +1,12 @@
 #pragma once
 #include "../errors/ErrorWebServ.hpp"
-#include "../server/Server.hpp"
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <string>
+#include <map>
+#include <fstream>
+#include <sstream> 
 
 class Response
 {
@@ -27,11 +30,12 @@ public:
 	void setStatusMessage(std::string message);
 	void setHeaders(std::istringstream &ss);
 	void setBody(std::string body);
+	void setContentType(std::string type);
 
 	// ------------------------------------ FUNCTIONS
 	void printResponse() const;
 	void formatResponse();
-	void loadHTMLContent(const std::string &filePath);
+	void loadContent(const std::string &filePath);
 
 	void ErrorBody(int error_code);
 
@@ -43,6 +47,7 @@ private:
 	std::map<std::string, std::string> _headers;
 	std::string _body;
 	std::string _resp;
+	std::string _contentType;
 
 	std::string takeTime() const;
 
@@ -54,10 +59,10 @@ private:
 		const char *what() const throw();
 	};
 
-		class cantLoadFile : public ErrorWebServ
+		class cantLoadContent : public ErrorWebServ
 	{
 	public:
-		cantLoadFile(int code) : ErrorWebServ(code) {}
+		cantLoadContent(int code) : ErrorWebServ(code) {}
 		const char *what() const throw();
 	};
 };

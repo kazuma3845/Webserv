@@ -221,6 +221,11 @@ void Response::setBody(std::string body)
 	this->_body = body;
 }
 
+void Response::setContentType(std::string type)
+{
+	_contentType = type;
+}
+
 void Response::printResponse() const
 {
 	std::cout << "HTTP Version: " << _httpVersion << std::endl;
@@ -234,11 +239,11 @@ void Response::printResponse() const
 
 ////////////////////// --------------- ADDITIONNAL FUNCTIONS ---------------- //////////////////////////
 
-void Response::loadHTMLContent(const std::string &filePath)
+void Response::loadContent(const std::string &filePath)
 {
 	std::ifstream file(filePath);
 	if (!file)
-		throw cantLoadFile(404);
+		throw cantLoadContent(404);
 	else
 	{
 		std::stringstream buffer;
@@ -268,7 +273,7 @@ void Response::formatResponse()
 																					   "Date: " +
 			 takeTime() + "\r\n"
 						  "Content-Type: " +
-			 "text/html" + "\r\n"
+			 _contentType + "\r\n"
 						   "\r\n";
 	_resp += _body;
 }
@@ -300,7 +305,7 @@ const char *Response::settingHeadersError::what() const throw()
 }
 
 
-const char *Response::cantLoadFile::what() const throw()
+const char *Response::cantLoadContent::what() const throw()
 {
-	return ("Could not open file from path.");
+	return ("Could not load content from path.");
 }

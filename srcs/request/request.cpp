@@ -1,6 +1,6 @@
 #include "request.hpp"
 
-// -- COPLIEN -- //
+// ------------------------------------ COPLIEN -- //
 
 Request::Request()
 {
@@ -87,6 +87,11 @@ void Request::setFullPath(std::string fullPath)
 void Request::setQueryString(std::string queryString)
 {
 	_queryString = queryString;
+}
+
+void Request::setClient(Client *client)
+{
+	this->client = client;
 }
 // ---------------------------------- OTHER FUNCTIONS -- //
 
@@ -185,6 +190,8 @@ void Request::parseBody(std::istringstream &ss)
 		throw shorterBodyContent(400);
 	if (ss.get() != EOF)
 		throw longerBodyContent(400);
+	if (client->get_listen_socket().get_clientSize() > std::strtoul(_headers["Content-Length"].c_str(), NULL, 10))
+		throw bodySize(413);
 	delete[] buffer;
 	// std::cout << "Body read successfully: " << _body << std::endl;
 }
@@ -213,9 +220,9 @@ void Request::parseRequest(std::string requestFile)
 			parseBody(ss);
 	}
 	// * CHECKING REQUEST //
-	parseUri(); //Get location from URI
-	// isMethodAllowed(); // Check that method called is allowed in the directory // FIXME: currently not working because no location is found
-	redirectInURI(); // Check if there is a return in the directory
+	parseUri();		   // Get location from URI
+	isMethodAllowed(); // Check that method called is allowed in the directory
+	redirectInURI();   // Check if there is a return in the directory
 }
 
 void Request::parseUri()
@@ -259,7 +266,7 @@ void Request::parseUri()
 		temp_root = _curr_loc.getRoot();
 	_file_path = temp_file_path;
 	if (!_curr_loc.getIndex().empty() && _file_path.empty())
-			_file_path = _curr_loc.getIndex();
+		_file_path = _curr_loc.getIndex();
 	if (_curr_loc.empty())
 		_file_path = uri;
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
@@ -271,7 +278,7 @@ void Request::checkFile(int mode)
 {
 	if (access(_full_path.c_str(), mode))
 		throw fileNotFound(404);
-	return ;
+	return;
 }
 
 void Request::isMethodAllowed()
@@ -283,8 +290,10 @@ void Request::isMethodAllowed()
 		methods = _curr_loc.getAllowMethods();
 
 	if (methods.empty())
-{		std::cout << "LOCATION ASSOCIATED WITH REQUEST IS : " << _curr_loc.getName() << std::endl;
-		std::cout << "METHODS ARE EMPTY" << std::endl;}
+	{
+		std::cout << "LOCATION ASSOCIATED WITH REQUEST IS : " << _curr_loc.getName() << std::endl;
+		std::cout << "METHODS ARE EMPTY" << std::endl;
+	}
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 	{
 		if (_method == *it)
@@ -293,12 +302,11 @@ void Request::isMethodAllowed()
 			return;
 		}
 		std::cout << _method << " DOES NOT EQUAL TO " << *it << std::endl;
-
 	}
 	throw unauthorizedMethod(405);
 }
 
-void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complètement l'URI
+void Request::redirectInURI() // FIXME: A voir si on veut bien remplacer complètement l'URI
 {
 	if (_curr_loc.empty())
 		return;
@@ -310,7 +318,6 @@ void Request::redirectInURI() //FIXME: A voir si on veut bien remplacer complèt
 		_full_path.clear();
 		parseUri();
 	}
-
 }
 
 // ---------------------------------- ERROR -- //
@@ -358,10 +365,11 @@ const char *Request::fileNotFound::what() const throw()
 	return ("File not found");
 }
 
-void replaceDoubleSlashes(std::string& str)
+void replaceDoubleSlashes(std::string &str)
 {
 	std::string::size_type pos = 0;
-	while ((pos = str.find("//", pos)) != std::string::npos) {
+	while ((pos = str.find("//", pos)) != std::string::npos)
+	{
 		str.replace(pos, 2, "/");
 	}
 }

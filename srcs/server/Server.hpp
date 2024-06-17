@@ -20,6 +20,7 @@ class Server;
 # include "ListenSocket.hpp"
 #include "../request_handler/redirection.hpp"
 #include "../response/response.hpp"
+#include "../request_handler/Handler.hpp"
 
 
 class Server {
