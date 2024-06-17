@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 def generate_http_response(prenom):
     html_content = f"""
     <!DOCTYPE html>

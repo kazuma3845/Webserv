@@ -371,3 +371,8 @@ void replaceDoubleSlashes(std::string& str)
 		str.replace(pos, 2, "/");
 	}
 }
+
+Client *Request::getClient()
+{
+	return client;
+}
