@@ -164,7 +164,6 @@ void Server::read_socket(Client &client)
 			req.printRequest();
 			req.checkFile(F_OK);
 			redirect.path(req, response); 
-			// handler.start();
 			response.setHTTPVersion(req.getHttpVersion());
 			response.formatResponse();
 			client.setResp(response.getResp());
