@@ -166,7 +166,7 @@ std::vector<std::string> ListenSocket::get_allow_methods() const
 	return _allow_methods;
 }
 
-std::vector<location> ListenSocket::get_location() const
+std::map<std::string, location> ListenSocket::get_location() const
 {
 	return _location;
 }

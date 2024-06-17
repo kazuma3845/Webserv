@@ -34,12 +34,21 @@ void Web::check()
 			_serv[i].setName("localhost");
 		if (_serv[i].getRoot().empty())
 			throw ExceptionInFile();
-		if (_serv[i].getIndex().empty())
-			throw ExceptionInFile();
 		if (_serv[i].getClientSize() == 0)
 			_serv[i].setClientSize(CLIENT_SIZE);
 		if (_serv[i].getAllowMethods().empty())
 			_serv[i].setMethod();
+
+		location a = _serv[i].getLocation()["/"];
+		if (_serv[i].getIndex().empty() && !_serv[i].getLocation().at("/").getIndex().empty())
+			_serv[i].setIndex(_serv[i].getLocation().at("/").getIndex());
+		else if (!_serv[i].getIndex().empty() && _serv[i].getLocation().at("/").getIndex().empty())
+		{
+			a.setIndex(_serv[i].getIndex());
+			_serv[i].setLocation("/", a);
+		}
+		else
+			throw ExceptionInFile();
 	}
 }
 void Web::parsing(char **argv, int argc)

@@ -4,7 +4,7 @@
 location::location()
 {
 	_autoindex = false;
-	_client_size = 0;
+	_client_size = 10000;
 }
 
 void location::init(std::vector< std::vector<std::string> > file, unsigned int &i)
@@ -169,4 +169,9 @@ std::vector<std::string> location::getCgiExt() const
 bool location::empty()
 {
 	return (_name.empty());
+}
+
+void location::setIndex(std::string str)
+{
+	_index = str;
 }
