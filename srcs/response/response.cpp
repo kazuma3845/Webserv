@@ -4,6 +4,7 @@
 
 Response::Response()
 {
+	_statusCode = 200;
 	// Default constructor implementation
 }
 

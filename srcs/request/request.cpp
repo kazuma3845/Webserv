@@ -215,7 +215,7 @@ void Request::parseRequest(std::string requestFile)
 	// * CHECKING REQUEST //
 	parseUri(); //Get location from URI
 	// isMethodAllowed(); // Check that method called is allowed in the directory // FIXME: currently not working because no location is found
-	redirectInURI(); // Check if there is a return in the directory
+	// redirectInURI(); // Check if there is a return in the directory
 }
 
 void Request::parseUri()
@@ -259,7 +259,12 @@ void Request::parseUri()
 		temp_root = _curr_loc.getRoot();
 	_file_path = temp_file_path;
 	if (!_curr_loc.getIndex().empty() && _file_path.empty())
+	{
 			_file_path = _curr_loc.getIndex();
+			_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+			if (access(_full_path.c_str(), F_OK) && _curr_loc.getAutoindex())
+				_file_path.clear();
+	}
 	if (_curr_loc.empty())
 		_file_path = uri;
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
@@ -269,6 +274,7 @@ void Request::parseUri()
 
 void Request::checkFile(int mode)
 {
+
 	if (access(_full_path.c_str(), mode))
 		throw fileNotFound(404);
 	return ;

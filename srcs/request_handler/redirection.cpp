@@ -22,7 +22,7 @@ bool Redirection::checkfolder(std::string uri)
 
 void Redirection::folderpath(Request &a, Response &resp)
 {
-	if (a.getCurr_loc().getIndex().empty())
+	if (a.getFilePath().empty())
 	{
 		if (a.getCurr_loc().getAutoindex() == true)
 		{
