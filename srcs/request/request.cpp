@@ -213,6 +213,11 @@ void Request::parseRequest(std::string requestFile)
 			parseBody(ss);
 	}
 	// * CHECKING REQUEST //
+	if (!_headers["Referer"].empty())
+	{
+		if (_headers["Referer"].back() != '/')
+			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
+	}
 	parseUri(); //Get location from URI
 	// isMethodAllowed(); // Check that method called is allowed in the directory // FIXME: currently not working because no location is found
 	// redirectInURI(); // Check if there is a return in the directory
