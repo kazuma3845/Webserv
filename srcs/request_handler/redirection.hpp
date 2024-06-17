@@ -7,6 +7,7 @@
 #include "../request/request.hpp"
 #include "CgiHandler.hpp"
 #include "../response/response.hpp"
+#include "Handler.hpp"
 
 class Response;
 

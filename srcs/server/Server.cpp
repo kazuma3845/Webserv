@@ -154,7 +154,6 @@ void Server::read_socket(Client &client)
 	Request req(&client);
 	Redirection redirect;
 	Response response;
-	Handler handler(client, req, response);
 
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content)
@@ -164,8 +163,8 @@ void Server::read_socket(Client &client)
 			req.parseRequest(buffer);
 			req.printRequest();
 			req.checkFile(F_OK);
-			redirect.path(req, response);
-			handler.start();
+			redirect.path(req, response); 
+			// handler.start();
 			response.setHTTPVersion(req.getHttpVersion());
 			response.formatResponse();
 			client.setResp(response.getResp());
