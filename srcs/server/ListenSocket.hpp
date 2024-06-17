@@ -29,7 +29,7 @@ class ListenSocket {
 		std::string							_error;
 		std::map<std::string, std::string>	_errorpath;
 		std::vector<std::string>			_allow_methods;
-		std::vector<location>				_location;
+		std::map<std::string, location>		_location;
 
 
 	public :
@@ -54,7 +54,7 @@ class ListenSocket {
 		std::string							get_error() const;
 		std::map<std::string, std::string>	get_error_path() const;
 		std::vector<std::string>			get_allow_methods() const;
-		std::vector<location>				get_location() const;
+		std::map<std::string, location>		get_location() const;
 
 };
 

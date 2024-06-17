@@ -35,6 +35,7 @@ public:
 	std::string getFullPath();
 	location getCurr_loc();
 	std::string getQueryString();
+	Client* getClient();
 
 	// ---------------------------------- SETTERS
 

@@ -14,7 +14,7 @@
 
 // using namespace std;
 
-#define CLIENT_SIZE 5
+#define CLIENT_SIZE 1000
 
 class Web
 {

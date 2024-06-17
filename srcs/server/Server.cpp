@@ -68,6 +68,7 @@ void Server::run_server(void)
 {
 	fd_set temp_read_sds;
 	fd_set temp_write_sds;
+	struct timeval timeout;
 
 	std::cout << std::endl
 			  << "##################" << std::endl
@@ -77,11 +78,11 @@ void Server::run_server(void)
 	{
 		temp_read_sds = this->_read_sds;
 		temp_write_sds = this->_write_sds;
-		std::cerr << std::endl
-				  << "| START LOOP: " << std::endl;
+		timeout.tv_sec = 1;
+		timeout.tv_usec = 0;
 
 		// Wait for an activity on one of the , select return the value of readies FD
-		if (select(this->_max_sd + 1, &temp_read_sds, NULL, NULL, NULL) <= 0)
+		if (select(this->_max_sd + 1, &temp_read_sds, &temp_write_sds, NULL, &timeout) < 0)
 			exit(1);
 		for (unsigned int i = 0; i < this->_ListenSockets.size(); ++i)
 		{
@@ -101,7 +102,7 @@ void Server::run_server(void)
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &_write_sds))
 				write_socket(this->_client_sds_map[i]);
 		}
-		std::cerr << "| END LOOP" << std::endl;
+		check_timeout();
 	}
 	std::cerr << "SERVER END " << std::endl
 			  << std::endl;
@@ -132,8 +133,9 @@ void Server::add_client(ListenSocket &listen_socket)
 	}
 	Client new_client(new_socket, listen_socket);
 	// ------------- Message for testing
-	std::cout << "|" << std::endl
-			  << "|   New connection: socket fd is " << new_socket << " | " << inet_ntoa(listen_socket.get_address().sin_addr) << " | " << ntohs(listen_socket.get_address().sin_port) << std::endl
+	std::cout << std::endl << "|" << std::endl
+			  << "|   New connection: socket fd is " << new_socket << " | "
+			  << inet_ntoa(address.sin_addr) << " | " << ntohs(address.sin_port) << std::endl
 			  << "|" << std::endl;
 
 	// Add new socket to fd_set
@@ -141,7 +143,6 @@ void Server::add_client(ListenSocket &listen_socket)
 	if (new_socket > this->_max_sd)
 		this->_max_sd = new_socket;
 	this->_client_sds_map[new_socket] = new_client;
-	// this->_Clients.push_back(new_client);
 }
 
 void Server::read_socket(Client &client)
@@ -168,6 +169,7 @@ void Server::read_socket(Client &client)
 			response.setHTTPVersion(req.getHttpVersion());
 			response.formatResponse();
 			client.setResp(response.getResp());
+			client.setHeaders(req.getHeaders());
 		}
 		catch (const ErrorWebServ &e)
 		{
@@ -180,12 +182,9 @@ void Server::read_socket(Client &client)
 			client.setResp(response.getResp());
 		}
 	}
-	// client.get_request()->printRequest();
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_read_sds);
 	FD_SET(socket, &this->_write_sds);
-	// close(socket);
-	// this->_client_sds_map.erase(socket);
 }
 
 void Server::write_socket(Client &client)
@@ -198,19 +197,41 @@ void Server::write_socket(Client &client)
 	// Only to show the request content; PRINT REPONSE
 	std::istringstream contentStream(client.getResp());
 	std::string line;
-	// std::istringstream contentStream(rep.getRep());
-	// std::string line;
-
-	// std::cerr << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
+	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
 	// while (std::getline(contentStream, line)) {
-	// 	std::cerr << "|      " << line << std::endl;
+	// 	std::cerr << line << std::endl;
 	// }
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_write_sds);
+	if (client.getHeaders()["Connection"] == "keep-alive")
+	{
+		std::cerr << "|      keep-alive" << client.getHeaders()["Connection"] << std::endl;
+		FD_CLR(socket, &this->_read_sds);
+	}
+	else
+	{
+		close(socket);
+		this->_client_sds_map.erase(socket);
+	}
+}
 
-	// FD_SET(sd, &this->_write_sds);
-	close(socket);
-	this->_client_sds_map.erase(socket);
+void Server::check_timeout(void)
+{
+	for (int i = 0; i <= this->_max_sd; ++i)
+	{
+		if (_client_sds_map.count(i) && (time(NULL) - _client_sds_map[i].get_connected_time() > TIMEOUT_LIMIT))
+		{
+			std::cerr << "Disconnection from client fd : " << i << " sec asgo "<< time(NULL) - _client_sds_map[i].get_connected_time() << std::endl;
+			if (FD_ISSET(i, &_read_sds))
+				FD_CLR(i, &_read_sds);
+			if (FD_ISSET(i, &_write_sds))
+				FD_CLR(i, &_write_sds);
+			if (i >= _max_sd)
+				_max_sd--;
+			close(i);
+			_client_sds_map.erase(i);
+		}
+	}
 }

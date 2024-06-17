@@ -41,4 +41,6 @@ class location
 		std::vector<std::string> getCgiExt() const;
 
 		bool empty();
+
+		void setIndex(std::string str);
 };

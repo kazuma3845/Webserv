@@ -11,21 +11,21 @@ CgiHandler::~CgiHandler()
 
 void CgiHandler::initenv(Request &request)
 {
-    _env["AUTH_TYPE"] = request.getHeaders()["Authorization"];  // Type d'authentification utilisée
-    _env["CONTENT_LENGTH"] = request.getBody().size();  // Longueur du corps de la requête
-    _env["CONTENT_TYPE"] =request.getHeaders()["Content-Type"];  // Type de contenu du corps de la requête
+    _env["AUTH_TYPE"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
+    _env["CONTENT_LENGTH"] = std::to_string(request.getBody().size());
+    _env["CONTENT_TYPE"] = request.getHeaders().count("Content-Type") ? request.getHeaders()["Content-Type"] : "";
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";
-    _env["PATH_INFO"] = request.getFilePath() + request.getCurr_loc().getIndex();  // Chemin de la ressource demandée
-    _env["PATH_TRANSLATED"] = request.getFullPath();  // Chemin absolu traduit du système de fichiers
-    // _env["QUERY_STRING"] = request.getQueryString();  // Chaîne de requête (after ? in url)
-    // _env["REMOTE_ADDR"] = request.getHost();  // Adresse IP du client (host)
-    _env["REMOTE_IDENT"] = request.getHeaders()["Authorization"];  // Nom d'utilisateur pour l'identification distante
-    _env["REMOTE_USER"] = request.getHeaders()["Authorization"];  // Nom d'utilisateur pour l'authentification distante
-    _env["REQUEST_METHOD"] = request.getMethod();  // Méthode HTTP utilisée pour la requête
-    _env["REQUEST_URI"] = request.getURI();  // URI de la requête
-    _env["SCRIPT_NAME"] = request.getFilePath() + request.getCurr_loc().getIndex();;  // Chemin du script CGI
-    // _env["SERVER_NAME"] = request.getServName;  // Nom du serveur (name)
-    // _env["SERVER_PORT"] = request.getPort;  // Port sur lequel le serveur écoute (listen)
+    _env["PATH_INFO"] = request.getFullPath();
+    _env["PATH_TRANSLATED"] = request.getFullPath();
+    _env["QUERY_STRING"] = request.getQueryString();
+    _env["REMOTE_ADDR"] = request.getClient()->get_listen_socket().get_host();
+    _env["REMOTE_IDENT"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
+    _env["REMOTE_USER"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
+    _env["REQUEST_METHOD"] = request.getMethod();
+    _env["REQUEST_URI"] = request.getFullPath() + (request.getQueryString().empty() ? "" : "?" + request.getQueryString());
+    _env["SCRIPT_NAME"] = request.getFullPath();
+    _env["SERVER_NAME"] = request.getClient()->get_listen_socket().get_name();
+    _env["SERVER_PORT"] = std::to_string(request.getClient()->get_listen_socket().get_port());
     _env["SERVER_PROTOCOL"] = "HTTP/1.1";
     _env["SERVER_SOFTWARE"] = "Weebserv/1.0";
     _env["REDIRECT_STATUS"] = "200";
@@ -43,6 +43,7 @@ char **CgiHandler::EnvToArray() const
 		j++;
 	}
 	array[j] = NULL;
+	
 	return array;
 }
 
@@ -78,13 +79,13 @@ std::string CgiHandler::execute(std::string Script)
 		execve(Script.c_str(), tmp, env);
 		std::cerr << "Execution failed" << std::endl;
 		write(STDOUT_FILENO, "Code 500\n", 10);
+		exit(1);
 	}
 	else
 	{
 		char	buffer[BUFFER] = {0};
 		waitpid(-1, NULL, 0);
 		lseek(fdOut, 0, SEEK_SET);
-
 		ret = 1;
 		while (ret > 0)
 		{
@@ -109,7 +110,6 @@ std::string CgiHandler::execute(std::string Script)
 
 	if (newbody.compare("Code 500\n") == 0)
 		throw InternalServerError(500);
-
 	return newbody;
 }
 

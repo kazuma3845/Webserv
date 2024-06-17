@@ -97,7 +97,8 @@ void Request::setClient(Client *client)
 
 void Request::printRequest()
 {
-	std::cout << "Method : " << _method << std::endl;
+	std::cout << std::endl
+			  << "Method : " << _method << std::endl;
 	std::cout << "URI : " << _uri << std::endl;
 	std::cout << "Version : " << _httpVersion << std::endl;
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
@@ -220,6 +221,12 @@ void Request::parseRequest(std::string requestFile)
 			parseBody(ss);
 	}
 	// * CHECKING REQUEST //
+	parseUri(); // Get location from URI
+	if (!_headers["Referer"].empty())
+	{
+		if (_headers["Referer"].back() != '/')
+			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
+	}
 	parseUri();		   // Get location from URI
 	isMethodAllowed(); // Check that method called is allowed in the directory
 	redirectInURI();   // Check if there is a return in the directory
@@ -241,9 +248,9 @@ void Request::parseUri()
 	{
 		for (size_t i = 0; i < client->get_listen_socket().get_location().size(); ++i)
 		{
-			if (temp_loc_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
+			if (!client->get_listen_socket().get_location()[temp_loc_path].getName().empty())
 			{
-				this->_curr_loc = client->get_listen_socket().get_location()[i];
+				this->_curr_loc = client->get_listen_socket().get_location()[temp_loc_path];
 				break;
 			}
 		}
@@ -266,7 +273,12 @@ void Request::parseUri()
 		temp_root = _curr_loc.getRoot();
 	_file_path = temp_file_path;
 	if (!_curr_loc.getIndex().empty() && _file_path.empty())
+	{
 		_file_path = _curr_loc.getIndex();
+		_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+		if (access(_full_path.c_str(), F_OK) && _curr_loc.getAutoindex())
+			_file_path.clear();
+	}
 	if (_curr_loc.empty())
 		_file_path = uri;
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
@@ -276,6 +288,7 @@ void Request::parseUri()
 
 void Request::checkFile(int mode)
 {
+
 	if (access(_full_path.c_str(), mode))
 		throw fileNotFound(404);
 	return;
@@ -372,4 +385,9 @@ void replaceDoubleSlashes(std::string &str)
 	{
 		str.replace(pos, 2, "/");
 	}
+}
+
+Client *Request::getClient()
+{
+	return client;
 }

@@ -28,7 +28,7 @@ class configserv
 		std::string _error;
 		std::map<std::string, std::string> _errorpath;
 		std::vector<std::string> _allow_methods;
-		std::vector<location> _location;
+		std::map<std::string, location> _location;
 
  
 	public:
@@ -37,7 +37,6 @@ class configserv
 
 		//additional fonction
 		void serv(std::vector< std::vector<std::string> > file, unsigned int &i);
-		void print();
 
 		//GET
 		std::vector<int> getListen() const;
@@ -50,9 +49,11 @@ class configserv
 		std::string	getError() const;
 		std::map<std::string, std::string> getErrorPath() const;
 		std::vector<std::string> getAllowMethods() const;
-		std::vector<location> getLocation() const;
+		std::map<std::string, location> getLocation() const;
 
 		//set
+		void setIndex(std::string str);
+		void setLocation(std::string str, location loc);
 		void setClientSize(unsigned int size);
 		void setName(std::string str);
 		void setMethod();

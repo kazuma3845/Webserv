@@ -22,7 +22,7 @@ bool Redirection::checkfolder(std::string uri)
 
 void Redirection::folderpath(Request &a, Response &resp)
 {
-	if (a.getCurr_loc().getIndex().empty())
+	if (a.getFilePath().empty())
 	{
 		if (a.getCurr_loc().getAutoindex() == true)
 		{
@@ -47,7 +47,7 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 	{
 		std::cout << "CGI" << std::endl;
 		CgiHandler cgi(a);
-		resp.setBody(cgi.execute(a.getFilePath()));
+		resp.setBody(cgi.execute(a.getFullPath()));
 	}
 	else if (checkMimeExt(a.getURI()))
 	{
