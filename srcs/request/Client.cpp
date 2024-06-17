@@ -6,7 +6,8 @@ Client::Client(int fd, ListenSocket &listen_socket)
 {
 	this->_listen_socket = listen_socket;
 	this->_connected_sd = fd;
-	// std::cout << "Client was called." << std::endl;
+	this->_connected_time = time(NULL);
+	// std::cout << "Client was called. " << std::endl;
 }
 Client::Client() {
 
@@ -30,7 +31,7 @@ Client& Client::operator=( const Client& ref )
 	{
 		this->_connected_sd = ref._connected_sd;
 		this->_listen_socket = ref._listen_socket;
-		// this->_request = ref._request;
+		this->_connected_time = ref._connected_time;
 	}
 	return *this;
 }
@@ -58,4 +59,19 @@ void Client::setResp(std::string rep)
 std::string Client::getResp() const
 {
 	return _rep;
+}
+
+time_t Client::get_connected_time(void)
+{
+	return _connected_time;
+}
+
+std::map<std::string, std::string> Client::getHeaders()
+{
+	return (_headers);
+}
+
+void Client::setHeaders(const std::map<std::string, std::string>& headers)
+{
+	_headers = headers;
 }

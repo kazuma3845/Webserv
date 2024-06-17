@@ -92,7 +92,7 @@ void Request::setQueryString(std::string queryString)
 
 void Request::printRequest()
 {
-	std::cout << "Method : " << _method << std::endl;
+	std::cout << std::endl << "Method : " << _method << std::endl;
 	std::cout << "URI : " << _uri << std::endl;
 	std::cout << "Version : " << _httpVersion << std::endl;
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); ++it)
@@ -215,7 +215,6 @@ void Request::parseRequest(std::string requestFile)
 	// * CHECKING REQUEST //
 	parseUri(); //Get location from URI
 	// isMethodAllowed(); // Check that method called is allowed in the directory // FIXME: currently not working because no location is found
-	// redirectInURI(); // Check if there is a return in the directory
 }
 
 void Request::parseUri()

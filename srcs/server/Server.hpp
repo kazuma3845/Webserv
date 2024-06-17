@@ -14,13 +14,14 @@ class Server;
 # include <arpa/inet.h>
 # include <fcntl.h>
 # include <iomanip>
+# include <sys/time.h>
 # include "../parsing/configserv.hpp"
 # include "../request/Client.hpp"
 # include "../request/request.hpp"
 # include "ListenSocket.hpp"
 #include "../request_handler/redirection.hpp"
 #include "../response/response.hpp"
-
+#define TIMEOUT_LIMIT 60
 
 class Server {
 	private :
@@ -43,6 +44,7 @@ class Server {
 		void					add_client(ListenSocket& listen_socket);
 		void					read_socket(Client& client);
 		void					write_socket(Client& client);
+		void					check_timeout(void);
 };
 
 #endif
