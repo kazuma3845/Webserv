@@ -19,8 +19,9 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 		else if (file[i][0].compare("location") == 0)
 		{
 			location a;
+			int r = i;
 			a.init(file, i);
-			_location.push_back(a);
+			_location[file[r][1]] = a;
 		}
 		else
 		{
@@ -115,26 +116,6 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 	}
 }
 
-void configserv::print()
-{
-	for (unsigned int i = 0; i < _listen.size(); i++)
-		std::cout << "Listen: " << _listen[i] << std::endl;
-	std::cout << "Name: " << _name << std::endl;
-	std::cout << "Host: " << _host << std::endl;
-	std::cout << "Root: " << _root << std::endl;
-	std::cout << "Autoindex: " << _autoindex << std::endl;
-	std::cout << "Client size: " << _client_size << std::endl;
-	std::cout << "Index: " << _index << std::endl;
-	std::cout << "Error num: " << _error << " | Path: " << _errorpath[_error] << std::endl;
-	for (unsigned int i = 0; i < _allow_methods.size(); i++)
-		std::cout << "Allow_methods: " << _allow_methods[i] << std::endl;
-	for (unsigned int i = 0; i < _location.size(); i++)
-	{
-		_location[i].print();
-	}
-	std::cout << std::endl;
-}
-
 std::vector<int> configserv::getListen() const
 {
 	return _listen;
@@ -185,7 +166,7 @@ std::vector<std::string> configserv::getAllowMethods() const
 	return _allow_methods;
 }
 
-std::vector<location> configserv::getLocation() const
+std::map<std::string, location> configserv::getLocation() const
 {
 	return _location;
 }
@@ -204,4 +185,14 @@ void configserv::setMethod()
 {
 	_allow_methods.push_back("GET");
 	_allow_methods.push_back("HEAD");
+}
+
+void configserv::setIndex(std::string str)
+{
+	_index = str;
+}
+
+void configserv::setLocation(std::string str, location loc)
+{
+	_location[str] = loc;
 }

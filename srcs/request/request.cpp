@@ -234,9 +234,9 @@ void Request::parseUri()
 	{
 		for (size_t i = 0; i < client->get_listen_socket().get_location().size(); ++i)
 		{
-			if (temp_loc_path.compare((client->get_listen_socket().get_location()[i]).getName()) == 0)
+			if (!client->get_listen_socket().get_location()[temp_loc_path].getName().empty())
 			{
-				this->_curr_loc = client->get_listen_socket().get_location()[i];
+				this->_curr_loc = client->get_listen_socket().get_location()[temp_loc_path];
 				break;
 			}
 		}
