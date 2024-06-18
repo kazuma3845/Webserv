@@ -271,11 +271,10 @@ void Response::formatResponse()
 {
 	// _resp += "HTTP/1.1 200 ok\r\n"
 	_resp += _httpVersion + " " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
-																					   "Date: " +
-			 takeTime() + "\r\n"
-						  "Content-Type: " +
-			 _contentType + "\r\n"
-						   "\r\n";
+	"Date: " + takeTime() + "\r\n"
+	"Content-Type: " + _contentType + "\r\n"
+	"Content-Lenght: " + std::to_string(_body.size()) + "\r\n"
+	"\r\n";
 	_resp += _body;
 }
 

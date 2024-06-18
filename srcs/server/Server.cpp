@@ -196,9 +196,9 @@ void Server::write_socket(Client &client)
 	std::istringstream contentStream(client.getResp());
 	std::string line;
 	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
-	// while (std::getline(contentStream, line)) {
-	// 	std::cerr << line << std::endl;
-	// }
+	while (std::getline(contentStream, line)) {
+		std::cerr << line << std::endl;
+	}
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write

@@ -221,12 +221,11 @@ void Request::parseRequest(std::string requestFile)
 			parseBody(ss);
 	}
 	// * CHECKING REQUEST //
-	parseUri(); // Get location from URI
-	if (!_headers["Referer"].empty())
-	{
-		if (_headers["Referer"].back() != '/')
-			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
-	}
+	// if (!_headers["Referer"].empty())
+	// {
+	// 	if (isfolder(_headers["Referer"])  && _headers["Referer"].back() != '/')
+	// 		_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
+	// }
 	parseUri();		   // Get location from URI
 	isMethodAllowed(); // Check that method called is allowed in the directory
 	redirectInURI();   // Check if there is a return in the directory
