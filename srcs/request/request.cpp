@@ -221,7 +221,6 @@ void Request::parseRequest(std::string requestFile)
 			parseBody(ss);
 	}
 	// * CHECKING REQUEST //
-	parseUri(); // Get location from URI
 	if (!_headers["Referer"].empty())
 	{
 		if (_headers["Referer"].back() != '/')

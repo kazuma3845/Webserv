@@ -29,6 +29,7 @@ void Redirection::folderpath(Request &a, Response &resp)
 			std::cout << "AutoIndex" << std::endl;
 			AutoIndex index;
 			resp.setBody(index.create(a.getFullPath()));
+			resp.setStatusCode(200);
 		}
 		else
 			throw Forbidden(403);
@@ -54,7 +55,6 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 		Handler handler(a, resp);
 		std::cout << "MIME" << std::endl;
 		handler.start();
-		// resp.setBody(...);
 	}
 	else
 		throw UnsupportedMediaType(415);

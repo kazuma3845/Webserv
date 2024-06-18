@@ -32,6 +32,7 @@ void Handler::handlePost()
 		throw postFailed(500);
 	outFile << postData << std::endl;
 	outFile.close();
+	_response.setStatusCode(200);
 	_response.setContentType("text/plain");
 	_response.setBody("POST data received and processed.");
 }
@@ -56,6 +57,7 @@ void Handler::handleGet()
 	else
 		_response.setContentType("text/plain");
 	_response.loadContent(_request.getFullPath());
+	_response.setStatusCode(200);
 }
 
 void Handler::handleDelete()
@@ -63,6 +65,7 @@ void Handler::handleDelete()
 	std::string filePath = _request.getFilePath();
 	if (std::remove(filePath.c_str()) != 0)
 		throw deletionFailed(500);
+	_response.setStatusCode(200);
 	_response.setContentType("text/plain");
 	_response.setBody("Content deleted successfully");
 }
