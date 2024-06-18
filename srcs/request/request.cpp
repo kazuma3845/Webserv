@@ -221,7 +221,7 @@ void Request::parseRequest(std::string requestFile)
 			parseBody(ss);
 	}
 	// * CHECKING REQUEST //
-	if (!_headers["Referer"].empty())
+	if (_headers.count("Referer"))
 	{
 		if (checkfolder(_headers["Referer"]) && _headers["Referer"].back() != '/')
 			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
