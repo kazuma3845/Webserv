@@ -3,6 +3,7 @@
 #include <map>
 #include <iostream>
 #include "../request/request.hpp"
+#include "../response/response.hpp"
 
 #define BUFFER 1000
 
@@ -18,7 +19,7 @@ class CgiHandler
 		CgiHandler(Request &request);
 		~CgiHandler();
 		
-		std::string execute(std::string Script);
+		std::string execute(std::string Script, Response &resp);
 
         class InternalServerError : public ErrorWebServ
         {

@@ -163,7 +163,7 @@ void Server::read_socket(Client &client)
 		{
 			req.parseRequest(buffer);
 			req.checkRequest();
-			req.printRequest();
+			// req.printRequest();
 			redirect.path(req, response);
 			response.setHTTPVersion(req.getHttpVersion());
 			response.formatResponse();
@@ -196,6 +196,9 @@ void Server::write_socket(Client &client)
 	std::istringstream contentStream(client.getResp());
 	std::string line;
 	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
+	// while (std::getline(contentStream, line)) {
+	// 	std::cerr << line << std::endl;
+	// }
 	// while (std::getline(contentStream, line)) {
 	// 	std::cerr << line << std::endl;
 	// }
