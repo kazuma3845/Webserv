@@ -221,11 +221,11 @@ void Request::parseRequest(std::string requestFile)
 			parseBody(ss);
 	}
 	// * CHECKING REQUEST //
-	// if (!_headers["Referer"].empty())
-	// {
-	// 	if (isfolder(_headers["Referer"])  && _headers["Referer"].back() != '/')
-	// 		_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
-	// }
+	if (!_headers["Referer"].empty())
+	{
+		if (checkfolder(_headers["Referer"]) && _headers["Referer"].back() != '/')
+			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
+	}
 	parseUri();		   // Get location from URI
 	isMethodAllowed(); // Check that method called is allowed in the directory
 	redirectInURI();   // Check if there is a return in the directory
@@ -390,4 +390,16 @@ void replaceDoubleSlashes(std::string &str)
 Client *Request::getClient()
 {
 	return client;
+}
+
+bool Request::checkfolder(std::string uri)
+{
+	for (unsigned int i = uri.size(); i != 0; i--)
+	{
+		if (uri[i - 1] == '.')
+			return false;
+		if (uri[i - 1] == '/')
+			return true;
+	}
+	return false;
 }

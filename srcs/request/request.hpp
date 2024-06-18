@@ -24,6 +24,9 @@ public:
 	void parseUri();
 	void checkFile(int mode);
 
+	bool checkfolder(std::string uri);
+
+
 	// ---------------------------------- GETTERS
 
 	std::string getMethod();
