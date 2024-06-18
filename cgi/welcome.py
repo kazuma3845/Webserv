@@ -1,4 +1,7 @@
 #!/usr/bin/python3
+
+import sys
+
 def generate_http_response(prenom):
     html_content = f"""
     <!DOCTYPE html>
@@ -22,6 +25,11 @@ Content-Length: {len(html_content)}
 
     return http_response
 
-prenom = "TonPrenom"  # Remplace par le prénom souhaité
-response = generate_http_response(prenom)
-print(response)
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: python script.py <prenom>")
+        sys.exit(1)
+
+    prenom = sys.argv[1]
+    response = generate_http_response(prenom)
+    print(response)
