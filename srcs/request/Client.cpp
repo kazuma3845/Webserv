@@ -36,6 +36,11 @@ Client& Client::operator=( const Client& ref )
 	return *this;
 }
 
+void Client::reUseClient(void)
+{
+	_rep.clear();
+}
+
 int Client::get_fd(void)
 {
 	return this->_connected_sd;
@@ -79,4 +84,9 @@ void Client::setHeaders(const std::map<std::string, std::string>& headers)
 void Client::setKeepAlive(bool status)
 {
 	_keepAlive = status;
+}
+
+void	Client::setTimeout(void)
+{
+	_connected_time = time(NULL);
 }

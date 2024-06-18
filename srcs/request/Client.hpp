@@ -32,6 +32,7 @@ public:
 	~Client();
 	Client &operator=(const Client &ref);
 
+	void reUseClient(void);
 	// --------------------------------------------- GETTERS
 	std::string getResp() const;
 	int get_fd(void);
@@ -44,4 +45,5 @@ public:
 	void setHeaders(const std::map<std::string, std::string> &headers);
 	void setKeepAlive(bool status);
 	void setResp(std::string rep);
+	void setTimeout(void);
 };

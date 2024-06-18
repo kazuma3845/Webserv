@@ -31,6 +31,7 @@ public:
 	// void setHeaders(std::istringstream &ss);
 	void setBody(std::string body);
 	void setContentType(std::string type);
+	void setConnectionType(bool status);
 
 	// ------------------------------------ FUNCTIONS
 	void printResponse() const;
@@ -48,6 +49,7 @@ private:
 	std::string _body;
 	std::string _resp;
 	std::string _contentType;
+	std::string _connectionType;
 
 	std::string takeTime() const;
 
