@@ -39,7 +39,7 @@ public:
 	std::string getFullPath();
 	location getCurr_loc();
 	std::string getQueryString();
-	Client* getClient();
+	Client *getClient();
 
 	// ---------------------------------- SETTERS
 
@@ -48,7 +48,7 @@ public:
 	void setFilePath(std::string filePath);
 	void setFullPath(std::string fullPath);
 	void setQueryString(std::string queryString);
-	void setClient(Client* client);
+	void setClient(Client *client);
 
 private:
 	std::string _method;
@@ -130,7 +130,12 @@ private:
 		fileNotFound(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
+	class unsupportedHTTPVersion : public ErrorWebServ
+	{
+	public:
+		unsupportedHTTPVersion(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
 };
 
-void replaceDoubleSlashes(std::string& str);
-bool isDirectory(std::string& path);
+void replaceDoubleSlashes(std::string &str);
