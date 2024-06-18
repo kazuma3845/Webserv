@@ -139,3 +139,4 @@ private:
 };
 
 void replaceDoubleSlashes(std::string &str);
+bool isDirectory(std::string &path);

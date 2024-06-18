@@ -407,6 +407,24 @@ const char *Request::fileNotFound::what() const throw()
 {
 	return ("File not found");
 }
+
+bool isDirectory(std::string &path)
+{
+	struct stat info;
+	if (stat(path.c_str(), &info) != 0)
+	{
+		std::cerr << "Cannot access " << path << std::endl;
+		return false;
+	}
+	else if (info.st_mode & S_IFDIR)
+	{
+		return true; // C'est un répertoire
+	}
+	else
+	{
+		return false; // C'est un fichier
+	}
+}
 const char *Request::unsupportedHTTPVersion::what() const throw()
 {
 	return ("Unsupported HTTP Version. Please conform to HTTP 1.1 only.");
