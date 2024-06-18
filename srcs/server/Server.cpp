@@ -99,7 +99,7 @@ void Server::run_server(void)
 		// Writing request response
 		for (int i = 0; i <= this->_max_sd; ++i)
 		{
-			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &_write_sds))
+			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_write_sds))
 				write_socket(this->_client_sds_map[i]);
 		}
 		check_timeout();

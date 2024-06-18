@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 #include <fstream>
-#include <sstream> 
+#include <sstream>
 
 class Response
 {
@@ -20,7 +20,7 @@ public:
 	std::string getHTTPVersion();
 	int getStatusCode();
 	std::string getStatusMessage();
-	std::map<std::string, std::string> getHeaders();
+	// std::map<std::string, std::string> getHeaders();
 	std::string getBody();
 	std::string getResp();
 
@@ -28,7 +28,7 @@ public:
 	void setHTTPVersion(std::string version);
 	void setStatusCode(int code);
 	void setStatusMessage(std::string message);
-	void setHeaders(std::istringstream &ss);
+	// void setHeaders(std::istringstream &ss);
 	void setBody(std::string body);
 	void setContentType(std::string type);
 

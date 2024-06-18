@@ -47,10 +47,10 @@ std::string Response::getStatusMessage()
 	return (_statusMessage);
 }
 
-std::map<std::string, std::string> Response::getHeaders()
-{
-	return (_headers);
-}
+// std::map<std::string, std::string> Response::getHeaders()
+// {
+// 	return (_headers);
+// }
 
 std::string Response::getBody()
 {
@@ -208,15 +208,15 @@ void Response::setStatusMessage(std::string message)
 	this->_statusMessage = message;
 }
 
-void Response::setHeaders(std::istringstream &ss)
-{
-	std::string key;
-	std::string value;
-	while (std::getline(ss, key, ':') && std::getline(ss, value))
-		_headers[key] = value;
-	if (ss.get() != EOF)
-		throw settingHeadersError(400); // FIXME: need to be corrected
-}
+// void Response::setHeaders(std::istringstream &ss)
+// {
+// 	std::string key;
+// 	std::string value;
+// 	while (std::getline(ss, key, ':') && std::getline(ss, value))
+// 		_headers[key] = value;
+// 	if (ss.get() != EOF)
+// 		throw settingHeadersError(400); // FIXME: need to be corrected
+// }
 
 void Response::setBody(std::string body)
 {
