@@ -143,6 +143,8 @@ void Server::add_client(ListenSocket &listen_socket)
 	FD_SET(new_socket, &this->_read_sds);
 	if (new_socket > this->_max_sd)
 		this->_max_sd = new_socket;
+	if (_client_sds_map.count(new_socket) != 0)
+		_client_sds_map.erase(new_socket);
 	this->_client_sds_map[new_socket] = new_client;
 }
 
@@ -161,11 +163,13 @@ void Server::read_socket(Client &client)
 	{
 		try
 		{
+			client.setTimeout();
 			req.parseRequest(buffer);
 			req.checkRequest();
 			req.printRequest();
 			redirect.path(req, response);
 			response.setHTTPVersion(req.getHttpVersion());
+			response.setConnectionType(client.getKeepAlive());
 			response.formatResponse();
 			client.setResp(response.getResp());
 		}
@@ -176,6 +180,7 @@ void Server::read_socket(Client &client)
 			response.setStatusCode(e.getErrorCode());
 			response.setStatusMessage(e.what());
 			response.ErrorBody(e.getErrorCode());
+			response.setConnectionType(false);
 			response.formatResponse();
 			client.setResp(response.getResp());
 		}
@@ -195,21 +200,26 @@ void Server::write_socket(Client &client)
 	// Only to show the request content; PRINT REPONSE
 	std::istringstream contentStream(client.getResp());
 	std::string line;
-	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
-	// while (std::getline(contentStream, line)) {
-	// 	std::cerr << line << std::endl;
-	// }
-	// while (std::getline(contentStream, line)) {
-	// 	std::cerr << line << std::endl;
-	// }
+	std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
+	while (std::getline(contentStream, line)) {
+		std::cerr << line << std::endl;
+	}
+	while (std::getline(contentStream, line)) {
+		std::cerr << line << std::endl;
+	}
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_write_sds);
 	if (client.getKeepAlive()) // status is herited from Request parsing
-		FD_CLR(socket, &this->_read_sds);
+	{
+		std::cerr << "-------------->> REUSE socket : " << socket << std::endl;
+		FD_SET(socket, &this->_read_sds);
+		client.reUseClient();
+	}
 	else
 	{
+		std::cerr << "###########>> CLOSE" << std::endl;
 		close(socket);
 		this->_client_sds_map.erase(socket);
 	}

@@ -228,6 +228,14 @@ void Response::setContentType(std::string type)
 	_contentType = type;
 }
 
+void Response::setConnectionType(bool status)
+{
+	if (status == true)
+		_connectionType = "keep-alive";
+	else
+		_connectionType = "close";
+}
+
 void Response::printResponse() const
 {
 	std::cout << "HTTP Version: " << _httpVersion << std::endl;
@@ -274,7 +282,8 @@ void Response::formatResponse()
 	_resp += "HTTP/1.1 " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
 	"Date: " + takeTime() + "\r\n"
 	"Content-Type: " + _contentType + "\r\n"
-	"Content-Lenght: " + std::to_string(_body.size()) + "\r\n"
+	"Connection: " + _connectionType + "\r\n"
+	"Content-Length: " + std::to_string(_body.size()) + "\r\n"
 	"\r\n";
 	_resp += _body;
 }
