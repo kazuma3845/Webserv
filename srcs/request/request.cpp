@@ -284,11 +284,16 @@ void Request::parseUri()
 	{
 		_file_path = _curr_loc.getIndex();
 		_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+		replaceDoubleSlashes(_full_path);
 		if (access(_full_path.c_str(), F_OK) && _curr_loc.getAutoindex())
 			_file_path.clear();
 	}
 	if (_curr_loc.empty())
 		_file_path = uri;
+	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+	replaceDoubleSlashes(_full_path);
+	if (isDirectory(_full_path))
+		_file_path.clear();
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
 	redirectInURI();
@@ -400,4 +405,16 @@ const char *Request::unauthorizedMethod::what() const throw()
 const char *Request::fileNotFound::what() const throw()
 {
 	return ("File not found");
+}
+
+bool isDirectory(std::string& path) {
+	struct stat info;
+	if (stat(path.c_str(), &info) != 0) {
+		std::cerr << "Cannot access " << path << std::endl;
+		return false;
+	} else if (info.st_mode & S_IFDIR) {
+		return true; // C'est un répertoire
+	} else {
+		return false; // C'est un fichier
+	}
 }

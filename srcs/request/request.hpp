@@ -3,6 +3,7 @@
 #include <map>
 #include <algorithm>
 #include <sstream>
+#include <sys/stat.h>
 
 class Request;
 
@@ -26,7 +27,6 @@ public:
 	void checkFile(int mode);
 
 	bool checkfolder(std::string uri);
-
 
 	// ---------------------------------- GETTERS
 
@@ -133,3 +133,4 @@ private:
 };
 
 void replaceDoubleSlashes(std::string& str);
+bool isDirectory(std::string& path);
