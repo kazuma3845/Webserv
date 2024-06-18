@@ -48,7 +48,9 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 	{
 		std::cout << "CGI" << std::endl;
 		CgiHandler cgi(a);
-		resp.setBody(cgi.execute(a.getFullPath()));
+		resp.setContentType("text/plain");
+		resp.setBody(cgi.execute(a.getFullPath(), resp));
+		
 	}
 	else if (checkMimeExt(a.getURI()))
 	{

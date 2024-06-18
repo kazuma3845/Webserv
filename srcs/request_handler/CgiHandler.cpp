@@ -47,7 +47,7 @@ char **CgiHandler::EnvToArray() const
 	return array;
 }
 
-std::string CgiHandler::execute(std::string Script)
+std::string CgiHandler::execute(std::string Script, Response &resp)
 {
 	char **env = EnvToArray();
 	pid_t pid;
@@ -72,18 +72,16 @@ std::string CgiHandler::execute(std::string Script)
 	}
 	else if (!pid)
 	{
-		char **tmp = NULL;
-
 		dup2(fdIn, STDIN_FILENO);
 		dup2(fdOut, STDOUT_FILENO);
-		execve(Script.c_str(), tmp, env);
+		execve(Script.c_str(), nullptr, env);
 		std::cerr << "Execution failed" << std::endl;
 		write(STDOUT_FILENO, "Code 500\n", 10);
 		exit(1);
 	}
 	else
 	{
-		char	buffer[BUFFER] = {0};
+		char	buffer[BUFFER];
 		waitpid(-1, NULL, 0);
 		lseek(fdOut, 0, SEEK_SET);
 		ret = 1;
@@ -110,6 +108,28 @@ std::string CgiHandler::execute(std::string Script)
 
 	if (newbody.compare("Code 500\n") == 0)
 		throw InternalServerError(500);
+
+	size_t pos = newbody.find("\n\n");
+    if (pos != std::string::npos)
+    {
+        std::string headers_str = newbody.substr(0, pos);
+        std::string body = newbody.substr(pos + 4);
+        std::istringstream stream(headers_str);
+        std::string line;
+
+        while (std::getline(stream, line))
+        {
+            size_t delimiter_pos = line.find(": ");
+            if (delimiter_pos != std::string::npos)
+            {
+                std::string key = line.substr(0, delimiter_pos);
+                std::string value = line.substr(delimiter_pos + 2);
+                if (key == "Content-Type")
+                    resp.setContentType(value);
+            }
+        }
+        newbody = body;
+    }
 	return newbody;
 }
 
