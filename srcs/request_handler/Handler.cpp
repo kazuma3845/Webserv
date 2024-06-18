@@ -25,16 +25,81 @@ void Handler::start()
 
 void Handler::handlePost()
 {
-	std::cout << "Handling POST request" << std::endl;
-	std::string postData = _request.getBody();
-	std::ofstream outFile("post_data.txt", std::ios::app); // appends at the end of the file
-	if (!outFile.is_open())
-		throw postFailed(500);
-	outFile << postData << std::endl;
-	outFile.close();
-	_response.setStatusCode(200);
-	_response.setContentType("text/plain");
-	_response.setBody("POST data received and processed.");
+	std::string contentType = _request.getHeaders()["Content-Type"];
+	if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
+	{
+		std::string postData = _request.getBody();
+		std::string outputPath = "Page/data/post_data.txt"; // Chemin prédéfini
+		std::ofstream outFile(outputPath.c_str(), std::ios::app);
+		if (!outFile.is_open())
+			throw postFailed(500);
+		outFile << postData << std::endl;
+		outFile.close();
+		_response.setStatusCode(200);
+		_response.setContentType("text/plain");
+		_response.setBody("POST data received and processed.");
+	}
+	else if (contentType.find("multipart/form-data") != std::string::npos)
+	{
+		std::string boundary = extractBoundary(contentType);
+		std::istringstream stream(_request.getBody());
+		std::string content;
+
+		// Lire et traiter chaque partie
+		while (std::getline(stream, content))
+		{
+			if (content.find(boundary) != std::string::npos)
+			{
+				// Commence une nouvelle partie
+				if (processPart(stream))
+				{
+					_response.setStatusCode(200);
+					_response.setContentType("text/plain");
+					_response.setBody("Files uploaded successfully.");
+				}
+				else
+					throw postFailed(500);
+			}
+		}
+	}
+	else
+		throw postFailed(415);
+}
+
+std::string Handler::extractBoundary(const std::string &contentType)
+{
+	std::size_t pos = contentType.find("boundary=");
+	if (pos != std::string::npos)
+		return contentType.substr(pos + 9); // 9 pour passer 'boundary='
+	return "";
+}
+
+bool Handler::processPart(std::istringstream &stream)
+{
+	std::string line;
+	std::string disposition;
+	std::string filename;
+
+	// Extrait le Content-Disposition
+	std::getline(stream, line);
+	std::size_t pos = line.find("filename=");
+	if (pos != std::string::npos)
+	{
+		filename = line.substr(pos + 10);					  // 10 pour passer 'filename="'
+		filename = filename.substr(0, filename.length() - 2); // Supprimer la dernière citation
+
+		// Ouvrir le fichier pour écrire
+		std::string outputPath = "Page/data/" + filename;
+		std::ofstream outFile(outputPath.c_str(), std::ios::binary);
+		if (!outFile.is_open())
+			return false;
+		// Lire et écrire les données jusqu'à la prochaine boundary
+		while (std::getline(stream, line) && line.find("--") == std::string::npos)
+			outFile << line << std::endl;
+		outFile.close();
+		return true;
+	}
+	return false;
 }
 
 void Handler::handleGet()
@@ -62,7 +127,7 @@ void Handler::handleGet()
 
 void Handler::handleDelete()
 {
-	std::string filePath = _request.getFilePath();
+	std::string filePath = _request.getFullPath();
 	if (std::remove(filePath.c_str()) != 0)
 		throw deletionFailed(500);
 	_response.setStatusCode(200);

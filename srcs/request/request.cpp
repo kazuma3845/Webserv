@@ -192,8 +192,8 @@ void Request::parseBody(std::istringstream &ss)
 	ss.read(buffer, length);
 	buffer[ss.gcount()] = '\0';
 	_body.assign(buffer, ss.gcount());
-	if (ss.gcount() != length)
-		throw shorterBodyContent(400);
+	// if (ss.gcount() != length)
+	// 	throw shorterBodyContent(400);
 	if (ss.get() != EOF)
 		throw longerBodyContent(400);
 	if (client->get_listen_socket().get_clientSize() > std::strtoul(_headers["Content-Length"].c_str(), NULL, 10))
