@@ -62,7 +62,10 @@ std::string Request::getQueryString()
 {
 	return (_queryString);
 }
-
+Client *Request::getClient()
+{
+	return client;
+}
 // ---------------------------------- SETTERS -- //
 
 void Request::setURI(std::string uri)
@@ -197,6 +200,21 @@ void Request::parseBody(std::istringstream &ss)
 	// std::cout << "Body read successfully: " << _body << std::endl;
 }
 
+void Request::checkRequest()
+{
+	if (!_headers["Referer"].empty())
+	{
+		if (checkfolder(_headers["Referer"]) && _headers["Referer"].back() != '/')
+			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
+	}
+	parseUri();		   // Get location from URI
+	isMethodAllowed(); // Check that method called is allowed in the directory
+	redirectInURI();   // Check if there is a return in the directory
+	checkFile(F_OK);
+	if (_headers["Connection"] == "keep-alive") // set up connection mode in Client
+		client->setKeepAlive(true);
+}
+
 void Request::parseRequest(std::string requestFile)
 {
 	std::istringstream ss(requestFile);
@@ -220,15 +238,6 @@ void Request::parseRequest(std::string requestFile)
 		else
 			parseBody(ss);
 	}
-	// * CHECKING REQUEST //
-	if (_headers.count("Referer"))
-	{
-		if (checkfolder(_headers["Referer"]) && _headers["Referer"].back() != '/')
-			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
-	}
-	parseUri();		   // Get location from URI
-	isMethodAllowed(); // Check that method called is allowed in the directory
-	redirectInURI();   // Check if there is a return in the directory
 }
 
 void Request::parseUri()
@@ -333,28 +342,45 @@ void Request::redirectInURI() // FIXME: A voir si on veut bien remplacer complè
 	}
 }
 
-// ---------------------------------- ERROR -- //
+bool Request::checkfolder(std::string uri)
+{
+	for (unsigned int i = uri.size(); i != 0; i--)
+	{
+		if (uri[i - 1] == '.')
+			return false;
+		if (uri[i - 1] == '/')
+			return true;
+	}
+	return false;
+}
+
+void replaceDoubleSlashes(std::string &str)
+{
+	std::string::size_type pos = 0;
+	while ((pos = str.find("//", pos)) != std::string::npos)
+	{
+		str.replace(pos, 2, "/");
+	}
+}
+
+// ------------------------------------------------- ERROR -- //
 
 const char *Request::bodySize::what() const throw()
 {
 	return ("Body length exceeds server limits.");
 }
-
 const char *Request::wrongRLInput::what() const throw()
 {
 	return ("Request line arguments doesn't fit format.");
 }
-
 const char *Request::headerParsingError::what() const throw()
 {
 	return ("Header parsing error.");
 }
-
 const char *Request::invalidContentLength::what() const throw()
 {
 	return ("Negative length content specified.");
 }
-
 const char *Request::shorterBodyContent::what() const throw()
 {
 	return ("Mismatch between specified content-length and actuel content size (shorter).");
@@ -367,39 +393,11 @@ const char *Request::contentLengthUnspecified::what() const throw()
 {
 	return ("Content-length was not specified.");
 }
-
 const char *Request::unauthorizedMethod::what() const throw()
 {
 	return ("Unauthorized method requested.");
 }
-
 const char *Request::fileNotFound::what() const throw()
 {
 	return ("File not found");
-}
-
-void replaceDoubleSlashes(std::string &str)
-{
-	std::string::size_type pos = 0;
-	while ((pos = str.find("//", pos)) != std::string::npos)
-	{
-		str.replace(pos, 2, "/");
-	}
-}
-
-Client *Request::getClient()
-{
-	return client;
-}
-
-bool Request::checkfolder(std::string uri)
-{
-	for (unsigned int i = uri.size(); i != 0; i--)
-	{
-		if (uri[i - 1] == '.')
-			return false;
-		if (uri[i - 1] == '/')
-			return true;
-	}
-	return false;
 }

@@ -51,6 +51,11 @@ ListenSocket Client::get_listen_socket(void)
 	return this->_listen_socket;
 }
 
+bool Client::getKeepAlive()
+{
+	return (_keepAlive);
+}
+
 void Client::setResp(std::string rep)
 {
 	_rep = rep;
@@ -66,12 +71,12 @@ time_t Client::get_connected_time(void)
 	return _connected_time;
 }
 
-std::map<std::string, std::string> Client::getHeaders()
-{
-	return (_headers);
-}
-
 void Client::setHeaders(const std::map<std::string, std::string>& headers)
 {
 	_headers = headers;
+}
+
+void Client::setKeepAlive(bool status)
+{
+	_keepAlive = status;
 }

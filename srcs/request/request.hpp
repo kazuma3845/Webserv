@@ -17,6 +17,7 @@ public:
 	Request(Client *client);
 	~Request();
 	void parseRequest(std::string requestFile);
+	void checkRequest();
 	void printRequest();
 
 	void isMethodAllowed();
