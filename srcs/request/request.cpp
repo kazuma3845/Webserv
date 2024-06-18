@@ -294,8 +294,8 @@ void Request::parseUri()
 		_file_path = uri;
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
-	if (isDirectory(_full_path))
-		_file_path.clear();
+	if (!_file_path.empty() && isDirectory(_full_path))
+		throw fileNotFound(404);
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
 	redirectInURI();
