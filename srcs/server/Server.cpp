@@ -163,7 +163,7 @@ void Server::read_socket(Client &client)
 		{
 			req.parseRequest(buffer);
 			req.checkRequest();
-			// req.printRequest();
+			req.printRequest();
 			redirect.path(req, response);
 			response.setHTTPVersion(req.getHttpVersion());
 			response.formatResponse();
@@ -206,7 +206,7 @@ void Server::write_socket(Client &client)
 
 	// Remove socket from read to write
 	FD_CLR(socket, &this->_write_sds);
-	if (client.getKeepAlive()) //status is herited from Request parsing
+	if (client.getKeepAlive()) // status is herited from Request parsing
 		FD_CLR(socket, &this->_read_sds);
 	else
 	{

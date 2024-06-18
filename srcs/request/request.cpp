@@ -135,6 +135,8 @@ void Request::parseRequestLine(std::string line)
 	char extra;
 	if (_method.empty() || _uri.empty() || _uri.front() != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/" || ss >> extra)
 		throw wrongRLInput(400);
+	if (_httpVersion != "HTTP/1.1")
+		unsupportedHTTPVersion(505);
 }
 void Request::parseHeaders(std::string line)
 {
@@ -400,4 +402,8 @@ const char *Request::unauthorizedMethod::what() const throw()
 const char *Request::fileNotFound::what() const throw()
 {
 	return ("File not found");
+}
+const char *Request::unsupportedHTTPVersion::what() const throw()
+{
+	return ("Unsupported HTTP Version. Please conform to HTTP 1.1 only.");
 }
