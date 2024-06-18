@@ -321,6 +321,7 @@ void Request::isMethodAllowed()
 
 void Request::redirectInURI() // FIXME: A voir si on veut bien remplacer complètement l'URI
 {
+	std::cout << "Retrun !!! " << _body << std::endl;
 	if (_curr_loc.empty())
 		return;
 	if (!_curr_loc.getReturn().empty())

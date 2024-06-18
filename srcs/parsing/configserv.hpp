@@ -30,14 +30,14 @@ class configserv
 		std::vector<std::string> _allow_methods;
 		std::map<std::string, location> _location;
 
- 
+
 	public:
 		configserv();
 		~configserv(){};
 
 		//additional fonction
 		void serv(std::vector< std::vector<std::string> > file, unsigned int &i);
-
+		void checkReturn(void);
 		//GET
 		std::vector<int> getListen() const;
 		std::string getName() const;
@@ -57,4 +57,11 @@ class configserv
 		void setClientSize(unsigned int size);
 		void setName(std::string str);
 		void setMethod();
+
+		//exception
+		class LoopInReturnLocation : public std::exception
+		{
+			public:
+				const char *what() const throw();
+		};
 };

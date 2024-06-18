@@ -98,7 +98,7 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 }
 
 void location::print()
-{	
+{
 	std::cout << "---------------------------" << std::endl;
 	std::cout << "Location: " << std::endl;
 	std::cout << "Name: " << _name << std::endl;
@@ -174,4 +174,13 @@ bool location::empty()
 void location::setIndex(std::string str)
 {
 	_index = str;
+}
+
+std::map<std::string, location> location::getVisitedLoc(void)
+{
+	return _visited_loc;
+}
+
+void location::setVisitedLoc(const std::string& name, const location& loc) {
+	_visited_loc[name] = loc;
 }

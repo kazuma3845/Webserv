@@ -116,6 +116,35 @@ void configserv::serv(std::vector< std::vector<std::string> > file, unsigned int
 	}
 }
 
+void configserv::checkReturn(void)
+{
+	location curr_loc;
+	for (std::map<std::string, location>::iterator it = _location.begin(); it != _location.end(); ++it)
+	{
+		curr_loc = it->second;
+		while (true)
+		{
+			if (!curr_loc.getReturn().empty())
+			{
+				if (it->second.getVisitedLoc().count(curr_loc.getName()))
+				{
+					throw LoopInReturnLocation();
+					exit(1);
+				}
+				if (_location.count(curr_loc.getName()) && !_location[curr_loc.getReturn()].empty())
+				{
+					it->second.setVisitedLoc(curr_loc.getName(), curr_loc);
+					curr_loc = _location[curr_loc.getReturn()];
+				}
+				else
+					break ;
+			}
+			else
+				break;
+		}
+	}
+}
+
 std::vector<int> configserv::getListen() const
 {
 	return _listen;
@@ -195,4 +224,9 @@ void configserv::setIndex(std::string str)
 void configserv::setLocation(std::string str, location loc)
 {
 	_location[str] = loc;
+}
+
+const char *configserv::LoopInReturnLocation::what() const throw()
+{
+	return "Infinite loop in return location.";
 }

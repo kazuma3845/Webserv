@@ -20,7 +20,8 @@ class location
 		std::vector<std::string> _allow_methods;
 		std::vector<std::string>	_cgi_path;
 		std::vector<std::string>	_cgi_ext;
- 
+		std::map<std::string, location>		_visited_loc;
+
 	public:
 		location();
 		~location(){};
@@ -39,6 +40,10 @@ class location
 		std::vector<std::string> getAllowMethods() const;
 		std::vector<std::string> getCgiPath() const;
 		std::vector<std::string> getCgiExt() const;
+		std::map<std::string, location> getVisitedLoc(void);
+
+		//SET
+		void setVisitedLoc(const std::string& name, const location& loc);
 
 		bool empty();
 

@@ -49,6 +49,7 @@ void Web::check()
 		}
 		else
 			throw ExceptionInFile();
+		_serv[i].checkReturn();
 	}
 }
 void Web::parsing(char **argv, int argc)

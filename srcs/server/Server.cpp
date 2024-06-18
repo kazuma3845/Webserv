@@ -16,7 +16,7 @@ Server::Server(std::vector<configserv> config_servs) : _max_sd(0)
 		for (int i_port = 0; i_port != nb_ports; i_port++)
 		{
 			ListenSocket curr_listen_socket(config_servs[i], config_servs[i].getListen()[i_port]);
-			this->_ListenSockets.push_back(curr_listen_socket);
+			_ListenSockets.push_back(curr_listen_socket);
 		}
 	}
 	std::cout << "Server was called." << std::endl;
@@ -46,22 +46,22 @@ void Server::set_server(void)
 {
 	int current_fd;
 	// Clear the socket set to void
-	FD_ZERO(&this->_read_sds);
-	FD_ZERO(&this->_write_sds);
-	for (std::vector<ListenSocket>::iterator it = this->_ListenSockets.begin(); it != this->_ListenSockets.end(); ++it)
+	FD_ZERO(&_read_sds);
+	FD_ZERO(&_write_sds);
+	for (std::vector<ListenSocket>::iterator it = _ListenSockets.begin(); it != _ListenSockets.end(); ++it)
 	{
 		it->initSocket();
 		current_fd = it->get_listen_fd();
 		// Set new socket as non blocked
 		fcntl(current_fd, F_SETFL, O_NONBLOCK);
 		// Add every listen sockets to set
-		FD_SET(current_fd, &this->_read_sds);
+		FD_SET(current_fd, &_read_sds);
 		// Save the max socket descriptor for forther use
-		if (current_fd > this->_max_sd)
-			this->_max_sd = current_fd;
+		if (current_fd > _max_sd)
+			_max_sd = current_fd;
 		std::cerr << "   IP : " << std::setw(14) << std::left << it->get_host() << " port : " << it->get_port() << " fd :" << it->get_listen_fd() << std::endl;
 	}
-	std::cerr << ">> Max fd : " << this->_max_sd << std::endl;
+	std::cerr << ">> Max fd : " << _max_sd << std::endl;
 }
 
 void Server::run_server(void)
@@ -76,31 +76,31 @@ void Server::run_server(void)
 			  << "##################" << std::endl;
 	while (1)
 	{
-		temp_read_sds = this->_read_sds;
-		temp_write_sds = this->_write_sds;
+		temp_read_sds = _read_sds;
+		temp_write_sds = _write_sds;
 		timeout.tv_sec = 1;
 		timeout.tv_usec = 0;
 
 		// Wait for an activity on one of the , select return the value of readies FD
-		if (select(this->_max_sd + 1, &temp_read_sds, &temp_write_sds, NULL, &timeout) < 0)
+		if (select(_max_sd + 1, &temp_read_sds, &temp_write_sds, NULL, &timeout) < 0)
 			exit(1);
-		for (unsigned int i = 0; i < this->_ListenSockets.size(); ++i)
+		for (unsigned int i = 0; i < _ListenSockets.size(); ++i)
 		{
-			if (FD_ISSET(this->_ListenSockets[i].get_listen_fd(), &temp_read_sds))
-				this->add_client(_ListenSockets[i]);
+			if (FD_ISSET(_ListenSockets[i].get_listen_fd(), &temp_read_sds))
+				add_client(_ListenSockets[i]);
 		}
 
 		// Reading new request
-		for (int i = 0; i <= this->_max_sd; ++i)
+		for (int i = 0; i <= _max_sd; ++i)
 		{
-			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
-				read_socket(this->_client_sds_map[i]);
+			if (_client_sds_map.count(i) && FD_ISSET((_client_sds_map[i]).get_fd(), &temp_read_sds))
+				read_socket(_client_sds_map[i]);
 		}
 		// Writing request response
-		for (int i = 0; i <= this->_max_sd; ++i)
+		for (int i = 0; i <= _max_sd; ++i)
 		{
-			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &_write_sds))
-				write_socket(this->_client_sds_map[i]);
+			if (_client_sds_map.count(i) && FD_ISSET((_client_sds_map[i]).get_fd(), &_write_sds))
+				write_socket(_client_sds_map[i]);
 		}
 		check_timeout();
 	}
@@ -139,10 +139,10 @@ void Server::add_client(ListenSocket &listen_socket)
 			  << "|" << std::endl;
 
 	// Add new socket to fd_set
-	FD_SET(new_socket, &this->_read_sds);
-	if (new_socket > this->_max_sd)
-		this->_max_sd = new_socket;
-	this->_client_sds_map[new_socket] = new_client;
+	FD_SET(new_socket, &_read_sds);
+	if (new_socket > _max_sd)
+		_max_sd = new_socket;
+	_client_sds_map[new_socket] = new_client;
 }
 
 void Server::read_socket(Client &client)
@@ -163,7 +163,7 @@ void Server::read_socket(Client &client)
 			req.parseRequest(buffer);
 			req.printRequest();
 			req.checkFile(F_OK);
-			redirect.path(req, response); 
+			redirect.path(req, response);
 			response.setHTTPVersion(req.getHttpVersion());
 			response.formatResponse();
 			client.setResp(response.getResp());
@@ -181,8 +181,8 @@ void Server::read_socket(Client &client)
 		}
 	}
 	// Remove socket from read to write
-	FD_CLR(socket, &this->_read_sds);
-	FD_SET(socket, &this->_write_sds);
+	FD_CLR(socket, &_read_sds);
+	FD_SET(socket, &_write_sds);
 }
 
 void Server::write_socket(Client &client)
@@ -202,22 +202,22 @@ void Server::write_socket(Client &client)
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write
-	FD_CLR(socket, &this->_write_sds);
+	FD_CLR(socket, &_write_sds);
 	if (client.getHeaders()["Connection"] == "keep-alive")
 	{
 		std::cerr << "|      keep-alive" << client.getHeaders()["Connection"] << std::endl;
-		FD_CLR(socket, &this->_read_sds);
+		FD_CLR(socket, &_read_sds);
 	}
 	else
 	{
 		close(socket);
-		this->_client_sds_map.erase(socket);
+		_client_sds_map.erase(socket);
 	}
 }
 
 void Server::check_timeout(void)
 {
-	for (int i = 0; i <= this->_max_sd; ++i)
+	for (int i = 0; i <= _max_sd; ++i)
 	{
 		if (_client_sds_map.count(i) && (time(NULL) - _client_sds_map[i].get_connected_time() > TIMEOUT_LIMIT))
 		{
