@@ -159,6 +159,20 @@ void Server::read_socket(Client &client)
 	Response response;
 
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
+	if (has_content < 0)
+	{
+
+	}
+	else if (has_content == 0)
+	{
+		std::cerr << std::endl << "Client " << socket << " disconnect " << socket << std::endl;
+		FD_CLR(socket, &_read_sds);
+		if (socket >= _max_sd)
+			_max_sd--;
+		close(socket);
+		_client_sds_map.erase(socket);
+		return;
+	}
 	if (has_content)
 	{
 		try

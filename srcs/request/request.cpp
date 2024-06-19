@@ -210,10 +210,10 @@ void Request::parseBody(std::istringstream &ss)
 
 void Request::checkRequest()
 {
-	if (!_headers["Referer"].empty())
+	if (_headers.count("Referer"))
 	{
 		if (checkfolder(_headers["Referer"]) && _headers["Referer"].back() != '/')
-			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
+			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri.substr(_uri.find_last_of("/"), _uri.size());
 	}
 	parseUri();		   // Get location from URI
 	isMethodAllowed(); // Check that method called is allowed in the directory
@@ -300,10 +300,10 @@ void Request::parseUri()
 		_file_path = uri;
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
-	if (!_file_path.empty() && isDirectory(_full_path))
-		throw fileNotFound(404);
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
+	if (!_file_path.empty() && isDirectory(_full_path))
+		_file_path.clear();
 	redirectInURI();
 }
 
