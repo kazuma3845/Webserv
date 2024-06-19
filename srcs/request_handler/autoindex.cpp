@@ -1,14 +1,15 @@
 #include "autoindex.hpp"
 
-std::string AutoIndex::create(const std::string& uri) {
+std::string AutoIndex::create(std::string uri, std::string root) {
     std::string page;
-    const char* path = uri.c_str();
-    std::string dirName(path);
-    DIR* dir = opendir(path);
-
+    // char* path = uri.c_str();
+    std::string dirName(uri.c_str());
+    std::string purePath(uri.substr(root.size(), uri.size()).c_str());
+    DIR* dir = opendir(uri.c_str());
+    // uri.substr(root.size(), uri.size())
     page = "<html>\n"
            "    <head>\n"
-           "        <title>Index of " + dirName + "</title>\n"
+           "        <title>Index of " + purePath + "</title>\n"
            "        <style>\n"
            "            table { width: 100%; border-collapse: collapse; }\n"
            "            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }\n"
@@ -16,21 +17,21 @@ std::string AutoIndex::create(const std::string& uri) {
            "        </style>\n"
            "    </head>\n"
            "    <body>\n"
-           "        <h1>Index of " + dirName + "</h1>\n"
+           "        <h1>Index of " + purePath + "</h1>\n"
            "        <table>\n"
            "            <tr><th>Name</th><th>Size</th></tr>\n";
 
     if (dir == NULL) {
-        std::cerr << "Error: Directory not opened: " << path << std::endl;
+        std::cerr << "Error: Directory not opened: " << dirName << std::endl;
         return "";
     }
 
     for (struct dirent* newdir = readdir(dir); newdir; newdir = readdir(dir)) {
         std::string name(newdir->d_name);
         std::string filePath = dirName + "/" + name;
-        page += addLine(name, filePath);
+        page += addLine(name, filePath, purePath);
     }
-    
+
     page += "        </table>\n"
             "    </body>\n"
             "</html>\n";
@@ -38,9 +39,7 @@ std::string AutoIndex::create(const std::string& uri) {
     return page;
 }
 
-std::string AutoIndex::addLine(const std::string& name, const std::string& path) {
-    std::cout << "Path: " << path << " | Name: " << name << " ==============" << std::endl;
-    std::cout << "Path: " << path.substr(path.find("/"), path.size()) << " ==============" << std::endl;
+std::string AutoIndex::addLine(const std::string& name, const std::string& path, std::string& purePath) {
     struct stat fileStat;
     if (stat(path.c_str(), &fileStat) == -1) {
         perror("stat");
@@ -50,7 +49,7 @@ std::string AutoIndex::addLine(const std::string& name, const std::string& path)
         return "";
     std::stringstream ss;
     ss << "            <tr>"
-       << "<td><a href=\"" << path.substr(path.find("/"), path.size()) << "\">" << name << "</a></td>"
+       << "<td><a href=\"" << "/" + purePath + name << "\">" << name << "</a></td>"
        << "<td>" << ((S_ISDIR(fileStat.st_mode)) ? "-" : fileSize(fileStat.st_size)) << "</td>"
        << "</tr>\n";
     return ss.str();
