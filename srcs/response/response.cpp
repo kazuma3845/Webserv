@@ -278,13 +278,15 @@ std::string Response::takeTime() const
 
 void Response::formatResponse(Client &a, Request &b)
 {
+	(void)a;
+	(void)b;
 	// _resp += "HTTP/1.1 200 ok\r\n"
 	_resp += "HTTP/1.1 " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
 	"Date: " + takeTime() + "\r\n"
 	"Content-Type: " + _contentType + "\r\n"
 	"Connection: " + _connectionType + "\r\n"
 	"Content-Length: " + std::to_string(_body.size()) + "\r\n"
-	"Location: http://" + a.get_listen_socket().get_host() + ":" + std::to_string(a.get_listen_socket().get_port()) + b.getFullPath() + "\r\n"
+	"Location: http://" + a.get_listen_socket().get_host() + ":" + std::to_string(a.get_listen_socket().get_port()) + b.getFullPath().substr(a.get_listen_socket().get_root().size(), b.getFullPath().size()) + "\r\n"
 	"\r\n";
 	_resp += _body;
 }

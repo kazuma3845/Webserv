@@ -152,7 +152,7 @@ void Server::read_socket(Client &client)
 {
 	char buffer[MESSAGE_BUFFER];
 	int socket = client.get_fd();
-	memset(buffer, 0, sizeof(buffer));
+	memset(buffer, 0, MESSAGE_BUFFER);
 
 	Request req(&client);
 	Redirection redirect;
@@ -171,6 +171,8 @@ void Server::read_socket(Client &client)
 			response.setHTTPVersion(req.getHttpVersion());
 			response.setConnectionType(client.getKeepAlive());
 			if (req.getHasReturn())
+				response.setStatusCode(301);
+			if (req.getHeaders().count("Referer"))
 				response.setStatusCode(301);
 			response.formatResponse(client, req);
 			client.setResp(response.getResp());

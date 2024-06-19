@@ -210,10 +210,10 @@ void Request::parseBody(std::istringstream &ss)
 
 void Request::checkRequest()
 {
-	if (!_headers["Referer"].empty())
+	if (_headers.count("Referer"))
 	{
 		if (checkfolder(_headers["Referer"]) && _headers["Referer"].back() != '/')
-			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri;
+			_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri.substr(_uri.find_last_of("/"), _uri.size());
 	}
 	parseUri();		   // Get location from URI
 	isMethodAllowed(); // Check that method called is allowed in the directory
@@ -227,11 +227,10 @@ void Request::parseRequest(std::string requestFile)
 {
 	std::istringstream ss(requestFile);
 	std::string line;
-
+	std::cout << requestFile << " =================" << std::endl;
 	// extraction de la première ligne qui est la RequestLine
 	std::getline(ss, line);
 	parseRequestLine(line);
-
 	// lecture des headers jusqu'à /r
 	while (std::getline(ss, line) && line != "\r" && line != "\r\n" && line != "\n" && !line.empty()) //"\r" fais séparation entre les headers et le body
 		parseHeaders(line);
