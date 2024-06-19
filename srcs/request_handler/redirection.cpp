@@ -28,7 +28,7 @@ void Redirection::folderpath(Request &a, Response &resp)
 		{
 			std::cout << "AutoIndex" << std::endl;
 			AutoIndex index;
-			resp.setBody(index.create(a.getFullPath()));
+			resp.setBody(index.create(a.getFullPath(), a.getClient()->get_listen_socket().get_root()));
 			resp.setStatusCode(200);
 		}
 		else

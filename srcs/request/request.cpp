@@ -229,7 +229,6 @@ void Request::parseRequest(std::string requestFile)
 {
 	std::istringstream ss(requestFile);
 	std::string line;
-	std::cout << requestFile << " =================" << std::endl;
 	// extraction de la première ligne qui est la RequestLine
 	std::getline(ss, line);
 	parseRequestLine(line);
@@ -303,10 +302,11 @@ void Request::parseUri()
 	replaceDoubleSlashes(_full_path);
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	if (!_file_path.empty() && isDirectory(_full_path))
+	{
 		_file_path.clear();
+		_full_path += "/";
+	}
 	replaceDoubleSlashes(_full_path);
-	if (!_file_path.empty() && isDirectory(_full_path))
-		_file_path.clear();
 	redirectInURI();
 }
 
