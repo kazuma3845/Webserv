@@ -22,6 +22,8 @@ private:
 	void handleGet();
 	void handlePost();
 	void handleDelete();
+	std::string extractBoundary(const std::string& contentType);
+	bool processPart(std::istringstream& stream);
 
 	// ------------------------------------------ ERRORS //
 

@@ -198,8 +198,8 @@ void Request::parseBody(std::istringstream &ss)
 	ss.read(buffer, length);
 	buffer[ss.gcount()] = '\0';
 	_body.assign(buffer, ss.gcount());
-	if (ss.gcount() != length)
-		throw shorterBodyContent(400);
+	// if (ss.gcount() != length)
+	// 	throw shorterBodyContent(400);
 	if (ss.get() != EOF)
 		throw longerBodyContent(400);
 	if (client->get_listen_socket().get_clientSize() > std::strtoul(_headers["Content-Length"].c_str(), NULL, 10))
@@ -227,11 +227,10 @@ void Request::parseRequest(std::string requestFile)
 {
 	std::istringstream ss(requestFile);
 	std::string line;
-
+	std::cout << requestFile << " =================" << std::endl;
 	// extraction de la première ligne qui est la RequestLine
 	std::getline(ss, line);
 	parseRequestLine(line);
-
 	// lecture des headers jusqu'à /r
 	while (std::getline(ss, line) && line != "\r" && line != "\r\n" && line != "\n" && !line.empty()) //"\r" fais séparation entre les headers et le body
 		parseHeaders(line);
@@ -301,6 +300,8 @@ void Request::parseUri()
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
 	replaceDoubleSlashes(_full_path);
 	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+	if (!_file_path.empty() && isDirectory(_full_path))
+		_file_path.clear();
 	replaceDoubleSlashes(_full_path);
 	if (!_file_path.empty() && isDirectory(_full_path))
 		_file_path.clear();

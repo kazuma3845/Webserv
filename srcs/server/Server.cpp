@@ -152,7 +152,7 @@ void Server::read_socket(Client &client)
 {
 	char buffer[MESSAGE_BUFFER];
 	int socket = client.get_fd();
-	memset(buffer, 0, sizeof(buffer));
+	memset(buffer, 0, MESSAGE_BUFFER);
 
 	Request req(&client);
 	Redirection redirect;
@@ -186,7 +186,9 @@ void Server::read_socket(Client &client)
 			response.setConnectionType(client.getKeepAlive());
 			if (req.getHasReturn())
 				response.setStatusCode(301);
-			response.formatResponse();
+			if (req.getHeaders().count("Referer"))
+				response.setStatusCode(301);
+			response.formatResponse(client, req);
 			client.setResp(response.getResp());
 		}
 		catch (const ErrorWebServ &e)
@@ -198,7 +200,7 @@ void Server::read_socket(Client &client)
 			response.setStatusMessage(e.what());
 			response.ErrorBody(e.getErrorCode());
 			response.setConnectionType(false);
-			response.formatResponse();
+			response.formatResponse(client, req);
 			client.setResp(response.getResp());
 		}
 	}
@@ -217,10 +219,7 @@ void Server::write_socket(Client &client)
 	// Only to show the request content; PRINT REPONSE
 	std::istringstream contentStream(client.getResp());
 	std::string line;
-	std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
-	while (std::getline(contentStream, line)) {
-		std::cerr << line << std::endl;
-	}
+	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
 	while (std::getline(contentStream, line)) {
 		std::cerr << line << std::endl;
 	}

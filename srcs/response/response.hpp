@@ -1,5 +1,7 @@
 #pragma once
 #include "../errors/ErrorWebServ.hpp"
+#include "../request/Client.hpp"
+#include "../request/request.hpp"
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -35,7 +37,7 @@ public:
 
 	// ------------------------------------ FUNCTIONS
 	void printResponse() const;
-	void formatResponse();
+	void formatResponse(Client &a, Request &b);
 	void loadContent(const std::string &filePath);
 
 	void ErrorBody(int error_code);
