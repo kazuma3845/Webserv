@@ -38,6 +38,8 @@ void Web::check()
 			_serv[i].setClientSize(CLIENT_SIZE);
 		if (_serv[i].getAllowMethods().empty())
 			_serv[i].setMethod();
+		if (_serv[i].getRoot().back() != '/')
+			_serv[i].setRoot("/");
 
 		location a = _serv[i].getLocation()["/"];
 		if (_serv[i].getIndex().empty() && !_serv[i].getLocation().at("/").getIndex().empty())

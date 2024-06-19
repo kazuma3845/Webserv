@@ -57,6 +57,7 @@ class configserv
 		void setClientSize(unsigned int size);
 		void setName(std::string str);
 		void setMethod();
+		void setRoot(std::string str);
 
 		//exception
 		class LoopInReturnLocation : public std::exception

@@ -226,6 +226,11 @@ void configserv::setLocation(std::string str, location loc)
 	_location[str] = loc;
 }
 
+void configserv::setRoot(std::string str)
+{
+	_root += str;
+}
+
 const char *configserv::LoopInReturnLocation::what() const throw()
 {
 	return "Infinite loop in return location.";
