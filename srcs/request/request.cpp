@@ -210,13 +210,6 @@ void Request::parseBody(std::istringstream &ss)
 
 void Request::checkRequest()
 {
-	// if (_headers.count("Referer"))
-	// {
-	// 	std::cerr << "-------------------->>" << _headers["Referer"] << std::endl;
-	// 	std::cerr << "-------------------->>" << _uri << std::endl;
-	// 	if (checkfolder(_headers["Referer"]) && _headers["Referer"].back() != '/')
-	// 		_uri = _headers["Referer"].substr(21, _headers["Referer"].size()) + _uri.substr(_uri.find_last_of("/"), _uri.size());
-	// }
 	parseUri();		   // Get location from URI
 	isMethodAllowed(); // Check that method called is allowed in the directory
 	redirectInURI();   // Check if there is a return in the directory

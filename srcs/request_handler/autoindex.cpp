@@ -39,6 +39,8 @@ std::string AutoIndex::create(const std::string& uri) {
 }
 
 std::string AutoIndex::addLine(const std::string& name, const std::string& path) {
+    std::cout << "Path: " << path << " | Name: " << name << " ==============" << std::endl;
+    std::cout << "Path: " << path.substr(path.find("/"), path.size()) << " ==============" << std::endl;
     struct stat fileStat;
     if (stat(path.c_str(), &fileStat) == -1) {
         perror("stat");
@@ -48,7 +50,7 @@ std::string AutoIndex::addLine(const std::string& name, const std::string& path)
         return "";
     std::stringstream ss;
     ss << "            <tr>"
-       << "<td><a href=\"" << name << "\">" << name << "</a></td>"
+       << "<td><a href=\"" << path.substr(path.find("/"), path.size()) << "\">" << name << "</a></td>"
        << "<td>" << ((S_ISDIR(fileStat.st_mode)) ? "-" : fileSize(fileStat.st_size)) << "</td>"
        << "</tr>\n";
     return ss.str();

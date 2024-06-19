@@ -186,8 +186,6 @@ void Server::read_socket(Client &client)
 			response.setConnectionType(client.getKeepAlive());
 			if (req.getHasReturn())
 				response.setStatusCode(301);
-			// if (req.getHeaders().count("Referer"))
-			// 	response.setStatusCode(301);
 			response.formatResponse(client, req);
 			client.setResp(response.getResp());
 		}

@@ -15,6 +15,7 @@ class AutoIndex
 	private:
 		std::string addLine(const std::string& name, const std::string& path);
     	std::string fileSize(off_t size);
+
 	public:
 		AutoIndex(){};
 		~AutoIndex(){};
