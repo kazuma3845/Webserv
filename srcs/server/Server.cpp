@@ -170,6 +170,8 @@ void Server::read_socket(Client &client)
 			redirect.path(req, response);
 			response.setHTTPVersion(req.getHttpVersion());
 			response.setConnectionType(client.getKeepAlive());
+			if (req.getHasReturn())
+				response.setStatusCode(301);
 			response.formatResponse();
 			client.setResp(response.getResp());
 		}
@@ -177,6 +179,7 @@ void Server::read_socket(Client &client)
 		{
 			std::cerr << "Error number: " << e.getErrorCode() << std::endl;
 			std::cerr << "What happened : " << e.what() << std::endl;
+			client.setKeepAlive(false);
 			response.setStatusCode(e.getErrorCode());
 			response.setStatusMessage(e.what());
 			response.ErrorBody(e.getErrorCode());
@@ -200,7 +203,7 @@ void Server::write_socket(Client &client)
 	// Only to show the request content; PRINT REPONSE
 	std::istringstream contentStream(client.getResp());
 	std::string line;
-	std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN ->" << std::endl;
+	std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
 	while (std::getline(contentStream, line)) {
 		std::cerr << line << std::endl;
 	}
@@ -213,13 +216,11 @@ void Server::write_socket(Client &client)
 	FD_CLR(socket, &this->_write_sds);
 	if (client.getKeepAlive()) // status is herited from Request parsing
 	{
-		std::cerr << "-------------->> REUSE socket : " << socket << std::endl;
 		FD_SET(socket, &this->_read_sds);
 		client.reUseClient();
 	}
 	else
 	{
-		std::cerr << "###########>> CLOSE" << std::endl;
 		close(socket);
 		this->_client_sds_map.erase(socket);
 	}
