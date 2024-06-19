@@ -46,11 +46,6 @@ int Client::get_fd(void)
 	return this->_connected_sd;
 }
 
-// std::string Client::get_request_content(void)
-// {
-// 	return this->_request_content;
-// }
-
 ListenSocket Client::get_listen_socket(void)
 {
 	return this->_listen_socket;

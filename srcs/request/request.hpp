@@ -40,6 +40,7 @@ public:
 	location getCurr_loc();
 	std::string getQueryString();
 	Client *getClient();
+	bool getHasReturn();
 
 	// ---------------------------------- SETTERS
 
@@ -60,6 +61,7 @@ private:
 	location _curr_loc;
 	std::string _file_path;
 	std::string _full_path;
+	bool		_hasReturn;
 	Client *client;
 
 	// ---------------------------------- REQUEST PARSING FUNCTIONS

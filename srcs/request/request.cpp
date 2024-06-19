@@ -7,7 +7,7 @@ Request::Request()
 	// std::cout << "Request instance created." << std::endl;
 }
 
-Request::Request(Client *client) : client(client)
+Request::Request(Client *client) : _hasReturn(false), client(client)
 {
 	// std::cout << "Request instance with pointer on client created." << std::endl;
 }
@@ -66,6 +66,12 @@ Client *Request::getClient()
 {
 	return client;
 }
+
+bool Request::getHasReturn()
+{
+	return _hasReturn;
+}
+
 // ---------------------------------- SETTERS -- //
 
 void Request::setURI(std::string uri)
@@ -342,6 +348,7 @@ void Request::redirectInURI() // FIXME: A voir si on veut bien remplacer complè
 	{
 		setURI(_curr_loc.getReturn());
 		_curr_loc = location();
+		_hasReturn = true;
 		_file_path.clear();
 		_full_path.clear();
 		parseUri();

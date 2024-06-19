@@ -36,7 +36,6 @@ public:
 	// --------------------------------------------- GETTERS
 	std::string getResp() const;
 	int get_fd(void);
-	std::string get_request_content(void);
 	ListenSocket get_listen_socket(void);
 	time_t get_connected_time(void);
 	bool getKeepAlive();
