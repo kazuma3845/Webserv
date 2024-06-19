@@ -35,7 +35,7 @@ void Handler::handlePost()
 			throw postFailed(500);
 		outFile << postData << std::endl;
 		outFile.close();
-		_response.setStatusCode(200);
+		_response.setStatusCode(201);
 		_response.setContentType("text/plain");
 		_response.setBody("POST data received and processed.");
 	}
@@ -43,27 +43,63 @@ void Handler::handlePost()
 	{
 		std::string boundary = extractBoundary(contentType);
 		std::istringstream stream(_request.getBody());
-		std::string content;
+		std::string partContent;
+		bool hasSuccessfulPart = false;
 
 		// Lire et traiter chaque partie
-		while (std::getline(stream, content))
+		while (getNextPart(stream, boundary, partContent))
 		{
-			if (content.find(boundary) != std::string::npos)
+			if (processPart(partContent))
 			{
-				// Commence une nouvelle partie
-				if (processPart(stream))
-				{
-					_response.setStatusCode(200);
-					_response.setContentType("text/plain");
-					_response.setBody("Files uploaded successfully.");
-				}
-				else
-					throw postFailed(500);
+				hasSuccessfulPart = true;
 			}
+			else
+			{
+				throw postFailed(500); // Échec lors du traitement d'une des parties
+			}
+		}
+		if (hasSuccessfulPart)
+		{
+			_response.setStatusCode(201);
+			_response.setContentType("text/plain");
+			_response.setBody("Files uploaded successfully.");
+		}
+		else
+		{
+			throw postFailed(500); // Aucun fichier n'a été traité avec succès
 		}
 	}
 	else
-		throw postFailed(415);
+	{
+		throw postFailed(415); // Unsupported Media Type
+	}
+}
+
+bool Handler::getNextPart(std::istringstream &stream, const std::string &boundary, std::string &partContent)
+{
+	partContent.clear();
+	std::string line;
+	bool inPart = false;
+
+	while (std::getline(stream, line))
+	{
+		if (line.find(boundary) != std::string::npos)
+		{
+			if (inPart)
+			{
+				// Si on est déjà dans une partie, on retourne car on a atteint la fin de la partie
+				return true;
+			}
+			// Commencer une nouvelle partie
+			inPart = true;
+		}
+		else if (inPart)
+		{
+			if (!line.empty())
+				partContent += line + "\n";
+		}
+	}
+	return !partContent.empty();
 }
 
 std::string Handler::extractBoundary(const std::string &contentType)
@@ -74,33 +110,40 @@ std::string Handler::extractBoundary(const std::string &contentType)
 	return "";
 }
 
-bool Handler::processPart(std::istringstream &stream)
+bool Handler::processPart(const std::string &partContent)
 {
-	std::string line;
-	std::string disposition;
-	std::string filename;
+    std::istringstream stream(partContent);
+    std::string line;
+    std::string disposition;
+    std::string filename;
 
-	// Extrait le Content-Disposition
-	std::getline(stream, line);
-	std::size_t pos = line.find("filename=");
-	if (pos != std::string::npos)
-	{
-		filename = line.substr(pos + 10);					  // 10 pour passer 'filename="'
-		filename = filename.substr(0, filename.length() - 2); // Supprimer la dernière citation
+    while (std::getline(stream, line))
+    {
+        std::size_t pos = line.find("filename=");
+        if (pos != std::string::npos)
+        {
+            filename = line.substr(pos + 10);                      // 10 pour passer 'filename="'
+            filename = filename.substr(0, filename.length() - 1);  // Supprimer le dernier caractère (qui pourrait être une citation)
 
-		// Ouvrir le fichier pour écrire
-		std::string outputPath = "Page/data/" + filename;
-		std::ofstream outFile(outputPath.c_str(), std::ios::binary);
-		if (!outFile.is_open())
-			return false;
-		// Lire et écrire les données jusqu'à la prochaine boundary
-		while (std::getline(stream, line) && line.find("--") == std::string::npos)
-			outFile << line << std::endl;
-		outFile.close();
-		return true;
-	}
-	return false;
+            // Ouvrir le fichier pour écrire
+            std::string outputPath = "Page/data/" + filename;
+            std::ofstream outFile(outputPath.c_str(), std::ios::binary);
+            if (!outFile.is_open())
+                return false;
+            
+            // Lire et écrire les données jusqu'à la prochaine boundary
+            while (std::getline(stream, line))
+            {
+                if (line.find("--") == std::string::npos)
+                    outFile << line << std::endl;
+            }
+            outFile.close();
+            return true;
+        }
+    }
+    return false;
 }
+
 
 void Handler::handleGet()
 {
@@ -130,7 +173,7 @@ void Handler::handleDelete()
 	std::string filePath = _request.getFullPath();
 	if (std::remove(filePath.c_str()) != 0)
 		throw deletionFailed(500);
-	_response.setStatusCode(200);
+	_response.setStatusCode(204);
 	_response.setContentType("text/plain");
 	_response.setBody("Content deleted successfully");
 }

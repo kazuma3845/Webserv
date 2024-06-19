@@ -161,11 +161,11 @@ void Server::read_socket(Client &client)
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content < 0)
 	{
-
 	}
 	else if (has_content == 0)
 	{
-		std::cerr << std::endl << "Client " << socket << " disconnect " << socket << std::endl;
+		std::cerr << std::endl
+				  << "Client " << socket << " disconnect " << socket << std::endl;
 		FD_CLR(socket, &_read_sds);
 		if (socket >= _max_sd)
 			_max_sd--;
@@ -218,7 +218,8 @@ void Server::write_socket(Client &client)
 	std::istringstream contentStream(client.getResp());
 	std::string line;
 	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
-	while (std::getline(contentStream, line)) {
+	while (std::getline(contentStream, line))
+	{
 		std::cerr << line << std::endl;
 	}
 	//-----------------------------------------------------------------------

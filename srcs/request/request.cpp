@@ -106,6 +106,7 @@ void Request::setClient(Client *client)
 
 void Request::printRequest()
 {
+	std::cout << " -- REQUEST PARSED -- " << std::endl;
 	std::cout << std::endl
 			  << "Method : " << _method << std::endl;
 	std::cout << "URI : " << _uri << std::endl;
@@ -114,12 +115,20 @@ void Request::printRequest()
 		std::cout << it->first << " : " << it->second << std::endl;
 	if (!_body.empty())
 		std::cout << "Body : " << _body << std::endl;
+	else
+		std::cout << "! Body is EMPTY" << std::endl;
 	if (!_curr_loc.empty())
 		std::cout << "Location : " << _curr_loc.getName() << std::endl;
+	else
+		std::cout << "! Location is EMPTY" << std::endl;
 	std::cout << "File_path : " << _file_path << std::endl;
 	std::cout << "Full_path : " << _full_path << std::endl;
 	if (!_queryString.empty())
 		std::cout << "Query String : " << _queryString << std::endl;
+	else
+		std::cout << "! No query string found." << std::endl;
+	std::cout << std::endl;
+	std::cout << " -- END OF PARSED REQUEST -- " << std::endl;
 }
 
 void Request::extractQueryString()
@@ -205,7 +214,7 @@ void Request::parseBody(std::istringstream &ss)
 	if (client->get_listen_socket().get_clientSize() > std::strtoul(_headers["Content-Length"].c_str(), NULL, 10))
 		throw bodySize(413);
 	delete[] buffer;
-	// std::cout << "Body read successfully: " << _body << std::endl;
+	std::cout << "Body read successfully: " << _body << std::endl;
 }
 
 void Request::checkRequest()
@@ -321,8 +330,8 @@ void Request::isMethodAllowed()
 
 	if (methods.empty())
 	{
-		std::cout << "LOCATION ASSOCIATED WITH REQUEST IS : " << _curr_loc.getName() << std::endl;
 		std::cout << "METHODS ARE EMPTY" << std::endl;
+		std::cout << "LOCATION ASSOCIATED WITH REQUEST IS : " << _curr_loc.getName() << std::endl;
 	}
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 	{
@@ -331,7 +340,6 @@ void Request::isMethodAllowed()
 			// std::cout << "AUTHORIZED METHOD " << *it << " IN LOCATION : " << _curr_loc.getName() << std::endl;
 			return;
 		}
-		std::cout << _method << " DOES NOT EQUAL TO " << *it << std::endl;
 	}
 	throw unauthorizedMethod(405);
 }

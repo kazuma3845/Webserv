@@ -28,7 +28,7 @@ public:
 
 	bool checkfolder(std::string uri);
 
-	// ---------------------------------- GETTERS
+	// ------------------------------------------- GETTERS
 
 	std::string getMethod();
 	std::string getURI();
@@ -42,7 +42,7 @@ public:
 	Client *getClient();
 	bool getHasReturn();
 
-	// ---------------------------------- SETTERS
+	// ------------------------------------------- SETTERS
 
 	void setURI(std::string uri);
 	void setLocation(location &loc);
@@ -52,6 +52,8 @@ public:
 	void setClient(Client *client);
 
 private:
+	// ------------------------------------------ ATTRIBUTES
+
 	std::string _method;
 	std::string _uri;
 	std::string _httpVersion;
@@ -61,10 +63,10 @@ private:
 	location _curr_loc;
 	std::string _file_path;
 	std::string _full_path;
-	bool		_hasReturn;
+	bool _hasReturn;
 	Client *client;
 
-	// ---------------------------------- REQUEST PARSING FUNCTIONS
+	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
@@ -72,7 +74,7 @@ private:
 	void parseChunkedBody(std::istringstream &ss);
 	void extractQueryString();
 
-	// ---------------------------------- ERROR
+	// ------------------------------------------ ERROR
 
 	class bodySize : public ErrorWebServ
 	{
