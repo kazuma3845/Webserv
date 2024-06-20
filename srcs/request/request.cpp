@@ -229,6 +229,7 @@ void Request::parseRequest(std::string requestFile)
 {
 	std::istringstream ss(requestFile);
 	std::string line;
+	std::cerr << std::endl << std::endl << "#### Request ####" << std::endl << requestFile << std::endl << std::endl;
 	// extraction de la première ligne qui est la RequestLine
 	std::getline(ss, line);
 	parseRequestLine(line);

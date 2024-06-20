@@ -161,11 +161,17 @@ void Server::read_socket(Client &client)
 	int has_content = read(socket, buffer, MESSAGE_BUFFER);
 	if (has_content < 0)
 	{
-
+		std::cerr << std::endl << "Read error on fd :" << socket << std::endl;
+		FD_CLR(socket, &_read_sds);
+		if (socket >= _max_sd)
+			_max_sd--;
+		close(socket);
+		_client_sds_map.erase(socket);
+		return;
 	}
 	else if (has_content == 0)
 	{
-		std::cerr << std::endl << "Client " << socket << " disconnect " << socket << std::endl;
+		std::cerr << std::endl << "Client " << socket << " disconnect " << std::endl;
 		FD_CLR(socket, &_read_sds);
 		if (socket >= _max_sd)
 			_max_sd--;
