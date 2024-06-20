@@ -17,7 +17,7 @@ public:
 	Request();
 	Request(Client *client);
 	~Request();
-	void parseRequest(std::string requestFile);
+	void parseRequest(int fd);
 	void checkRequest();
 	void printRequest();
 
@@ -71,7 +71,7 @@ private:
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);
-	void parseChunkedBody(std::istringstream &ss);
+	void processChunkedBody(int fd, const std::string &initial_data);
 	void extractQueryString();
 
 	// ------------------------------------------ ERROR

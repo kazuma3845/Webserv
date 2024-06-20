@@ -150,59 +150,37 @@ void Server::add_client(ListenSocket &listen_socket)
 
 void Server::read_socket(Client &client)
 {
-	char buffer[MESSAGE_BUFFER];
 	int socket = client.get_fd();
-	memset(buffer, 0, MESSAGE_BUFFER);
-
 	Request req(&client);
 	Redirection redirect;
 	Response response;
 
-	int has_content = read(socket, buffer, MESSAGE_BUFFER);
-	if (has_content < 0)
+	try
 	{
+		client.setTimeout();
+		req.parseRequest(socket);
+		req.checkRequest();
+		req.printRequest();
+		redirect.path(req, response);
+		response.setHTTPVersion(req.getHttpVersion());
+		response.setConnectionType(client.getKeepAlive());
+		if (req.getHasReturn())
+			response.setStatusCode(301);
+		response.formatResponse(client, req);
+		client.setResp(response.getResp());
 	}
-	else if (has_content == 0)
+	catch (const ErrorWebServ &e)
 	{
-		std::cerr << std::endl
-				  << "Client " << socket << " disconnect " << socket << std::endl;
-		FD_CLR(socket, &_read_sds);
-		if (socket >= _max_sd)
-			_max_sd--;
-		close(socket);
-		_client_sds_map.erase(socket);
-		return;
+		std::cerr << "Error number: " << e.getErrorCode() << std::endl;
+		std::cerr << "What happened : " << e.what() << std::endl;
+		client.setKeepAlive(false);
+		response.setStatusCode(e.getErrorCode());
+		response.setStatusMessage(e.what());
+		response.ErrorBody(e.getErrorCode());
+		response.setConnectionType(false);
+		response.formatResponse(client, req);
+		client.setResp(response.getResp());
 	}
-	if (has_content)
-	{
-		try
-		{
-			client.setTimeout();
-			req.parseRequest(buffer);
-			req.checkRequest();
-			req.printRequest();
-			redirect.path(req, response);
-			response.setHTTPVersion(req.getHttpVersion());
-			response.setConnectionType(client.getKeepAlive());
-			if (req.getHasReturn())
-				response.setStatusCode(301);
-			response.formatResponse(client, req);
-			client.setResp(response.getResp());
-		}
-		catch (const ErrorWebServ &e)
-		{
-			std::cerr << "Error number: " << e.getErrorCode() << std::endl;
-			std::cerr << "What happened : " << e.what() << std::endl;
-			client.setKeepAlive(false);
-			response.setStatusCode(e.getErrorCode());
-			response.setStatusMessage(e.what());
-			response.ErrorBody(e.getErrorCode());
-			response.setConnectionType(false);
-			response.formatResponse(client, req);
-			client.setResp(response.getResp());
-		}
-	}
-	// Remove socket from read to write
 	FD_CLR(socket, &this->_read_sds);
 	FD_SET(socket, &this->_write_sds);
 }
@@ -218,10 +196,10 @@ void Server::write_socket(Client &client)
 	std::istringstream contentStream(client.getResp());
 	std::string line;
 	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
-	while (std::getline(contentStream, line))
-	{
-		std::cerr << line << std::endl;
-	}
+	// while (std::getline(contentStream, line))
+	// {
+	// 	std::cerr << line << std::endl;
+	// }
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write

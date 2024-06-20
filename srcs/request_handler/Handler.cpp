@@ -49,14 +49,10 @@ void Handler::handlePost()
 		// Lire et traiter chaque partie
 		while (getNextPart(stream, boundary, partContent))
 		{
-			if (processPart(partContent))
-			{
+			if (processPart(partContent, boundary))
 				hasSuccessfulPart = true;
-			}
 			else
-			{
 				throw postFailed(500); // Échec lors du traitement d'une des parties
-			}
 		}
 		if (hasSuccessfulPart)
 		{
@@ -65,14 +61,10 @@ void Handler::handlePost()
 			_response.setBody("Files uploaded successfully.");
 		}
 		else
-		{
 			throw postFailed(500); // Aucun fichier n'a été traité avec succès
-		}
 	}
 	else
-	{
 		throw postFailed(415); // Unsupported Media Type
-	}
 }
 
 bool Handler::getNextPart(std::istringstream &stream, const std::string &boundary, std::string &partContent)
@@ -83,20 +75,18 @@ bool Handler::getNextPart(std::istringstream &stream, const std::string &boundar
 
 	while (std::getline(stream, line))
 	{
+		// Si on trouve la limite de la partie
 		if (line.find(boundary) != std::string::npos)
 		{
+			// Si on était déjà dans une partie, cela signifie que nous avons atteint la limite de la prochaine partie
 			if (inPart)
-			{
-				// Si on est déjà dans une partie, on retourne car on a atteint la fin de la partie
 				return true;
-			}
-			// Commencer une nouvelle partie
+
 			inPart = true;
 		}
 		else if (inPart)
 		{
-			if (!line.empty())
-				partContent += line + "\n";
+			partContent += line + "\n";
 		}
 	}
 	return !partContent.empty();
@@ -106,44 +96,58 @@ std::string Handler::extractBoundary(const std::string &contentType)
 {
 	std::size_t pos = contentType.find("boundary=");
 	if (pos != std::string::npos)
-		return contentType.substr(pos + 9); // 9 pour passer 'boundary='
+		return "--" + contentType.substr(pos + 9); // 9 pour passer 'boundary=' et ajouter '--' pour correspondre au format des délimiteurs
 	return "";
 }
 
-bool Handler::processPart(const std::string &partContent)
+bool Handler::processPart(const std::string &partContent, const std::string &boundary)
 {
-    std::istringstream stream(partContent);
-    std::string line;
-    std::string disposition;
-    std::string filename;
+	std::istringstream stream(partContent);
+	std::string line;
+	std::string filename;
+	bool inHeader = true;
 
-    while (std::getline(stream, line))
-    {
-        std::size_t pos = line.find("filename=");
-        if (pos != std::string::npos)
-        {
-            filename = line.substr(pos + 10);                      // 10 pour passer 'filename="'
-            filename = filename.substr(0, filename.length() - 1);  // Supprimer le dernier caractère (qui pourrait être une citation)
+	// Parse headers to get the filename
+	while (inHeader && std::getline(stream, line))
+	{
+		if (line.find("Content-Disposition:") != std::string::npos)
+		{
+			std::size_t pos = line.find("filename=");
+			if (pos != std::string::npos)
+			{
+				filename = line.substr(pos + 10);					  // 10 pour passer 'filename="'
+				filename = filename.substr(0, filename.length() - 2); // Supprimer le dernier caractère (généralement une citation)
+			}
+		}
+		if (line == "\r" || line == "\n" || line.empty()) // Fin des en-têtes
+		{
+			inHeader = false;
+		}
+	}
 
-            // Ouvrir le fichier pour écrire
-            std::string outputPath = "Page/data/" + filename;
-            std::ofstream outFile(outputPath.c_str(), std::ios::binary);
-            if (!outFile.is_open())
-                return false;
-            
-            // Lire et écrire les données jusqu'à la prochaine boundary
-            while (std::getline(stream, line))
-            {
-                if (line.find("--") == std::string::npos)
-                    outFile << line << std::endl;
-            }
-            outFile.close();
-            return true;
-        }
-    }
-    return false;
+	if (filename.empty())
+		return false;
+
+	// Ouvrir le fichier pour écrire
+	std::string outputPath = "Page/data/" + filename;
+	std::ofstream outFile(outputPath.c_str(), std::ios::binary);
+	if (!outFile.is_open())
+		return false;
+
+	// Lire le contenu du fichier et écrire dans outFile
+	while (std::getline(stream, line))
+	{
+		// Vérifier si la ligne contient la fin de la partie (délimité par "--")
+		if (line.find(boundary) != std::string::npos)
+			break;
+
+		// Write the line to the file
+		outFile << line << "\n";
+	}
+
+	outFile.close();
+	return true;
 }
-
 
 void Handler::handleGet()
 {

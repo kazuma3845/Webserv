@@ -23,7 +23,7 @@ private:
 	void handlePost();
 	void handleDelete();
 	std::string extractBoundary(const std::string &contentType);
-	bool processPart(const std::string &partContent);
+	bool processPart(const std::string &partContent, const std::string &boundary);
 	bool getNextPart(std::istringstream &stream, const std::string &boundary, std::string &partContent);
 
 	// ------------------------------------------ ERRORS //
