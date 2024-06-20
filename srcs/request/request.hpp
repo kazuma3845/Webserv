@@ -68,6 +68,7 @@ private:
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
+	size_t readUntilHeadersEnd(int fd, std::string &request_data);
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
 	void parseBody(std::istringstream &ss);

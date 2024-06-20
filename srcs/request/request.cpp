@@ -344,71 +344,137 @@ void Request::checkRequest()
 		client->setKeepAlive(true);
 }
 
+// * This function reads data from a file descriptor until the end of HTTP headers is reached.
+// * It appends the read data to the request_data string and returns the position just after the end of the headers.
+
+size_t Request::readUntilHeadersEnd(int fd, std::string &request_data) {
+    char buffer[MESSAGE_BUFFER]; // Buffer to hold incoming data from the file descriptor
+    int has_content; // Variable to hold the number of bytes read from the file descriptor
+    size_t header_end = std::string::npos; // Position of the end of the HTTP headers
+
+    // Read from the file descriptor in a loop until there is no more data
+    while ((has_content = read(fd, buffer, MESSAGE_BUFFER)) > 0) {
+        // Append the read data to the request_data string
+        request_data.append(buffer, has_content);
+
+        // Find the end of the HTTP headers
+        header_end = request_data.find("\r\n\r\n");
+        if (header_end != std::string::npos) // If the end of the headers is found, break the loop
+            break;
+    }
+
+    // Handle errors during reading
+    if (has_content < 0) // If read returns a negative value, an error occurred
+        throw std::runtime_error("Error reading from socket");
+    else if (has_content == 0 && request_data.empty()) // If no data is read and request_data is empty, the client disconnected
+        throw std::runtime_error("Client disconnected");
+
+    // Return the position just after the end of the headers
+    return header_end + 4;
+}
+
 // * Parses an HTTP request from a given file descriptor (fd).
 // * The function reads data from the fd into a buffer, processes the HTTP headers,
 // * and determines how to handle the body based on the headers.
 
 void Request::parseRequest(int fd)
 {
-	char buffer[MESSAGE_BUFFER]; // Buffer to hold incoming data from the file descriptor
 	std::string request_data; // String to accumulate the request data
-	int has_content; // Variable to hold the number of bytes read from the file descriptor
+	size_t header_end = readUntilHeadersEnd(fd, request_data);
+	// Create a stream to process the headers
+	std::istringstream header_stream(request_data.substr(0, header_end));
+	
+	std::string line;
+	// Parse the request line (e.g., GET /index.html HTTP/1.1)
+	std::getline(header_stream, line);
+	parseRequestLine(line);
 
-	// Read from the file descriptor in a loop until there is no more data
-	while ((has_content = read(fd, buffer, MESSAGE_BUFFER)) > 0)
+	// Parse all the headers
+	while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n")
+		parseHeaders(line);
+
+	// Determine where the body starts
+	size_t body_start = header_end;
+
+	// Handle the body if Content-Length is specified
+	if (_headers.find("Content-Length") != _headers.end())
 	{
-		// Append the read data to the request_data string
-		request_data.append(buffer, has_content);
-		// Clear the buffer
-		memset(buffer, 0, has_content);
-
-		// Find the end of the HTTP headers
-		size_t header_end = request_data.find("\r\n\r\n");
-		if (header_end != std::string::npos)
+		size_t content_length = std::stoi(_headers["Content-Length"]);
+		if (request_data.size() >= body_start + content_length)
 		{
-			// Create a stream to process the headers
-			std::istringstream header_stream(request_data.substr(0, header_end + 4));
-			std::string line;
-			// Parse the request line (e.g., GET /index.html HTTP/1.1)
-			std::getline(header_stream, line);
-			parseRequestLine(line);
-
-			// Parse all the headers
-			while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n")
-				parseHeaders(line);
-
-			// Determine where the body starts
-			size_t body_start = header_end + 4;
-
-			// Handle the body if Content-Length is specified
-			if (_headers.find("Content-Length") != _headers.end())
-			{
-				size_t content_length = std::stoi(_headers["Content-Length"]);
-				if (request_data.size() >= body_start + content_length)
-				{
-					std::istringstream body_stream(request_data.substr(body_start, content_length));
-					parseBody(body_stream);
-					break;
-				}
-			}
-			// Handle the body if Transfer-Encoding is chunked
-			else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
-			{
-				processChunkedBody(fd, request_data.substr(body_start));
-				break;
-			}
-			// No body to process
-			else
-				break;
+			std::istringstream body_stream(request_data.substr(body_start, content_length));
+			parseBody(body_stream);
 		}
 	}
-
-	// Handle errors during reading
-	if (has_content < 0)
-		throw std::runtime_error("Error reading from socket");
-	else if (has_content == 0 && request_data.empty())
-		throw std::runtime_error("Client disconnected");
+	// Handle the body if Transfer-Encoding is chunked
+	else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
+	{
+		processChunkedBody(fd, request_data.substr(body_start));
+	}
 }
+
+// ! WORKING VERSION DONT DELETE
+// void Request::parseRequest(int fd)
+// {
+// 	char buffer[MESSAGE_BUFFER]; // Buffer to hold incoming data from the file descriptor
+// 	std::string request_data; // String to accumulate the request data
+// 	int has_content; // Variable to hold the number of bytes read from the file descriptor
+
+// 	// Read from the file descriptor in a loop until there is no more data
+// 	while ((has_content = read(fd, buffer, MESSAGE_BUFFER)) > 0)
+// 	{
+// 		// Append the read data to the request_data string
+// 		request_data.append(buffer, has_content);
+// 		// Clear the buffer
+// 		memset(buffer, 0, has_content);
+
+// 		// Find the end of the HTTP headers
+// 		size_t header_end = request_data.find("\r\n\r\n");
+// 		if (header_end != std::string::npos)
+// 		{
+// 			// Create a stream to process the headers
+// 			std::istringstream header_stream(request_data.substr(0, header_end + 4));
+// 			std::string line;
+// 			// Parse the request line (e.g., GET /index.html HTTP/1.1)
+// 			std::getline(header_stream, line);
+// 			parseRequestLine(line);
+
+// 			// Parse all the headers
+// 			while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n")
+// 				parseHeaders(line);
+
+// 			// Determine where the body starts
+// 			size_t body_start = header_end + 4;
+
+// 			// Handle the body if Content-Length is specified
+// 			if (_headers.find("Content-Length") != _headers.end())
+// 			{
+// 				size_t content_length = std::stoi(_headers["Content-Length"]);
+// 				if (request_data.size() >= body_start + content_length)
+// 				{
+// 					std::istringstream body_stream(request_data.substr(body_start, content_length));
+// 					parseBody(body_stream);
+// 					break;
+// 				}
+// 			}
+// 			// Handle the body if Transfer-Encoding is chunked
+// 			else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
+// 			{
+// 				processChunkedBody(fd, request_data.substr(body_start));
+// 				break;
+// 			}
+// 			// No body to process
+// 			else
+// 				break;
+// 		}
+// 	}
+
+// 	// Handle errors during reading
+// 	if (has_content < 0)
+// 		throw std::runtime_error("Error reading from socket");
+// 	else if (has_content == 0 && request_data.empty())
+// 		throw std::runtime_error("Client disconnected");
+// }
 
 // * This function parses the URI to determine the correct location and file path based on the client's request.
 // * It iterates through potential locations and sets the appropriate current location and file path accordingly.
