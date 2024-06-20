@@ -202,8 +202,12 @@ void Server::read_socket(Client &client)
 			client.setKeepAlive(false);
 			response.setStatusCode(e.getErrorCode());
 			response.setStatusMessage(e.what());
-			response.ErrorBody(e.getErrorCode());
+			if (client.get_listen_socket().get_error().compare(std::to_string(e.getErrorCode())) == 0)
+				response.ErrorBody(e.getErrorCode(), client, true);
+			else
+				response.ErrorBody(e.getErrorCode(), client, false);
 			response.setConnectionType(false);
+			response.setContentType("text/html");
 			response.formatResponse(client, req);
 			client.setResp(response.getResp());
 		}

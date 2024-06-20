@@ -291,19 +291,25 @@ void Response::formatResponse(Client &a, Request &b)
 	_resp += _body;
 }
 
-void Response::ErrorBody(int error_code)
+void Response::ErrorBody(int error_code, Client &a, bool b)
 {
 	std::string path;
 
-	if (error_code % 400 < 100)
-		path = "Page/error/400/" + std::to_string(error_code) + ".html";
-	else if (error_code % 500 < 100)
-		path = "Page/error/500/" + std::to_string(error_code) + ".html";
+	if (b == false)
+	{
+		if (error_code % 400 < 100)
+			path = "Page/error/400/" + std::to_string(error_code) + ".html";
+		else if (error_code % 500 < 100)
+			path = "Page/error/500/" + std::to_string(error_code) + ".html";
+	}
+	else
+		path = a.get_listen_socket().get_error_path()[a.get_listen_socket().get_error()];
 	std::ifstream file(path);
 	if (!file)
 	{
 		std::cerr << "Failed to open file: " << path << '\n';
-		return;
+		ErrorBody(error_code, a, false);
+		return ;
 	}
 	std::stringstream buffer;
 	buffer << file.rdbuf();

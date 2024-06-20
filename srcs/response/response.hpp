@@ -40,7 +40,7 @@ public:
 	void formatResponse(Client &a, Request &b);
 	void loadContent(const std::string &filePath);
 
-	void ErrorBody(int error_code);
+	void ErrorBody(int error_code, Client &a, bool b);
 
 private:
 	// --------------------------------------- ATTRIBUTES
