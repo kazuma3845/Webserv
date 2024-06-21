@@ -6,7 +6,7 @@
 #include <sys/stat.h>
 
 #include <errno.h>
-#include <cstring> 
+#include <cstring>
 
 class Request;
 
@@ -21,15 +21,7 @@ public:
 	Request(Client *client);
 	~Request();
 	void parseRequest(int fd);
-	void checkRequest();
 	void printRequest();
-
-	void isMethodAllowed();
-	void redirectInURI();
-	void parseUri();
-	void checkFile(int mode);
-
-	bool checkfolder(std::string uri);
 
 	// ------------------------------------------- GETTERS
 
@@ -71,13 +63,19 @@ private:
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
-	size_t readUntilHeadersEnd(int fd, std::string &request_data);
-	void prepareBodyParsing(int fd, size_t body_start);
+	std::string readUntilHeadersEnd(int fd);
+	void prepareBodyParsing(int fd);
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
-	void parseBody(int fd, size_t start, unsigned int length);
-	void processChunkedBody(int fd, const std::string &initial_data);
+	void parseBody(int fd, unsigned int length);
+	void processChunkedBody(int fd);
 	void extractQueryString();
+	void isMethodAllowed();
+	void redirectInURI();
+	void parseUri();
+	void checkFile(int mode);
+	bool checkfolder(std::string uri);
+	void checkRequest();
 
 	// ------------------------------------------ ERROR
 
