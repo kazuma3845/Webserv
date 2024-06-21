@@ -220,6 +220,7 @@ void Request::processChunkedBody(int fd)
 	size_t maxSize = client->get_listen_socket().get_clientSize();
 	size_t totalSize = 0;
 
+	std::cout << "Starting chunked body parsing..." << std::endl;
 	while (true)
 	{
 		chunkSizeLine.clear();
@@ -236,7 +237,7 @@ void Request::processChunkedBody(int fd)
 		std::stringstream ss(chunkSizeLine);
 		ss << std::hex;
 		ss >> chunkSize;
-
+		std::cout << "Chunk size is : " << chunkSize << std::endl;
 		if (chunkSize == 0)
 			break;
 
@@ -279,38 +280,39 @@ void Request::processChunkedBody(int fd)
 	// }
 }
 
-// * Parses the body of an HTTP request based on the Content-Length header.
-// * Validates the length and ensures it matches the specified content length.
-
+// * Parses the body of an HTTP request from a given file descriptor.
 void Request::parseBody(int fd, unsigned int length)
 {
-	if (client->get_listen_socket().get_clientSize() > length)
+	if (client->get_listen_socket().get_clientSize() < length) // Check if client request size exceeds allowed limit
 		throw bodySize(413);
 
-	// Allocate buffer and read the body content
-	char *buffer = new char[length + 1];
-	ssize_t bytesRead = read(fd, buffer, length);
-	if (bytesRead < 0)
+	char *buffer = new char[length + 1]; // Allocate buffer for reading body content
+	size_t totalBytesRead = 0;
+	ssize_t bytesRead = 0;
+
+	while (totalBytesRead < length) // Loop until entire body length is read
 	{
-		delete[] buffer;
-		throw std::runtime_error("Error reading file");
+		bytesRead = read(fd, buffer + totalBytesRead, length - totalBytesRead);
+		if (bytesRead < 0) // Check for read error
+		{
+			delete[] buffer;
+			throw std::runtime_error("Error reading file");
+		}
+		else if (bytesRead == 0) // Check if client closed connection prematurely
+		{
+			delete[] buffer;
+			throw std::runtime_error("Connection closed by client");
+		}
+		totalBytesRead += bytesRead; // Update total bytes read counter
 	}
-
-	buffer[bytesRead] = '\0';
-	_body.assign(buffer, static_cast<size_t>(bytesRead));
-	delete[] buffer; // Free allocated buffer
-
-	if (bytesRead != length)
+	if (totalBytesRead != length)
 		throw shorterBodyContent(400);
+	buffer[totalBytesRead] = '\0';
+	_body.assign(buffer, totalBytesRead);
+	delete[] buffer;
 
-	// std::cout << "Body read successfully: " << _body << std::endl;
+	std::cout << "Length expected: " << length << ", Bytes read: " << totalBytesRead << std::endl;
 }
-
-// void Request::prepareBodyParsing()
-// {
-
-// 	fe
-// }
 
 // * This function checks various aspects of an HTTP request to ensure it meets certain criteria.
 // * It parses the URI, checks if the method is allowed, handles redirections, checks file existence,
@@ -355,22 +357,48 @@ std::string Request::readUntilHeadersEnd(int fd)
 	return (request);
 }
 
+void Request::waitForBody(int fd)
+{
+	fd_set read_fds;
+	struct timeval tv;
+	int attempts = 0;
+
+	while (attempts < MAX_ATTEMPTS)
+	{
+		FD_ZERO(&read_fds);
+		FD_SET(fd, &read_fds);
+
+		tv.tv_sec = 0;
+		tv.tv_usec = 100000; // 100 ms
+
+		int result = select(fd + 1, &read_fds, NULL, NULL, &tv);
+		if (result > 0)
+		{
+			if (FD_ISSET(fd, &read_fds))
+				return;
+		}
+		attempts++;
+		usleep(10000); // 10 ms delay to reduce CPU usage in the loop
+	}
+	throw std::runtime_error("Timeout waiting for the body to start arriving");
+}
+
 void Request::prepareBodyParsing(int fd)
 {
+	if (_headers.find("Expect") != _headers.end())
+	{
+		const char *continueMsg = "HTTP/1.1 100 Continue\r\n\r\n";
+		write(fd, continueMsg, strlen(continueMsg));
+		std::cout << "Sending CONTINUE signal" << std::endl;
+		waitForBody(fd);
+	}
 	if (_headers.find("Content-Length") != _headers.end())
 	{
 		unsigned int length = std::atoi(_headers["Content-Length"].c_str());
 		parseBody(fd, length);
 	}
 	else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
-	{
-		if (_headers.find("Expect") != _headers.end())
-		{
-			const char *continueMsg = "HTTP/1.1 100 Continue\r\n\r\n";
-			write(fd, continueMsg, strlen(continueMsg));
-		}
 		processChunkedBody(fd);
-	}
 }
 
 // * Function to parse an HTTP request from a given file descriptor.

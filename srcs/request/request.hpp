@@ -14,6 +14,8 @@ class Request;
 #include "../errors/ErrorWebServ.hpp"
 #include "Client.hpp"
 
+#define MAX_ATTEMPTS 1000000
+
 class Request
 {
 public:
@@ -22,6 +24,7 @@ public:
 	~Request();
 	void parseRequest(int fd);
 	void printRequest();
+	void checkRequest();
 
 	// ------------------------------------------- GETTERS
 
@@ -75,7 +78,7 @@ private:
 	void parseUri();
 	void checkFile(int mode);
 	bool checkfolder(std::string uri);
-	void checkRequest();
+	void waitForBody(int fd);
 
 	// ------------------------------------------ ERROR
 

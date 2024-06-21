@@ -12,7 +12,7 @@
 # include <arpa/inet.h>
 # include <fcntl.h>
 # include "../parsing/configserv.hpp"
-# define MESSAGE_BUFFER 5000
+# define MESSAGE_BUFFER 10000000
 # define MAX_CLIENTS 30
 
 class ListenSocket {
