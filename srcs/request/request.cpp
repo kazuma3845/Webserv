@@ -143,17 +143,13 @@ void Request::printRequest()
 	std::cout << " -- END OF PARSED REQUEST -- " << std::endl;
 }
 
-// * Extracts the query string from the URI and updates the URI to exclude the query string.
-
 void Request::extractQueryString()
 {
-	// Find the position of the '?' character in the URI
 	size_t pos = _uri.find('?');
 
-	std::string tmp = _uri.substr(0, pos); // URI without query string
-	_queryString = _uri.substr(pos + 1);   // Extracted query string
+	std::string tmp = _uri.substr(0, pos);
+	_queryString = _uri.substr(pos + 1);
 
-	// Update the URI to exclude the query string
 	_uri = tmp;
 }
 
@@ -284,39 +280,34 @@ void Request::processChunkedBody(int fd, const std::string &initial_data)
 // * Parses the body of an HTTP request based on the Content-Length header.
 // * Validates the length and ensures it matches the specified content length.
 
-void Request::parseBody(std::istringstream &ss)
+void Request::parseBody(int fd, size_t start, unsigned int length)
 {
-	// Ensure the Content-Length header is present
-	if (_headers.find("Content-Length") == _headers.end())
-		throw contentLengthUnspecified(411);
+	if (client->get_listen_socket().get_clientSize() > length)
+		throw bodySize(413);
 
-	// Convert the Content-Length value to an integer
-	std::stringstream to_convert(_headers["Content-Length"]);
-	int length;
-	to_convert >> length;
-	if (length <= 0)
-		throw invalidContentLength(400);
+	if (lseek(fd, start, SEEK_SET) == (off_t)-1)
+	{
+		std::cerr << "Failed to seek in file: " << strerror(errno) << std::endl;
+		throw std::runtime_error("Failed to seek in file");
+	}
 
 	// Allocate buffer and read the body content
 	char *buffer = new char[length + 1];
-	ss.read(buffer, length);
-	buffer[ss.gcount()] = '\0';
-	_body.assign(buffer, ss.gcount());
+	ssize_t bytesRead = read(fd, buffer, length);
+	if (bytesRead < 0)
+	{
+		delete[] buffer;
+		throw std::runtime_error("Error reading file");
+	}
 
-	// Validate the body content length
-	if (ss.gcount() != length)
+	buffer[bytesRead] = '\0';
+	_body.assign(buffer, static_cast<size_t>(bytesRead));
+	delete[] buffer; // Free allocated buffer
+
+	if (bytesRead != length)
 		throw shorterBodyContent(400);
 
-	// Ensure no extra content in the stream
-	if (ss.get() != EOF)
-		throw longerBodyContent(400);
-
-	// Validate against the client's allowed size
-	if (client->get_listen_socket().get_clientSize() > std::strtoul(_headers["Content-Length"].c_str(), NULL, 10))
-		throw bodySize(413);
-
-	delete[] buffer; // Free allocated buffer
-					 // std::cout << "Body read successfully: " << _body << std::endl;
+	// std::cout << "Body read successfully: " << _body << std::endl;
 }
 
 // void Request::prepareBodyParsing()
@@ -347,70 +338,65 @@ void Request::checkRequest()
 // * This function reads data from a file descriptor until the end of HTTP headers is reached.
 // * It appends the read data to the request_data string and returns the position just after the end of the headers.
 
-size_t Request::readUntilHeadersEnd(int fd, std::string &request_data) {
-    char buffer[MESSAGE_BUFFER]; // Buffer to hold incoming data from the file descriptor
-    int has_content; // Variable to hold the number of bytes read from the file descriptor
-    size_t header_end = std::string::npos; // Position of the end of the HTTP headers
+size_t Request::readUntilHeadersEnd(int fd, std::string &request_data)
+{
+	char buffer[MESSAGE_BUFFER];		   // Buffer to hold incoming data from the file descriptor
+	int has_content;					   // Variable to hold the number of bytes read from the file descriptor
+	size_t header_end = std::string::npos; // Position of the end of the HTTP headers
 
-    // Read from the file descriptor in a loop until there is no more data
-    while ((has_content = read(fd, buffer, MESSAGE_BUFFER)) > 0) {
-        // Append the read data to the request_data string
-        request_data.append(buffer, has_content);
+	// Read from the file descriptor in a loop until there is no more data
+	while ((has_content = read(fd, buffer, MESSAGE_BUFFER)) > 0)
+	{
+		// Append the read data to the request_data string
+		request_data.append(buffer, has_content);
 
-        // Find the end of the HTTP headers
-        header_end = request_data.find("\r\n\r\n");
-        if (header_end != std::string::npos) // If the end of the headers is found, break the loop
-            break;
-    }
+		// Find the end of the HTTP headers
+		header_end = request_data.find("\r\n\r\n");
+		if (header_end != std::string::npos) // If the end of the headers is found, break the loop
+			break;
+	}
 
-    // Handle errors during reading
-    if (has_content < 0) // If read returns a negative value, an error occurred
-        throw std::runtime_error("Error reading from socket");
-    else if (has_content == 0 && request_data.empty()) // If no data is read and request_data is empty, the client disconnected
-        throw std::runtime_error("Client disconnected");
+	// Handle errors during reading
+	if (has_content < 0) // If read returns a negative value, an error occurred
+		throw std::runtime_error("Error reading from socket");
+	else if (has_content == 0 && request_data.empty()) // If no data is read and request_data is empty, the client disconnected
+		throw std::runtime_error("Client disconnected");
 
-    // Return the position just after the end of the headers
-    return header_end + 4;
+	// Return the position just after the end of the headers
+	return header_end + 4;
 }
 
-// * Parses an HTTP request from a given file descriptor (fd).
-// * The function reads data from the fd into a buffer, processes the HTTP headers,
-// * and determines how to handle the body based on the headers.
+void Request::prepareBodyParsing(int fd, size_t body_start)
+{
+
+	if (_headers.find("Content-Length") != _headers.end())
+	{
+		unsigned int length = std::atoi(_headers["Content-Length"].c_str());
+		parseBody(fd, body_start, length);
+	}
+	// else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
+	// {
+	// 	processChunkedBody(fd, request_data.substr(body_start));
+	// }
+}
+
+// * Function to parse an HTTP request from a given file descriptor.
+// * It reads the request, parses the request line, headers, and body based on the headers.
 
 void Request::parseRequest(int fd)
 {
-	std::string request_data; // String to accumulate the request data
-	size_t header_end = readUntilHeadersEnd(fd, request_data);
-	// Create a stream to process the headers
-	std::istringstream header_stream(request_data.substr(0, header_end));
-	
+	std::string request_data;
+	size_t header_end = readUntilHeadersEnd(fd, request_data);			  // Read data until the end of the headers section
+	std::istringstream header_stream(request_data.substr(0, header_end)); // Create a stream for header parsing
 	std::string line;
-	// Parse the request line (e.g., GET /index.html HTTP/1.1)
 	std::getline(header_stream, line);
-	parseRequestLine(line);
 
-	// Parse all the headers
-	while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n")
+	parseRequestLine(line); // Parse the request line (e.g., GET /index.html HTTP/1.1)
+
+	while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n") // Loop to parse headers until an empty line or newline sequence
 		parseHeaders(line);
 
-	// Determine where the body starts
-	size_t body_start = header_end;
-
-	// Handle the body if Content-Length is specified
-	if (_headers.find("Content-Length") != _headers.end())
-	{
-		size_t content_length = std::stoi(_headers["Content-Length"]);
-		if (request_data.size() >= body_start + content_length)
-		{
-			std::istringstream body_stream(request_data.substr(body_start, content_length));
-			parseBody(body_stream);
-		}
-	}
-	// Handle the body if Transfer-Encoding is chunked
-	else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
-	{
-		processChunkedBody(fd, request_data.substr(body_start));
-	}
+	prepareBodyParsing(fd, header_end);
 }
 
 // ! WORKING VERSION DONT DELETE
@@ -476,77 +462,74 @@ void Request::parseRequest(int fd)
 // 		throw std::runtime_error("Client disconnected");
 // }
 
-// * This function parses the URI to determine the correct location and file path based on the client's request.
-// * It iterates through potential locations and sets the appropriate current location and file path accordingly.
+// * This function parses the URI to determine the current location and file path.
+// * It extracts the location and file paths from the URI and sets the appropriate
+// * member variables based on configuration and file system checks.
 
 void Request::parseUri()
 {
-	int slash_pos;				// Position of the last slash in the URI
-	int end_pos;				// End position of the URI string
-	std::string temp_loc_path;	// Temporary variable for location path
-	std::string temp_file_path; // Temporary variable for file path
-	std::string uri;			// The URI to be parsed
-
-	uri = this->_uri;	   // Assign the class member URI to the local variable
-	end_pos = sizeof(uri); // Set end_pos to the size of the URI string
-	slash_pos = end_pos;   // Initialize slash_pos to the end of the URI string
-	temp_loc_path = uri;   // Set temp_loc_path to the full URI initially
+	int slash_pos;
+	int end_pos;
+	std::string temp_loc_path;
+	std::string temp_file_path;
+	std::string uri;
+	uri = this->_uri;
+	end_pos = sizeof(uri); // Calculate the size of the URI.
+	slash_pos = end_pos;
+	temp_loc_path = uri;
 
 	while (1)
-	{ // Loop to find the correct location
+	{
 		for (size_t i = 0; i < client->get_listen_socket().get_location().size(); ++i)
-		{ // Iterate through locations
+		{
 			if (!client->get_listen_socket().get_location()[temp_loc_path].getName().empty())
-			{																				 // Check if location name is not empty
-				this->_curr_loc = client->get_listen_socket().get_location()[temp_loc_path]; // Set current location
-				break;																		 // Exit the loop if location is found
+			{
+				this->_curr_loc = client->get_listen_socket().get_location()[temp_loc_path];
+				break; // Exit the loop if a matching location is found.
 			}
 		}
-
-		if (slash_pos <= 0 || !_curr_loc.getName().empty()) // Exit condition: no more slashes or location found
-			break;
+		if (slash_pos <= 0 || !_curr_loc.getName().empty())
+			break; // Stop if no more slashes or current location is set.
 		else
 		{
-			slash_pos = temp_loc_path.find_last_of('/');					 // Find the last slash in the path
-			temp_loc_path = uri.substr(0, slash_pos);						 // Update temp_loc_path to the substring before the last slash
-			temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos); // Set temp_file_path to the substring after the last slash
-
+			slash_pos = temp_loc_path.find_last_of('/');					 // Find the last slash.
+			temp_loc_path = uri.substr(0, slash_pos);						 // Update the location path.
+			temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos); // Extract the file path.
 			if (slash_pos == 0)
-			{ // Special case for root path
+			{
 				temp_loc_path = "/";
-				temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos); // Update file path for root
+				temp_file_path = uri.substr(slash_pos + 1, end_pos - slash_pos);
 			}
 		}
 	}
 
-	std::string temp_root = client->get_listen_socket().get_root(); // Get the root path from the client
+	std::string temp_root = client->get_listen_socket().get_root();
 	if (!_curr_loc.getRoot().empty())
-		temp_root = _curr_loc.getRoot(); // Use the root path from the current location if available
+		temp_root = _curr_loc.getRoot(); // Use current location root if available.
 
-	_file_path = temp_file_path; // Set the class member file path to the temporary file path
+	_file_path = temp_file_path;
 	if (!_curr_loc.getIndex().empty() && _file_path.empty())
-	{ // If no file path is specified, use the index file from the location
-		_file_path = _curr_loc.getIndex();
-		_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;  // Construct the full path
-		replaceDoubleSlashes(_full_path);								  // Replace any double slashes in the path
-		if (access(_full_path.c_str(), F_OK) && _curr_loc.getAutoindex()) // Check if the file exists
-			_file_path.clear();											  // Clear the file path if the file doesn't exist and autoindex is enabled
+	{
+		_file_path = _curr_loc.getIndex(); // Set file path to index if empty.
+		_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+		replaceDoubleSlashes(_full_path);
+		if (access(_full_path.c_str(), F_OK) && _curr_loc.getAutoindex())
+			_file_path.clear(); // Clear file path if file doesn't exist and autoindex is enabled.
 	}
 
-	if (_curr_loc.empty()) // If no location is set, use the full URI as the file path
-		_file_path = uri;
+	if (_curr_loc.empty())
+		_file_path = uri; // Use URI as file path if current location is empty.
 
-	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path; // Construct the full path
-	replaceDoubleSlashes(_full_path);								 // Replace any double slashes in the path
+	_full_path = temp_root + _curr_loc.getName() + "/" + _file_path;
+	replaceDoubleSlashes(_full_path);
+	if (!_file_path.empty() && isDirectory(_full_path))
+		_file_path.clear(); // Clear file path if it's a directory.
 
-	if (!_file_path.empty() && isDirectory(_full_path)) // If the file path points to a directory, clear it
-		_file_path.clear();
+	replaceDoubleSlashes(_full_path);
+	if (!_file_path.empty() && isDirectory(_full_path))
+		_file_path.clear(); // Clear file path again if it's still a directory.
 
-	replaceDoubleSlashes(_full_path);					// Replace any double slashes in the path again
-	if (!_file_path.empty() && isDirectory(_full_path)) // Check if the path is still a directory and clear if so
-		_file_path.clear();
-
-	redirectInURI(); // Perform any necessary redirection based on the URI
+	redirectInURI(); // Perform any necessary URI redirections.
 }
 
 // * Checks if a file at _full_path is accessible with the specified mode.
@@ -555,7 +538,7 @@ void Request::parseUri()
 void Request::checkFile(int mode)
 {
 	if (access(_full_path.c_str(), mode))
-		throw fileNotFound(404); // Throw exception if file is not accessible
+		throw fileNotFound(404);
 	return;
 }
 

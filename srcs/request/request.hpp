@@ -5,6 +5,9 @@
 #include <sstream>
 #include <sys/stat.h>
 
+#include <errno.h>
+#include <cstring> 
+
 class Request;
 
 #include "../parsing/location.hpp"
@@ -69,9 +72,10 @@ private:
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
 	size_t readUntilHeadersEnd(int fd, std::string &request_data);
+	void prepareBodyParsing(int fd, size_t body_start);
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
-	void parseBody(std::istringstream &ss);
+	void parseBody(int fd, size_t start, unsigned int length);
 	void processChunkedBody(int fd, const std::string &initial_data);
 	void extractQueryString();
 
