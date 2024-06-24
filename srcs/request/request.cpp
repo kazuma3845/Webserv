@@ -297,7 +297,6 @@ void Request::parseBody(int fd, unsigned int length)
 
 // * This function checks various aspects of an HTTP request to ensure it meets certain criteria.
 // * It parses the URI, checks if the method is allowed, handles redirections, checks file existence,
-// * and sets the connection mode based on headers.
 
 void Request::checkRequest()
 {
