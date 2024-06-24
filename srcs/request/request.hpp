@@ -150,3 +150,9 @@ private:
 
 void replaceDoubleSlashes(std::string &str);
 bool isDirectory(std::string &path);
+
+template <typename T>
+T min(T a, T b)
+{
+	return (a < b) ? a : b;
+}

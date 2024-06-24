@@ -79,7 +79,7 @@ bool Redirection::checkCgiExt(std::string uri, Request &a)
 bool Redirection::checkMimeExt(std::string uri)
 {
 	std::string ext = uri.substr(uri.find('.'), uri.size());
-	std::string mime[76] = {".aac", ".abw", ".apng", ".arc", ".avif", ".avi", ".azw",\
+	std::string mime[77] = {".aac", ".abw", ".apng", ".arc", ".avif", ".avi", ".azw",\
 	".bin", ".bmp", ".bz", ".bz2",\
 	".cda", ".csh", ".css", ".csv",\
 	".doc", ".docx",\
@@ -87,7 +87,7 @@ bool Redirection::checkMimeExt(std::string uri)
 	".gz", ".gif",\
 	".htm", ".html",\
 	".ico", ".ics",\
-	".jar", ".jpeg", ".jpg", ".js", ".jsonld",\
+	".jar", ".jpeg", ".jpg", ".json", ".js", ".jsonld",\
 	".mid", ".midi", ".mjs", ".mp3", ".mp4", ".mpeg", ".mpkg",\
 	".odp", ".ods", ".odt", ".oga", ".ogv", ".ogx", ".opus", ".otf",\
 	".png", ".pdf", ".php", ".ppt", ".pptx",\
