@@ -278,17 +278,20 @@ std::string Response::takeTime() const
 
 void Response::formatResponse(Client &a, Request &b)
 {
-	(void)a;
-	(void)b;
-	// _resp += "HTTP/1.1 200 ok\r\n"
-	_resp += "HTTP/1.1 " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
-	"Date: " + takeTime() + "\r\n"
-	"Content-Type: " + _contentType + "\r\n"
-	"Location: http://" + a.get_listen_socket().get_host() + ":" + std::to_string(a.get_listen_socket().get_port()) + "/" + b.getFullPath().substr(a.get_listen_socket().get_root().size(), b.getFullPath().size()) + "\r\n"
-	"Connection: " + _connectionType + "\r\n"
-	"Content-Length: " + std::to_string(_body.size()) + "\r\n"
-	"\r\n";
-	_resp += _body;
+    (void)a;
+    (void)b;
+    std::string    loc_path;
+    // _resp += "HTTP/1.1 200 ok\r\n"
+    if (!b.getFullPath().empty())
+        loc_path = b.getFullPath().substr(a.get_listen_socket().get_root().size(), b.getFullPath().size());
+    _resp += "HTTP/1.1 " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
+    "Date: " + takeTime() + "\r\n"
+    "Content-Type: " + _contentType + "\r\n"
+    "Location: http://" + a.get_listen_socket().get_host() + ":" + std::to_string(a.get_listen_socket().get_port()) + "/" + loc_path + "\r\n"
+    "Connection: " + _connectionType + "\r\n"
+    "Content-Length: " + std::to_string(_body.size()) + "\r\n"
+    "\r\n";
+    _resp += _body;
 }
 
 void Response::ErrorBody(int error_code, Client &a, bool b)
