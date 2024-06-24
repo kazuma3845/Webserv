@@ -100,6 +100,8 @@
         <input type="text" id="fileToDelete" placeholder="Enter file name" />
         <button id="deleteButton" class="btn btn-red">Delete File</button>
         <p id="deleteStatusMessage"></p>
+        <hr>
+        <button id="viewFilesButton" class="btn">View Uploaded Files</button>
     </div>
     <footer>
         &copy; 2024 42 WebServ.
@@ -111,6 +113,7 @@
         const fileToDelete = document.getElementById('fileToDelete');
         const deleteButton = document.getElementById('deleteButton');
         const deleteStatusMessage = document.getElementById('deleteStatusMessage');
+        const viewFilesButton = document.getElementById('viewFilesButton');
 
         uploadButton.addEventListener('click', function() {
             const file = fileInput.files[0];
@@ -152,6 +155,10 @@
             } else {
                 deleteStatusMessage.textContent = 'Please enter a file name.';
             }
+        });
+
+        viewFilesButton.addEventListener('click', function() {
+            window.location.href = '/data/';
         });
     </script>
 </body>
