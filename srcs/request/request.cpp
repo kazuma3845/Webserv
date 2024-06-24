@@ -213,7 +213,7 @@ void Request::parseHeaders(std::string line)
 
 void Request::processChunkedBody(int fd)
 {
-	char buffer[1024];
+	char buffer[4096];
 	ssize_t bytesRead = 0;
 	std::string chunkSizeLine;
 	size_t chunkSize = 0;
@@ -224,19 +224,20 @@ void Request::processChunkedBody(int fd)
 	while (true)
 	{
 		chunkSizeLine.clear();
-		while (buffer[0] == '\n')
+
+		// Read line for chunk size
+		do
 		{
 			bytesRead = read(fd, buffer, 1);
 			if (bytesRead < 1)
 				throw std::runtime_error("Failed to read chunk size");
-			else if (buffer[0] != '\r')
+			if (buffer[0] != '\r')
 				chunkSizeLine += buffer[0];
-		}
+		} while (buffer[0] != '\n');
 
 		// Convert chunk size from hex to decimal
 		std::stringstream ss(chunkSizeLine);
-		ss << std::hex;
-		ss >> chunkSize;
+		ss >> std::hex >> chunkSize;
 		std::cout << "Chunk size is : " << chunkSize << std::endl;
 		if (chunkSize == 0)
 			break;
@@ -248,7 +249,7 @@ void Request::processChunkedBody(int fd)
 		totalSize += chunkSize; // Update the total size
 
 		// Read the chunk data
-		char *chunkData = new char[chunkSize];
+		char *chunkData = new char[chunkSize + 1]; // +1 for safety
 		size_t totalRead = 0;
 		while (totalRead < chunkSize)
 		{
@@ -260,56 +261,47 @@ void Request::processChunkedBody(int fd)
 			}
 			totalRead += bytesRead;
 		}
+
 		_body.append(chunkData, chunkSize);
 		delete[] chunkData;
-		read(fd, buffer, 2); // skip trailing /r/n
+		// Skip trailing "\r\n" after each chunk
+		read(fd, buffer, 2); // This assumes successful read, consider checking the return value
 	}
-
-	// // Handle trailing headers
-	// while (true)
-	// {
-	// 	bytesRead = read(fd, buffer, 1);
-	// 	if (bytesRead < 1)
-	// 		throw std::runtime_error("Failed to read trailing headers");
-	// 	if (buffer[0] == '\n')
-	// 	{
-	// 		bytesRead = read(fd, buffer, 1); // Read the next character to check for double newline
-	// 		if (bytesRead < 1 || buffer[0] == '\n')
-	// 			break; // End of headers
-	// 	}
-	// }
 }
 
 // * Parses the body of an HTTP request from a given file descriptor.
 void Request::parseBody(int fd, unsigned int length)
 {
+	size_t buffer_size = 4096;
 	if (client->get_listen_socket().get_clientSize() < length) // Check if client request size exceeds allowed limit
 		throw bodySize(413);
 
-	char *buffer = new char[length + 1]; // Allocate buffer for reading body content
+	std::vector<char> bodyData;
+	bodyData.reserve(length); // Réserver de l'espace pour optimiser les allocations
+
+	char buffer[buffer_size];
 	size_t totalBytesRead = 0;
 	ssize_t bytesRead = 0;
 
-	while (totalBytesRead < length) // Loop until entire body length is read
+	while (totalBytesRead < length)
 	{
-		bytesRead = read(fd, buffer + totalBytesRead, length - totalBytesRead);
-		if (bytesRead < 0) // Check for read error
+		bytesRead = read(fd, buffer, min(buffer_size, length - totalBytesRead));
+		if (bytesRead < 0)
 		{
-			delete[] buffer;
 			throw std::runtime_error("Error reading file");
 		}
-		else if (bytesRead == 0) // Check if client closed connection prematurely
+		else if (bytesRead == 0)
 		{
-			delete[] buffer;
 			throw std::runtime_error("Connection closed by client");
 		}
-		totalBytesRead += bytesRead; // Update total bytes read counter
+		bodyData.insert(bodyData.end(), buffer, buffer + bytesRead); // Ajouter au vecteur
+		totalBytesRead += bytesRead;
 	}
+
 	if (totalBytesRead != length)
 		throw shorterBodyContent(400);
-	buffer[totalBytesRead] = '\0';
-	_body.assign(buffer, totalBytesRead);
-	delete[] buffer;
+
+	_body.assign(bodyData.begin(), bodyData.end()); // Assigner les données lues au corps de la requête
 
 	std::cout << "Length expected: " << length << ", Bytes read: " << totalBytesRead << std::endl;
 }
@@ -389,8 +381,9 @@ void Request::prepareBodyParsing(int fd)
 	{
 		const char *continueMsg = "HTTP/1.1 100 Continue\r\n\r\n";
 		write(fd, continueMsg, strlen(continueMsg));
-		std::cout << "Sending CONTINUE signal" << std::endl;
-		waitForBody(fd);
+		// waitForBody(fd);
+		sleep(3);
+		std::cout << "CONTINUE signal sent" << std::endl;
 	}
 	if (_headers.find("Content-Length") != _headers.end())
 	{
