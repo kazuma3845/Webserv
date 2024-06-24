@@ -154,62 +154,7 @@ void Server::read_socket(Client &client)
 	Request req(&client);
 	Redirection redirect;
 	Response response;
-
-	int has_content = read(socket, buffer, MESSAGE_BUFFER);
-	if (has_content < 0)
-	{
-		std::cerr << std::endl << "Read error on fd :" << socket << std::endl;
-		FD_CLR(socket, &_read_sds);
-		if (socket >= _max_sd)
-			_max_sd--;
-		close(socket);
-		_client_sds_map.erase(socket);
-		return;
-	}
-	else if (has_content == 0)
-	{
-		std::cerr << std::endl << "Client " << socket << " disconnect " << std::endl;
-		FD_CLR(socket, &_read_sds);
-		if (socket >= _max_sd)
-			_max_sd--;
-		close(socket);
-		_client_sds_map.erase(socket);
-		return;
-	}
-	if (has_content)
-	{
-		try
-		{
-			client.setTimeout();
-			req.parseRequest(buffer);
-			req.checkRequest();
-			req.printRequest();
-			redirect.path(req, response);
-			response.setHTTPVersion(req.getHttpVersion());
-			response.setConnectionType(client.getKeepAlive());
-			if (req.getHasReturn())
-				response.setStatusCode(301);
-			response.formatResponse(client, req);
-			client.setResp(response.getResp());
-		}
-		catch (const ErrorWebServ &e)
-		{
-			std::cerr << "Error number: " << e.getErrorCode() << std::endl;
-			std::cerr << "What happened : " << e.what() << std::endl;
-			client.setKeepAlive(false);
-			response.setStatusCode(e.getErrorCode());
-			response.setStatusMessage(e.what());
-			if (client.get_listen_socket().get_error().compare(std::to_string(e.getErrorCode())) == 0)
-				response.ErrorBody(e.getErrorCode(), client, true);
-			else
-				response.ErrorBody(e.getErrorCode(), client, false);
-			response.setConnectionType(false);
-			response.setContentType("text/html");
-			response.formatResponse(client, req);
-			client.setResp(response.getResp());
-		}
-	}
-	// Remove socket from read to write
+	
 	try
 	{
 		client.setTimeout();
@@ -231,11 +176,16 @@ void Server::read_socket(Client &client)
 		client.setKeepAlive(false);
 		response.setStatusCode(e.getErrorCode());
 		response.setStatusMessage(e.what());
-		response.ErrorBody(e.getErrorCode());
+		if (client.get_listen_socket().get_error().compare(std::to_string(e.getErrorCode())) == 0)
+			response.ErrorBody(e.getErrorCode(), client, true);
+		else
+			response.ErrorBody(e.getErrorCode(), client, false);
 		response.setConnectionType(false);
+		response.setContentType("text/html");
 		response.formatResponse(client, req);
 		client.setResp(response.getResp());
 	}
+	
 	FD_CLR(socket, &this->_read_sds);
 	FD_SET(socket, &this->_write_sds);
 }
