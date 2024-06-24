@@ -119,7 +119,7 @@
             const file = fileInput.files[0];
             if (file) {
                 const xhr = new XMLHttpRequest();
-                xhr.open('PUT', `/uploads/${file.name}`, true);
+                xhr.open('PUT', `/${file.name}`, true);
                 xhr.onload = function() {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         uploadStatusMessage.textContent = 'File uploaded successfully!';
@@ -140,7 +140,7 @@
             const fileName = fileToDelete.value;
             if (fileName) {
                 const xhr = new XMLHttpRequest();
-                xhr.open('DELETE', `/uploads/${fileName}`, true);
+                xhr.open('DELETE', `/data/${fileName}`, true);
                 xhr.onload = function() {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         deleteStatusMessage.textContent = 'File deleted successfully!';
