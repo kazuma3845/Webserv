@@ -90,10 +90,12 @@
     <div class="container">
         <img src="https://upload.wikimedia.org/wikipedia/commons/8/8d/42_Logo.svg" alt="42 Logo" class="logo">
         <h1>Upload and Delete File</h1>
-        <p>Select a file to upload:</p>
-        <input type="file" id="fileInput" />
-        <label for="fileInput">Choose File</label>
-        <button id="uploadButton" class="btn">Upload Selected File</button>
+        <form id="uploadForm">
+            <p>Select a file to upload:</p>
+            <input type="file" id="fileInput" name="file" />
+            <label for="fileInput">Choose File</label>
+            <button type="submit" class="btn">Upload Selected File</button>
+        </form>
         <p id="uploadStatusMessage"></p>
         <hr>
         <p>Enter the name of the file to delete:</p>
@@ -108,18 +110,22 @@
     </footer>
     <script>
         const fileInput = document.getElementById('fileInput');
-        const uploadButton = document.getElementById('uploadButton');
+        const uploadForm = document.getElementById('uploadForm');
         const uploadStatusMessage = document.getElementById('uploadStatusMessage');
         const fileToDelete = document.getElementById('fileToDelete');
         const deleteButton = document.getElementById('deleteButton');
         const deleteStatusMessage = document.getElementById('deleteStatusMessage');
         const viewFilesButton = document.getElementById('viewFilesButton');
 
-        uploadButton.addEventListener('click', function() {
+        uploadForm.addEventListener('submit', function(event) {
+            event.preventDefault();
             const file = fileInput.files[0];
             if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
                 const xhr = new XMLHttpRequest();
-                xhr.open('PUT', `/${file.name}`, true);
+                xhr.open('POST', '/', true);
                 xhr.onload = function() {
                     if (xhr.status >= 200 && xhr.status < 300) {
                         uploadStatusMessage.textContent = 'File uploaded successfully!';
@@ -130,7 +136,7 @@
                 xhr.onerror = function() {
                     uploadStatusMessage.textContent = 'File upload failed!';
                 };
-                xhr.send(file);
+                xhr.send(formData);
             } else {
                 uploadStatusMessage.textContent = 'Please select a file.';
             }
@@ -158,7 +164,7 @@
         });
 
         viewFilesButton.addEventListener('click', function() {
-            window.location.href = '/data/';
+            window.location.href = '/data';
         });
     </script>
 </body>
