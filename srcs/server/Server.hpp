@@ -22,7 +22,7 @@ class Server;
 #include "../request_handler/redirection.hpp"
 #include "../response/response.hpp"
 #include "../request_handler/Handler.hpp"
-#define TIMEOUT_LIMIT 10
+#define TIMEOUT_LIMIT 60
 
 class Server
 {
