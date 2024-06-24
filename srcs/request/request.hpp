@@ -14,7 +14,6 @@ class Request;
 #include "../errors/ErrorWebServ.hpp"
 #include "Client.hpp"
 
-#define MAX_ATTEMPTS 1000000
 
 class Request
 {
@@ -78,7 +77,6 @@ private:
 	void parseUri();
 	void checkFile(int mode);
 	bool checkfolder(std::string uri);
-	void waitForBody(int fd);
 
 	// ------------------------------------------ ERROR
 
@@ -126,14 +124,12 @@ private:
 		contentLengthUnspecified(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-
 	class unauthorizedMethod : public ErrorWebServ
 	{
 	public:
 		unauthorizedMethod(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-
 	class fileNotFound : public ErrorWebServ
 	{
 	public:
@@ -144,6 +140,30 @@ private:
 	{
 	public:
 		unsupportedHTTPVersion(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
+	class chunkSizeError : public ErrorWebServ
+	{
+	public:
+		chunkSizeError(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
+	class chunkDataError : public ErrorWebServ
+	{
+	public:
+		chunkDataError(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
+	class connectionCloseEarly : public ErrorWebServ
+	{
+	public:
+		connectionCloseEarly(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
+	class errorReadingFD : public ErrorWebServ
+	{
+	public:
+		errorReadingFD(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 };

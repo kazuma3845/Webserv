@@ -176,7 +176,7 @@ void Request::parseRequestLine(std::string line)
 
 	// Ensure the HTTP version is supported
 	if (_httpVersion != "HTTP/1.1")
-		unsupportedHTTPVersion(505); // Throw exception for unsupported HTTP version
+		throw unsupportedHTTPVersion(505); // Throw exception for unsupported HTTP version
 }
 
 // * Parses a single header line and stores the key-value pair in the headers map.
@@ -208,64 +208,62 @@ void Request::parseHeaders(std::string line)
 		throw headerParsingError(400); // Throw exception for invalid header format
 }
 
-// * Processes a chunked transfer encoding body, reading data from the provided file descriptor (fd).
-// * Parses and assembles the chunked data into the request body.
+// * Parses a chunked HTTP body received on the given file descriptor (fd),
+// * appending it to the internal body buffer of the Request object.
 
 void Request::processChunkedBody(int fd)
 {
-	char buffer[1096];
-	ssize_t bytesRead = 0;
-	std::string chunkSizeLine;
-	size_t chunkSize = 0;
-	size_t maxSize = client->get_listen_socket().get_clientSize();
-	size_t totalSize = 0;
+	char buffer[1024];											   // Buffer for reading data
+	ssize_t bytesRead = 0;										   // Number of bytes read from socket
+	std::string chunkSizeLine;									   // String to store chunk size line
+	size_t chunkSize = 0;										   // Size of current chunk being read
+	size_t maxSize = client->get_listen_socket().get_clientSize(); // Maximum allowed size of body
+	size_t totalSize = 0;										   // Total size of body read so far
 
-	std::cout << "Starting chunked body parsing..." << std::endl;
 	while (true)
 	{
-		chunkSizeLine.clear();
+		chunkSizeLine.clear(); // Clear chunk size line for next read
 
-		// Read line for chunk size
-		do
+		while (true) // Read line for chunk size
 		{
-			bytesRead = read(fd, buffer, 1);
+			bytesRead = read(fd, buffer, 1); // Read one byte
 			if (bytesRead < 1)
-				throw std::runtime_error("Failed to read chunk size");
-			if (buffer[0] != '\r')
-				chunkSizeLine += buffer[0];
-		} while (buffer[0] != '\n');
-
-		// Convert chunk size from hex to decimal
-		std::stringstream ss(chunkSizeLine);
-		ss >> std::hex >> chunkSize;
-		std::cout << "Chunk size is : " << chunkSize << std::endl;
-		if (chunkSize == 0)
-			break;
-
-		if (totalSize + chunkSize > maxSize)
-		{
-			throw std::runtime_error("Payload too large");
+				throw chunkSizeError(500);
+			if (buffer[0] == '\r')
+			{
+				bytesRead = read(fd, buffer + 1, 1);
+				if (buffer[1] != '\n')
+					throw chunkSizeError(400);
+				break; // End of chunk size line
+			}
+			chunkSizeLine += buffer[0]; // Append byte to chunk size line
 		}
-		totalSize += chunkSize; // Update the total size
 
-		// Read the chunk data
-		char *chunkData = new char[chunkSize + 1]; // +1 for safety
+		std::stringstream ss(chunkSizeLine);
+		ss >> std::hex >> chunkSize; // Convert chunk size line
+		if (chunkSize == 0)
+			break; // End of chunks is signaled by a chunk of 0
+
+		if (totalSize + chunkSize > maxSize) // Checking if we overload the server for each chunk
+			throw bodySize(413);
+
+		totalSize += chunkSize;
+
+		char *chunkData = new char[chunkSize];
 		size_t totalRead = 0;
+
 		while (totalRead < chunkSize)
 		{
 			bytesRead = read(fd, chunkData + totalRead, chunkSize - totalRead);
 			if (bytesRead < 1)
 			{
-				delete[] chunkData;
-				throw std::runtime_error("Failed to read chunk data");
+				delete[] chunkData; // Clean up memory allocation in case of failure
+				throw chunkDataError(500);
 			}
 			totalRead += bytesRead;
 		}
-
 		_body.append(chunkData, chunkSize);
-		delete[] chunkData;
-		// Skip trailing "\r\n" after each chunk
-		read(fd, buffer, 2); // This assumes successful read, consider checking the return value
+		delete[] chunkData; // Free memory after appending data
 	}
 }
 
@@ -282,28 +280,19 @@ void Request::parseBody(int fd, unsigned int length)
 	char buffer[buffer_size];
 	size_t totalBytesRead = 0;
 	ssize_t bytesRead = 0;
-
 	while (totalBytesRead < length)
 	{
 		bytesRead = read(fd, buffer, min(buffer_size, length - totalBytesRead));
 		if (bytesRead < 0)
-		{
-			throw std::runtime_error("Error reading file");
-		}
+			throw errorReadingFD(500);
 		else if (bytesRead == 0)
-		{
-			throw std::runtime_error("Connection closed by client");
-		}
+			throw connectionCloseEarly(499);
 		bodyData.insert(bodyData.end(), buffer, buffer + bytesRead); // Ajouter au vecteur
 		totalBytesRead += bytesRead;
 	}
-
 	if (totalBytesRead != length)
 		throw shorterBodyContent(400);
-
 	_body.assign(bodyData.begin(), bodyData.end()); // Assigner les données lues au corps de la requête
-
-	std::cout << "Length expected: " << length << ", Bytes read: " << totalBytesRead << std::endl;
 }
 
 // * This function checks various aspects of an HTTP request to ensure it meets certain criteria.
@@ -342,36 +331,10 @@ std::string Request::readUntilHeadersEnd(int fd)
 	}
 	// Handle errors during reading
 	if (has_content < 0) // If read returns a negative value, an error occurred
-		throw std::runtime_error("Error reading from socket");
+		throw errorReadingFD(500);
 	else if (has_content == 0 && request.empty()) // If no data is read and request_data is empty, the client disconnected
-		throw std::runtime_error("Client disconnected");
+		throw connectionCloseEarly(499);
 	return (request);
-}
-
-void Request::waitForBody(int fd)
-{
-	fd_set read_fds;
-	struct timeval tv;
-	int attempts = 0;
-
-	while (attempts < MAX_ATTEMPTS)
-	{
-		FD_ZERO(&read_fds);
-		FD_SET(fd, &read_fds);
-
-		tv.tv_sec = 0;
-		tv.tv_usec = 100000; // 100 ms
-
-		int result = select(fd + 1, &read_fds, NULL, NULL, &tv);
-		if (result > 0)
-		{
-			if (FD_ISSET(fd, &read_fds))
-				return;
-		}
-		attempts++;
-		usleep(10000); // 10 ms delay to reduce CPU usage in the loop
-	}
-	throw std::runtime_error("Timeout waiting for the body to start arriving");
 }
 
 void Request::prepareBodyParsing(int fd)
@@ -380,9 +343,7 @@ void Request::prepareBodyParsing(int fd)
 	{
 		const char *continueMsg = "HTTP/1.1 100 Continue\r\n\r\n";
 		write(fd, continueMsg, strlen(continueMsg));
-		// waitForBody(fd);
-		sleep(3);
-		std::cout << "CONTINUE signal sent" << std::endl;
+		sleep(1);
 	}
 	if (_headers.find("Content-Length") != _headers.end())
 	{
@@ -504,13 +465,6 @@ void Request::isMethodAllowed()
 	else
 		methods = _curr_loc.getAllowMethods(); // Location-specific allowed methods
 
-	// Debugging output if methods list is empty
-	if (methods.empty())
-	{
-		std::cout << "METHODS ARE EMPTY" << std::endl;
-		std::cout << "LOCATION ASSOCIATED WITH REQUEST IS : " << _curr_loc.getName() << std::endl;
-	}
-
 	// Check if the method is allowed
 	for (std::vector<std::string>::iterator it = methods.begin(); it != methods.end(); ++it)
 	{
@@ -563,8 +517,24 @@ void replaceDoubleSlashes(std::string &str)
 	std::string::size_type pos = 0;
 	// Find and replace double slashes
 	while ((pos = str.find("//", pos)) != std::string::npos)
-	{
 		str.replace(pos, 2, "/");
+}
+
+bool isDirectory(std::string &path)
+{
+	struct stat info;
+	if (stat(path.c_str(), &info) != 0)
+	{
+		std::cerr << "Cannot access " << path << std::endl;
+		return false;
+	}
+	else if (info.st_mode & S_IFDIR)
+	{
+		return true; // C'est un répertoire
+	}
+	else
+	{
+		return false; // C'est un fichier
 	}
 }
 
@@ -606,25 +576,24 @@ const char *Request::fileNotFound::what() const throw()
 {
 	return ("File not found");
 }
-
-bool isDirectory(std::string &path)
-{
-	struct stat info;
-	if (stat(path.c_str(), &info) != 0)
-	{
-		std::cerr << "Cannot access " << path << std::endl;
-		return false;
-	}
-	else if (info.st_mode & S_IFDIR)
-	{
-		return true; // C'est un répertoire
-	}
-	else
-	{
-		return false; // C'est un fichier
-	}
-}
 const char *Request::unsupportedHTTPVersion::what() const throw()
 {
 	return ("Unsupported HTTP Version. Please conform to HTTP 1.1 only.");
+}
+
+const char *Request::chunkSizeError::what() const throw()
+{
+	return ("Failed to read chunk size.");
+}
+const char *Request::chunkDataError::what() const throw()
+{
+	return ("Failed to read chunk data.");
+}
+const char *Request::connectionCloseEarly::what() const throw()
+{
+	return ("Connexion closed by server.");
+}
+const char *Request::errorReadingFD::what() const throw()
+{
+	return ("Error while trying to read fd.");
 }
