@@ -48,4 +48,11 @@ private:
 		postFailed(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
+	class unsupportedMediaType : public ErrorWebServ
+	{
+	public:
+		unsupportedMediaType(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
+	
 };
