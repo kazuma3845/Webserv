@@ -5,11 +5,16 @@
 #include <sstream>
 #include <sys/stat.h>
 
+#include <errno.h>
+#include <cstring>
+
 class Request;
 
 #include "../parsing/location.hpp"
 #include "../errors/ErrorWebServ.hpp"
 #include "Client.hpp"
+
+#define MAX_ATTEMPTS 1000000
 
 class Request
 {
@@ -17,18 +22,11 @@ public:
 	Request();
 	Request(Client *client);
 	~Request();
-	void parseRequest(std::string requestFile);
-	void checkRequest();
+	void parseRequest(int fd);
 	void printRequest();
+	void checkRequest();
 
-	void isMethodAllowed();
-	void redirectInURI();
-	void parseUri();
-	void checkFile(int mode);
-
-	bool checkfolder(std::string uri);
-
-	// ---------------------------------- GETTERS
+	// ------------------------------------------- GETTERS
 
 	std::string getMethod();
 	std::string getURI();
@@ -42,7 +40,7 @@ public:
 	Client *getClient();
 	bool getHasReturn();
 
-	// ---------------------------------- SETTERS
+	// ------------------------------------------- SETTERS
 
 	void setURI(std::string uri);
 	void setLocation(location &loc);
@@ -52,6 +50,8 @@ public:
 	void setClient(Client *client);
 
 private:
+	// ------------------------------------------ ATTRIBUTES
+
 	std::string _method;
 	std::string _uri;
 	std::string _httpVersion;
@@ -61,18 +61,26 @@ private:
 	location _curr_loc;
 	std::string _file_path;
 	std::string _full_path;
-	bool		_hasReturn;
+	bool _hasReturn;
 	Client *client;
 
-	// ---------------------------------- REQUEST PARSING FUNCTIONS
+	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
+	std::string readUntilHeadersEnd(int fd);
+	void prepareBodyParsing(int fd);
 	void parseRequestLine(std::string line);
 	void parseHeaders(std::string line);
-	void parseBody(std::istringstream &ss);
-	void parseChunkedBody(std::istringstream &ss);
+	void parseBody(int fd, unsigned int length);
+	void processChunkedBody(int fd);
 	void extractQueryString();
+	void isMethodAllowed();
+	void redirectInURI();
+	void parseUri();
+	void checkFile(int mode);
+	bool checkfolder(std::string uri);
+	void waitForBody(int fd);
 
-	// ---------------------------------- ERROR
+	// ------------------------------------------ ERROR
 
 	class bodySize : public ErrorWebServ
 	{
@@ -142,3 +150,9 @@ private:
 
 void replaceDoubleSlashes(std::string &str);
 bool isDirectory(std::string &path);
+
+template <typename T>
+T min(T a, T b)
+{
+	return (a < b) ? a : b;
+}

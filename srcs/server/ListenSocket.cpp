@@ -29,6 +29,7 @@ ListenSocket::ListenSocket(configserv config_serv, int port)
 	this->_error = config_serv.getError();
 	this->_errorpath = config_serv.getErrorPath();
 	this->_location = config_serv.getLocation();
+	this->_client_size = config_serv.getClientSize();
 	// std::cout << "ListenSocket was called." << std::endl;
 }
 
