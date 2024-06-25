@@ -91,8 +91,12 @@ void Server::run_server(void)
 		}
 
 		// Reading new request
-		for (int i = 0; i <= this->_max_sd; ++i)
+		for (int i = 4; i <= this->_max_sd; ++i)
 		{
+			if (this->_client_sds_map[i].getReq() != nullptr)
+				std::cerr << "####### Client : "  << i << std::endl;
+				// this->_client_sds_map[i].getReq()->printRequest();
+
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
 				read_socket(this->_client_sds_map[i]);
 		}
@@ -171,6 +175,7 @@ void Server::read_socket(Client &client)
 	}
 	catch (const ErrorWebServ &e)
 	{
+		// std::cerr << "####### Client :"  << std::endl;
 		std::cerr << "Error number: " << e.getErrorCode() << std::endl;
 		std::cerr << "What happened : " << e.what() << std::endl;
 		client.setKeepAlive(false);
@@ -216,6 +221,7 @@ void Server::write_socket(Client &client)
 	}
 	else
 	{
+		std::cerr << "End of connection from client fd : " << socket << std::endl;
 		close(socket);
 		this->_client_sds_map.erase(socket);
 	}

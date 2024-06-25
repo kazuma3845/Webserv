@@ -13,6 +13,7 @@
 
 class Client;
 
+#include "request.hpp"
 #include "../server/ListenSocket.hpp"
 
 class Client
@@ -25,6 +26,7 @@ private:
 	time_t _connected_time;
 	std::map<std::string, std::string> _headers;
 	bool _keepAlive;
+	Request* _request;
 
 public:
 	Client();
@@ -39,6 +41,8 @@ public:
 	ListenSocket get_listen_socket(void);
 	time_t get_connected_time(void);
 	bool getKeepAlive();
+	Request *getReq(void);
+	void setReq(Request *request);
 
 	// --------------------------------------------- SETTERS
 	void setHeaders(const std::map<std::string, std::string> &headers);

@@ -7,6 +7,7 @@ Client::Client(int fd, ListenSocket &listen_socket)
 	this->_listen_socket = listen_socket;
 	this->_connected_sd = fd;
 	this->_connected_time = time(NULL);
+	this->_request = new Request(this);
 	// std::cout << "Client was called. " << std::endl;
 }
 Client::Client() {
@@ -32,6 +33,7 @@ Client& Client::operator=( const Client& ref )
 		this->_connected_sd = ref._connected_sd;
 		this->_listen_socket = ref._listen_socket;
 		this->_connected_time = ref._connected_time;
+		this->_request = ref._request;
 	}
 	return *this;
 }
@@ -56,9 +58,19 @@ bool Client::getKeepAlive()
 	return (_keepAlive);
 }
 
+Request *Client::getReq(void)
+{
+	return this->_request;
+}
+
 void Client::setResp(std::string rep)
 {
 	_rep = rep;
+}
+
+void Client::setReq(Request *request)
+{
+	this->_request = request;
 }
 
 std::string Client::getResp() const
