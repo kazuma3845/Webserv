@@ -11,8 +11,16 @@
 #include <fcntl.h>
 #include "../errors/ErrorWebServ.hpp"
 
+enum Flag
+{
+	NEW,
+	READING,
+	FINISHED
+};
+
 class Client;
 
+#include "request.hpp"
 #include "../server/ListenSocket.hpp"
 
 class Client
@@ -25,6 +33,8 @@ private:
 	time_t _connected_time;
 	std::map<std::string, std::string> _headers;
 	bool _keepAlive;
+	Request* _request;
+	int _flag;
 
 public:
 	Client();
@@ -39,10 +49,14 @@ public:
 	ListenSocket get_listen_socket(void);
 	time_t get_connected_time(void);
 	bool getKeepAlive();
+	Request *getReq(void);
+	int getFlag();
 
 	// --------------------------------------------- SETTERS
+	void setReq(Request *request);
 	void setHeaders(const std::map<std::string, std::string> &headers);
 	void setKeepAlive(bool status);
 	void setResp(std::string rep);
 	void setTimeout(void);
+	void setFlag(int flag);
 };
