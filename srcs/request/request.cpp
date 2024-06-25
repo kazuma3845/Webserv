@@ -213,21 +213,12 @@ void Request::parseHeaders(std::string line)
 
 void Request::processChunkedBody(int fd)
 {
-<<<<<<< HEAD
-	char buffer[1024];											   // Buffer for reading data
-	ssize_t bytesRead = 0;										   // Number of bytes read from socket
-	std::string chunkSizeLine;									   // String to store chunk size line
-	size_t chunkSize = 0;										   // Size of current chunk being read
-	size_t maxSize = client->get_listen_socket().get_clientSize(); // Maximum allowed size of body
-	size_t totalSize = 0;										   // Total size of body read so far
-=======
 	char buffer[4096];
 	ssize_t bytesRead = 0;
 	std::string chunkSizeLine;
 	size_t chunkSize = 0;
 	size_t maxSize = client->get_listen_socket().get_clientSize();
 	size_t totalSize = 0;
->>>>>>> parent of 0b4bac1 (working)
 
 	while (true)
 	{
