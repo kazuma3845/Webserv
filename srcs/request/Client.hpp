@@ -11,6 +11,13 @@
 #include <fcntl.h>
 #include "../errors/ErrorWebServ.hpp"
 
+enum Flag
+{
+	NEW,
+	READING,
+	FINISHED
+};
+
 class Client;
 
 #include "request.hpp"
@@ -27,6 +34,7 @@ private:
 	std::map<std::string, std::string> _headers;
 	bool _keepAlive;
 	Request* _request;
+	int _flag;
 
 public:
 	Client();
@@ -42,11 +50,13 @@ public:
 	time_t get_connected_time(void);
 	bool getKeepAlive();
 	Request *getReq(void);
-	void setReq(Request *request);
+	int getFlag();
 
 	// --------------------------------------------- SETTERS
+	void setReq(Request *request);
 	void setHeaders(const std::map<std::string, std::string> &headers);
 	void setKeepAlive(bool status);
 	void setResp(std::string rep);
 	void setTimeout(void);
+	void setFlag(int flag);
 };

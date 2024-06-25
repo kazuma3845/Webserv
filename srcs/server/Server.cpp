@@ -93,15 +93,13 @@ void Server::run_server(void)
 		// Reading new request
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
-			if (this->_client_sds_map[i].getReq() != nullptr)
-				std::cerr << "####### Client : "  << i << std::endl;
 				// this->_client_sds_map[i].getReq()->printRequest();
-
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
 				read_socket(this->_client_sds_map[i]);
+			// std::cerr << "####### Client : "  << this->_client_sds_map[i].getReq()->getClient()->get_fd() << std::endl;
 		}
 		// Writing request response
-		for (int i = 0; i <= this->_max_sd; ++i)
+		for (int i = 4; i <= this->_max_sd; ++i)
 		{
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_write_sds))
 				write_socket(this->_client_sds_map[i]);
@@ -150,27 +148,30 @@ void Server::add_client(ListenSocket &listen_socket)
 	if (_client_sds_map.count(new_socket) != 0)
 		_client_sds_map.erase(new_socket);
 	this->_client_sds_map[new_socket] = new_client;
+	std::cerr << "####### Client 2 : "  << this->_client_sds_map[new_socket].getReq()->getClient()->get_fd() << std::endl;
 }
 
 void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
-	Request req(&client);
+	// Request req(&client);
 	Redirection redirect;
 	Response response;
+	std::cerr << "####### Client 3 : "  << client.getReq()->getClient()->get_fd() << std::endl;
 
 	try
 	{
+		std::cerr << "******* error finder !!!! " << std::endl;
 		client.setTimeout();
-		req.parseRequest(socket);
-		req.checkRequest();
-		req.printRequest();
-		redirect.path(req, response);
-		response.setHTTPVersion(req.getHttpVersion());
+		client.getReq()->parseRequest(socket);
+		client.getReq()->checkRequest();
+		client.getReq()->printRequest();
+		redirect.path(*client.getReq(), response);
+		response.setHTTPVersion(client.getReq()->getHttpVersion());
 		response.setConnectionType(client.getKeepAlive());
-		if (req.getHasReturn())
+		if (client.getReq()->getHasReturn())
 			response.setStatusCode(301);
-		response.formatResponse(client, req);
+		response.formatResponse(client, *client.getReq());
 		client.setResp(response.getResp());
 	}
 	catch (const ErrorWebServ &e)
@@ -187,7 +188,7 @@ void Server::read_socket(Client &client)
 			response.ErrorBody(e.getErrorCode(), client, false);
 		response.setConnectionType(false);
 		response.setContentType("text/html");
-		response.formatResponse(client, req);
+		response.formatResponse(client, *client.getReq());
 		client.setResp(response.getResp());
 	}
 
