@@ -217,56 +217,54 @@ void Request::processChunkedBody(int fd)
 	ssize_t bytesRead = 0;
 	std::string chunkSizeLine;
 	size_t chunkSize = 0;
-	size_t maxSize = client->get_listen_socket().get_clientSize();
+	size_t maxSize = client->get_listen_socket().get_clientSize(); // Example max size
 	size_t totalSize = 0;
 
+	std::cout << "Starting to read chunked body ..." << std::endl;
 	while (true)
 	{
-		chunkSizeLine.clear();
-
-		// Read line for chunk size
+		// Read until \r\n is found (start of chunk size line)
 		do
 		{
-			bytesRead = read(fd, buffer, 1); // Read one byte
+			bytesRead = read(fd, buffer, 1);
 			if (bytesRead < 1)
-				throw std::runtime_error("Failed to read chunk size");
-			if (buffer[0] != '\r')
-				chunkSizeLine += buffer[0];
-		} while (buffer[0] != '\n');
+			{
+				throw std::runtime_error("Failed to read from socket");
+			}
+			chunkSizeLine += buffer[0];
+		} while (chunkSizeLine.size() < 2 || chunkSizeLine.substr(chunkSizeLine.size() - 2) != "\r\n");
 
-		// Convert chunk size from hex to decimal
+		chunkSizeLine = chunkSizeLine.substr(0, chunkSizeLine.size() - 2); // Remove \r\n
 		std::stringstream ss(chunkSizeLine);
 		ss >> std::hex >> chunkSize;
-		std::cout << "Chunk size is : " << chunkSize << std::endl;
+		std::cout << "ChunkSize is :" << chunkSize << std::endl;
+
 		if (chunkSize == 0)
-			break; // End of chunks is signaled by a chunk of 0
+			break;
 
 		if (totalSize + chunkSize > maxSize)
 		{
 			throw std::runtime_error("Payload too large");
 		}
-		totalSize += chunkSize; // Update the total size
 
-		// Read the chunk data
-		char *chunkData = new char[chunkSize + 1]; // +1 for safety
+		std::vector<char> chunkData(chunkSize);
 		size_t totalRead = 0;
 
 		while (totalRead < chunkSize)
 		{
-			bytesRead = read(fd, chunkData + totalRead, chunkSize - totalRead);
+			bytesRead = read(fd, &chunkData[totalRead], chunkSize - totalRead);
 			if (bytesRead < 1)
 			{
-				delete[] chunkData; // Clean up memory allocation in case of failure
-				throw chunkDataError(500);
+				throw std::runtime_error("Failed to read chunk data");
 			}
 			totalRead += bytesRead;
 		}
-		_body.append(chunkData, chunkSize);
-		delete[] chunkData;
-		// Skip trailing "\r\n" after each chunk
-		read(fd, buffer, 2); // This assumes successful read, consider checking the return value
+
+		_body.append(chunkData.begin(), chunkData.end());
+		read(fd, buffer, 2); // Read trailing \r\n
+		chunkSizeLine.clear();
 	}
-}
+};
 
 // * Parses the body of an HTTP request from a given file descriptor.
 void Request::parseBody(int fd, unsigned int length)
@@ -278,24 +276,26 @@ void Request::parseBody(int fd, unsigned int length)
 	size_t totalBytesRead = 0;
 	ssize_t bytesRead = 0;
 
-	while (totalBytesRead < length)
+	while (totalBytesRead < length) // Loop until entire body length is read
 	{
-		bytesRead = read(fd, buffer, min(buffer_size, length - totalBytesRead));
-		if (bytesRead < 0)
+		bytesRead = read(fd, buffer + totalBytesRead, length - totalBytesRead);
+		if (bytesRead < 0) // Check for read error
 		{
+			delete[] buffer;
 			throw std::runtime_error("Error reading file");
 		}
-		else if (bytesRead == 0)
+		else if (bytesRead == 0) // Check if client closed connection prematurely
 		{
+			delete[] buffer;
 			throw std::runtime_error("Connection closed by client");
 		}
-		bodyData.insert(bodyData.end(), buffer, buffer + bytesRead); // Ajouter au vecteur
-		totalBytesRead += bytesRead;
+		totalBytesRead += bytesRead; // Update total bytes read counter
 	}
 	if (totalBytesRead != length)
 		throw shorterBodyContent(400);
-
-	_body.assign(bodyData.begin(), bodyData.end()); // Assigner les données lues au corps de la requête
+	buffer[totalBytesRead] = '\0';
+	_body.assign(buffer, totalBytesRead);
+	delete[] buffer;
 
 	std::cout << "Length expected: " << length << ", Bytes read: " << totalBytesRead << std::endl;
 }
@@ -349,9 +349,7 @@ void Request::prepareBodyParsing(int fd)
 	{
 		const char *continueMsg = "HTTP/1.1 100 Continue\r\n\r\n";
 		write(fd, continueMsg, strlen(continueMsg));
-		// waitForBody(fd);
-		sleep(3);
-		std::cout << "CONTINUE signal sent" << std::endl;
+		sleep(1);
 	}
 	if (_headers.find("Content-Length") != _headers.end())
 	{
