@@ -213,7 +213,7 @@ void Request::parseHeaders(std::string line)
 
 void Request::processChunkedBody(int fd)
 {
-	char buffer[4096];
+	char buffer[1024];
 	ssize_t bytesRead = 0;
 	std::string chunkSizeLine;
 	size_t chunkSize = 0;
@@ -222,34 +222,33 @@ void Request::processChunkedBody(int fd)
 
 	while (true)
 	{
-		chunkSizeLine.clear(); // Clear chunk size line for next read
+		chunkSizeLine.clear();
 
-		while (true) // Read line for chunk size
+		// Read line for chunk size
+		do
 		{
 			bytesRead = read(fd, buffer, 1); // Read one byte
 			if (bytesRead < 1)
-				throw chunkSizeError(500);
-			if (buffer[0] == '\r')
-			{
-				bytesRead = read(fd, buffer + 1, 1);
-				if (buffer[1] != '\n')
-					throw chunkSizeError(400);
-				break; // End of chunk size line
-			}
-			chunkSizeLine += buffer[0]; // Append byte to chunk size line
-		}
+				throw std::runtime_error("Failed to read chunk size");
+			if (buffer[0] != '\r')
+				chunkSizeLine += buffer[0];
+		} while (buffer[0] != '\n');
 
+		// Convert chunk size from hex to decimal
 		std::stringstream ss(chunkSizeLine);
-		ss >> std::hex >> chunkSize; // Convert chunk size line
+		ss >> std::hex >> chunkSize;
+		std::cout << "Chunk size is : " << chunkSize << std::endl;
 		if (chunkSize == 0)
 			break; // End of chunks is signaled by a chunk of 0
 
-		if (totalSize + chunkSize > maxSize) // Checking if we overload the server for each chunk
-			throw bodySize(413);
+		if (totalSize + chunkSize > maxSize)
+		{
+			throw std::runtime_error("Payload too large");
+		}
+		totalSize += chunkSize; // Update the total size
 
-		totalSize += chunkSize;
-
-		char *chunkData = new char[chunkSize];
+		// Read the chunk data
+		char *chunkData = new char[chunkSize + 1]; // +1 for safety
 		size_t totalRead = 0;
 
 		while (totalRead < chunkSize)
@@ -263,36 +262,42 @@ void Request::processChunkedBody(int fd)
 			totalRead += bytesRead;
 		}
 		_body.append(chunkData, chunkSize);
-		delete[] chunkData; // Free memory after appending data
+		delete[] chunkData;
+		// Skip trailing "\r\n" after each chunk
+		read(fd, buffer, 2); // This assumes successful read, consider checking the return value
 	}
 }
 
 // * Parses the body of an HTTP request from a given file descriptor.
 void Request::parseBody(int fd, unsigned int length)
 {
-	size_t buffer_size = 4096;
 	if (client->get_listen_socket().get_clientSize() < length) // Check if client request size exceeds allowed limit
 		throw bodySize(413);
 
-	std::vector<char> bodyData;
-	bodyData.reserve(length); // Réserver de l'espace pour optimiser les allocations
-
-	char buffer[buffer_size];
+	char *buffer = new char[length + 1]; // Allocate buffer for reading body content
 	size_t totalBytesRead = 0;
 	ssize_t bytesRead = 0;
+
 	while (totalBytesRead < length)
 	{
 		bytesRead = read(fd, buffer, min(buffer_size, length - totalBytesRead));
 		if (bytesRead < 0)
-			throw errorReadingFD(500);
+		{
+			throw std::runtime_error("Error reading file");
+		}
 		else if (bytesRead == 0)
-			throw connectionCloseEarly(499);
+		{
+			throw std::runtime_error("Connection closed by client");
+		}
 		bodyData.insert(bodyData.end(), buffer, buffer + bytesRead); // Ajouter au vecteur
 		totalBytesRead += bytesRead;
 	}
 	if (totalBytesRead != length)
 		throw shorterBodyContent(400);
+
 	_body.assign(bodyData.begin(), bodyData.end()); // Assigner les données lues au corps de la requête
+
+	std::cout << "Length expected: " << length << ", Bytes read: " << totalBytesRead << std::endl;
 }
 
 // * This function checks various aspects of an HTTP request to ensure it meets certain criteria.
@@ -344,7 +349,9 @@ void Request::prepareBodyParsing(int fd)
 	{
 		const char *continueMsg = "HTTP/1.1 100 Continue\r\n\r\n";
 		write(fd, continueMsg, strlen(continueMsg));
-		sleep(1);
+		// waitForBody(fd);
+		sleep(3);
+		std::cout << "CONTINUE signal sent" << std::endl;
 	}
 	if (_headers.find("Content-Length") != _headers.end())
 	{
