@@ -9,8 +9,7 @@ Request::Request()
 
 Request::Request(Client *client) : _hasReturn(false), client(client)
 {
-	std::cout << "Request instance with pointer on client created : " << this->client->get_fd() << std::endl;
-
+	// std::cout << "Request instance with pointer on client created : " << this->client->get_fd() << std::endl;
 }
 
 Request::~Request()
@@ -366,7 +365,6 @@ void Request::parseRequest(int fd)
 
 	parseRequestLine(line); // Parse the request line (e.g., GET /index.html HTTP/1.1)
 
-	std::cerr << "####### error curr client " << client->get_fd() << std::endl;
 	while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n") // Loop to parse headers until an empty line or newline sequence
 		parseHeaders(line);
 

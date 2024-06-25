@@ -152,14 +152,11 @@ void Server::add_client(ListenSocket &listen_socket)
 void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
-	// Request req(&client);
 	Redirection redirect;
 	Response response;
-	std::cerr << "####### Client 3 : "  << client.getReq()->getClient()->get_fd() << std::endl;
 
 	try
 	{
-		std::cerr << "******* error finder !!!! " << std::endl;
 		client.setTimeout();
 		client.getReq()->parseRequest(socket);
 		client.getReq()->checkRequest();
