@@ -119,9 +119,7 @@ void Server::add_client(ListenSocket &listen_socket)
 	if (new_socket == -1)
 	{
 		std::cerr << "Issue accepting new_socket :" << new_socket
-				  << " " << listen_socket.get_listen_fd()
-				  << " " << strerror(errno)
-				  << std::endl;
+				  << " " << listen_socket.get_listen_fd() << std::endl;
 		exit(1);
 	}
 
@@ -201,10 +199,10 @@ void Server::write_socket(Client &client)
 	std::istringstream contentStream(client.getResp());
 	std::string line;
 	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
-	// while (std::getline(contentStream, line))
-	// {
-	// 	std::cerr << line << std::endl;
-	// }
+	while (std::getline(contentStream, line))
+	{
+		std::cerr << line << std::endl;
+	}
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write

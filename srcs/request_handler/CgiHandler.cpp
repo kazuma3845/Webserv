@@ -113,7 +113,7 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
     if (pos != std::string::npos)
     {
         std::string headers_str = newbody.substr(0, pos);
-        std::string body = newbody.substr(pos + 4);
+        std::string body = newbody.substr(pos);
         std::istringstream stream(headers_str);
         std::string line;
 

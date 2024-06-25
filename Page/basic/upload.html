@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload d'image</title>
+</head>
+<body>
+    <h2>Upload d'image</h2>
+    <form action="/cgi/upload_image.py" method="POST" enctype="multipart/form-data">
+        <label for="image">Choisir une image:</label>
+        <input type="file" id="image" name="image"><br><br>
+        <input type="submit" value="Upload">
+    </form>
+</body>
+</html>
