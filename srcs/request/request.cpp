@@ -453,6 +453,7 @@ void Request::Body(std::string current_buffer)
 		_body += current_buffer[j++];
 		if (current_buffer[j] == NULL)
 		{
+			//Change status
 			break ;
 		}
 	}
@@ -492,11 +493,13 @@ void Request::parseRequest(int fd)
 	case PARSING_BODY:
 		// * On parse le body normal tant que le buffer accumulé n'est pas >= a [content-length]
 		// ! _buffer = substring de ce qui n'a pas ete utilisé
-		Body(current_buffers);
-
-
-	case PARSING_CHUNKED_BODY:
-		// * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa
+		if (_headers.count("Content-Length"))
+			Body(current_buffers);
+		else
+			//Partsing chunk body
+			// * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa
+		break ;
+		
 	}
 }
 
