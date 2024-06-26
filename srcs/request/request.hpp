@@ -14,8 +14,8 @@ class Request;
 #include "Client.hpp"
 
 enum parsingStatus {
-	FRESH, 
-	PARSING_RL, 
+	FRESH,
+	PARSING_RL,
 	PARSING_HEADERS,
 	PARSING_BODY,
 	PARSING_CHUNKED_BODY
@@ -70,6 +70,7 @@ private:
 	Client *client;
 	parsingStatus status;
 	std::vector<std::string> _buffer;
+	unsigned int _chunkBodySize;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
