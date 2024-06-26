@@ -453,7 +453,7 @@ void Request::Body(std::string current_buffer)
 		_body += current_buffer[j++];
 		if (current_buffer[j] == NULL)
 		{
-			//Change status
+			client->setFlag(HANDLING_REQUEST);
 			break ;
 		}
 	}
