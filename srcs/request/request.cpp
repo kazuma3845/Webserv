@@ -441,13 +441,66 @@ void Request::parseRequest(int fd)
 // 		throw std::runtime_error("Client disconnected");
 // }
 
-parsingChunkedBody 
+parsingChunkedBody
 {
 	case PARSING_HEXA
 		chunk_size = taille;
 	case PARSE_CHUNK
 		tant que chunk < taille;
 	case CHUNK_SIZE == 0
+}
+
+{
+	_body += _current_buffer
+	si content_length est null:
+		chercher le chunkSize
+		si chunkSize = 0 -> return success
+	si content_length =< _body(size)
+		chercher le chunkSize a l index content_length
+		si chunkSize = 0 -> return success
+}
+
+void Request::ChunkedBody()
+{
+	std::string chunkSizeLine;
+	size_t chunkSize = 0;
+	size_t maxSize = client->get_listen_socket().get_clientSize();  // Taille maximale
+	int start;
+	size_t pos;
+	std::cout << "Starting to process chunked body from buffer..." << std::endl;
+
+	// Ajout du buffer actuel au corps de la requête
+	_body += _current_buffer;
+	_current_buffer.clear();
+
+	while ()
+	{
+		if (_chunkBodySize == null)
+			start = 0;
+		else
+			start = _chunkBodySize;
+
+		pos = _body.find("\r\n", start); // cherche le prochain "\r\n" du chunkSizeLine
+		if (pos != std::string::npos) {
+			chunkSizeLine = _body.substr(start, pos);
+			_body.erase(start, pos + 2);  // Supprime la chunkSizeLine
+
+			std::stringstream ss(chunkSizeLine);
+			ss >> std::hex >> chunkSize;
+			std::cout << "Chunk size is: " << chunkSize << std::endl;
+
+			if (chunkSize > maxSize)
+				throw std::runtime_error("Payload too large");
+			_chunkBodySize += (chunkSize + 2); // rajoute un "\r\n" du chunkSizeLine
+
+			if (chunkSize == 0) {
+				std::cout << "End of chunks detected." << std::endl;
+				break ;  // Finish
+			}
+		}
+		else
+			break;  // continue to read, si aucuns "\r\n" trouver dans le body
+	}
 }
 
 void Request::parseRequest(int fd)
