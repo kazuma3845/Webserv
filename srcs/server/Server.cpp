@@ -177,7 +177,9 @@ void Server::read_socket(Client &client)
 		client.setKeepAlive(false);
 		response.setStatusCode(e.getErrorCode());
 		response.setStatusMessage(e.what());
-		if (client.get_listen_socket().get_error().compare(std::to_string(e.getErrorCode())) == 0)
+		std::stringstream ss;
+		ss << e.getErrorCode();
+		if (client.get_listen_socket().get_error().compare(ss.str()) == 0)
 			response.ErrorBody(e.getErrorCode(), client, true);
 		else
 			response.ErrorBody(e.getErrorCode(), client, false);

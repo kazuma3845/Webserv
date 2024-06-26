@@ -11,8 +11,10 @@ CgiHandler::~CgiHandler()
 
 void CgiHandler::initenv(Request &request)
 {
+	std::stringstream ss;
     _env["AUTH_TYPE"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
-    _env["CONTENT_LENGTH"] = std::to_string(request.getBody().size());
+	ss << request.getBody().size();
+    _env["CONTENT_LENGTH"] = ss.str();
     _env["CONTENT_TYPE"] = request.getHeaders().count("Content-Type") ? request.getHeaders()["Content-Type"] : "";
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";
     _env["PATH_INFO"] = request.getFullPath();
@@ -25,7 +27,8 @@ void CgiHandler::initenv(Request &request)
     _env["REQUEST_URI"] = request.getFullPath() + (request.getQueryString().empty() ? "" : "?" + request.getQueryString());
     _env["SCRIPT_NAME"] = request.getFullPath();
     _env["SERVER_NAME"] = request.getClient()->get_listen_socket().get_name();
-    _env["SERVER_PORT"] = std::to_string(request.getClient()->get_listen_socket().get_port());
+	ss << request.getClient()->get_listen_socket().get_port();
+    _env["SERVER_PORT"] = ss.str();
     _env["SERVER_PROTOCOL"] = "HTTP/1.1";
     _env["SERVER_SOFTWARE"] = "Weebserv/1.0";
     _env["REDIRECT_STATUS"] = "200";

@@ -284,12 +284,16 @@ void Response::formatResponse(Client &a, Request &b)
     // _resp += "HTTP/1.1 200 ok\r\n"
     if (!b.getFullPath().empty())
         loc_path = b.getFullPath().substr(a.get_listen_socket().get_root().size(), b.getFullPath().size());
-    _resp += "HTTP/1.1 " + std::to_string(_statusCode) + " " + _statusMessage + "\r\n"
+	std::stringstream ss;
+	ss << _statusCode;
+    _resp += "HTTP/1.1 " + ss.str() + " " + _statusMessage + "\r\n"
     "Date: " + takeTime() + "\r\n"
-    "Content-Type: " + _contentType + "\r\n"
-    "Location: http://" + a.get_listen_socket().get_host() + ":" + std::to_string(a.get_listen_socket().get_port()) + "/" + loc_path + "\r\n"
-    "Connection: " + _connectionType + "\r\n"
-    "Content-Length: " + std::to_string(_body.size()) + "\r\n"
+    "Content-Type: " + _contentType + "\r\n";
+	ss << a.get_listen_socket().get_port();
+   _resp += "Location: http://" + a.get_listen_socket().get_host() + ":" + ss.str() + "/" + loc_path + "\r\n"
+    "Connection: " + _connectionType + "\r\n";
+	ss << _body.size();
+    _resp += "Content-Length: " + ss.str() + "\r\n"
     "\r\n";
     _resp += _body;
 }
@@ -297,13 +301,14 @@ void Response::formatResponse(Client &a, Request &b)
 void Response::ErrorBody(int error_code, Client &a, bool b)
 {
 	std::string path;
-
+	std::stringstream ss;
 	if (b == false)
 	{
+		ss << error_code;
 		if (error_code % 400 < 100)
-			path = "Page/error/400/" + std::to_string(error_code) + ".html";
+			path = "Page/error/400/" + ss.str() + ".html";
 		else if (error_code % 500 < 100)
-			path = "Page/error/500/" + std::to_string(error_code) + ".html";
+			path = "Page/error/500/" + ss.str() + ".html";
 	}
 	else
 		path = a.get_listen_socket().get_error_path()[a.get_listen_socket().get_error()];

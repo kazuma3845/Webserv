@@ -433,8 +433,8 @@ void Request::parseRequest(int fd)
 // 				break;
 // 		}
 // 	}
-
-// 	// Handle errors during reading
+// 
+	// Handle errors during reading
 // 	if (has_content < 0)
 // 		throw std::runtime_error("Error reading from socket");
 // 	else if (has_content == 0 && request_data.empty())
@@ -469,9 +469,9 @@ void Request::parseRequest(int fd)
 {
 	// On lit d'entrée car si on arrive ici c'est que le flag de parsing n'est pas set a FINISHED
 	int buffer_size = 1024;
-	char current_buffer[buffer_size];
-	read(fd, current_buffer, buffer_size);
-	std::string current_buffers = std::to_string(current_buffer[buffer_size]);
+    char buffer[buffer_size];
+    size_t bytes_read = read(fd, buffer, buffer_size);
+    std::string current_buffer(buffer, bytes_read);
 	// _buffer.push_back(current_buffers);
 
 	switch (status)
@@ -494,7 +494,7 @@ void Request::parseRequest(int fd)
 		// * On parse le body normal tant que le buffer accumulé n'est pas >= a [content-length]
 		// ! _buffer = substring de ce qui n'a pas ete utilisé
 		if (_headers.count("Content-Length"))
-			Body(current_buffers);
+			Body(current_buffer);
 		else
 			//Partsing chunk body
 			// * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa

@@ -38,7 +38,7 @@ void Web::check()
 			_serv[i].setClientSize(CLIENT_SIZE);
 		if (_serv[i].getAllowMethods().empty())
 			_serv[i].setMethod();
-		if (_serv[i].getRoot().back() != '/')
+		if (_serv[i].getRoot().substr(_serv[i].getRoot().size()-1).compare("/"))
 			_serv[i].setRoot("/");
 
 		location a = _serv[i].getLocation()["/"];
@@ -77,8 +77,9 @@ void Web::parsing(char **argv, int argc)
 					ss >> w;
 					if (!w.empty())
 					{
-						if (w.back() == ';')
-							w.pop_back();
+						if (w.substr(w.size() - 1).compare(";") == 0)
+							w = w.substr(0, w.size() - 1);
+						std::cout << "=====W======== " << w << std::endl;
 						word.push_back(w);
 					}
 				}
