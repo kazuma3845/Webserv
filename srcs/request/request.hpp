@@ -14,11 +14,10 @@ class Request;
 #include "Client.hpp"
 
 enum parsingStatus {
-	FRESH, 
-	PARSING_RL, 
+	PARSING_RL,
 	PARSING_HEADERS,
 	PARSING_BODY,
-	PARSING_CHUNKED_BODY
+	FINISHED,
 };
 
 class Request
@@ -75,8 +74,8 @@ private:
 
 	std::string readUntilHeadersEnd(int fd);
 	void prepareBodyParsing(int fd);
-	void parseRequestLine(std::string line);
-	void parseHeaders(std::string line);
+	std::string parseRequestLine(std::string &current_buffer);
+	std::string parseHeaders(std::string &current_buffer);
 	void parseBody(int fd, unsigned int length);
 	void processChunkedBody(int fd);
 	void extractQueryString();

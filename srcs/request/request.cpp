@@ -154,60 +154,6 @@ void Request::extractQueryString()
 	_uri = tmp;
 }
 
-// * Parses the request line of an HTTP request and validates its components.
-// * Extracts the method, URI, and HTTP version from the provided line.
-// * Validates the extracted components and throws exceptions for invalid inputs.
-
-void Request::parseRequestLine(std::string line)
-{
-	// Create a string stream from the request line
-	std::istringstream ss(line);
-
-	// Extract method, URI, and HTTP version from the string stream
-	ss >> _method >> _uri >> _httpVersion;
-
-	// If URI contains a query string, extract it
-	if (_uri.find('?') != std::string::npos)
-		extractQueryString();
-
-	char extra;
-	// Validate the extracted components and ensure no extra characters in the stream
-	if (_method.empty() || _uri.empty() || _uri.front() != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/" || ss >> extra)
-		throw wrongRLInput(400); // Throw exception for invalid request line input
-
-	// Ensure the HTTP version is supported
-	if (_httpVersion != "HTTP/1.1")
-		throw unsupportedHTTPVersion(505); // Throw exception for unsupported HTTP version
-}
-
-// * Parses a single header line and stores the key-value pair in the headers map.
-// * Throws an exception if the header line format is invalid.
-
-void Request::parseHeaders(std::string line)
-{
-	// Create a string stream from the header line
-	std::istringstream ss(line);
-	std::string key, value;
-	// Extract key and value from the string stream, separated by ':'
-	if (std::getline(ss, key, ':') && std::getline(ss, value))
-	{
-		// Trim leading whitespace from value
-		size_t start = value.find_first_not_of(" \t\r\n");
-		if (start != std::string::npos)
-			value.erase(0, start);
-
-		// Trim trailing whitespace from value
-		size_t end = value.find_last_not_of(" \t\r\n");
-		if (end != std::string::npos)
-			value.erase(end + 1);
-
-		// Store the key-value pair in the headers map
-		_headers[key] = value;
-	}
-	else
-		throw headerParsingError(400); // Throw exception for invalid header format
-}
-
 // * Parses a chunked HTTP body received on the given file descriptor (fd),
 // * appending it to the internal body buffer of the Request object.
 
@@ -318,30 +264,6 @@ void Request::checkRequest()
 		client->setKeepAlive(true);
 }
 
-// * This function reads data from a file descriptor until the end of HTTP headers is reached.
-// * It appends the read data to the request_data string and returns the position just after the end of the headers.
-
-std::string Request::readUntilHeadersEnd(int fd)
-{
-	char byte;
-	int has_content;
-	std::string request;
-
-	while ((has_content = read(fd, &byte, 1)) > 0)
-	{
-		request += byte;
-		if (request.find("\r\n\r\n") != std::string::npos) // If the end of the headers is found, break the loop
-			break;
-	}
-
-	// Handle errors during reading
-	if (has_content < 0) // If read returns a negative value, an error occurred
-		throw errorReadingFD(500);
-	else if (has_content == 0 && request.empty()) // If no data is read and request_data is empty, the client disconnected
-		throw connectionCloseEarly(499);
-	return (request);
-}
-
 void Request::prepareBodyParsing(int fd)
 {
 	if (_headers.find("Expect") != _headers.end())
@@ -359,88 +281,6 @@ void Request::prepareBodyParsing(int fd)
 		processChunkedBody(fd);
 }
 
-// * Function to parse an HTTP request from a given file descriptor.
-// * It reads the request, parses the request line, headers, and body based on the headers.
-
-void Request::parseRequest(int fd)
-{
-	std::string request_data = readUntilHeadersEnd(fd); // Read data until the end of the headers section
-	std::istringstream header_stream(request_data);		// Create a stream for header parsing
-	std::string line;
-	std::getline(header_stream, line);
-
-	parseRequestLine(line); // Parse the request line (e.g., GET /index.html HTTP/1.1)
-
-	while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n") // Loop to parse headers until an empty line or newline sequence
-		parseHeaders(line);
-
-
-	prepareBodyParsing(fd);
-}
-
-// ! WORKING VERSION DONT DELETE
-// void Request::parseRequest(int fd)
-// {
-// 	char buffer[MESSAGE_BUFFER]; // Buffer to hold incoming data from the file descriptor
-// 	std::string request_data; // String to accumulate the request data
-// 	int has_content; // Variable to hold the number of bytes read from the file descriptor
-
-// 	// Read from the file descriptor in a loop until there is no more data
-// 	while ((has_content = read(fd, buffer, MESSAGE_BUFFER)) > 0)
-// 	{
-// 		// Append the read data to the request_data string
-// 		request_data.append(buffer, has_content);
-// 		// Clear the buffer
-// 		memset(buffer, 0, has_content);
-
-// 		// Find the end of the HTTP headers
-// 		size_t header_end = request_data.find("\r\n\r\n");
-// 		if (header_end != std::string::npos)
-// 		{
-// 			// Create a stream to process the headers
-// 			std::istringstream header_stream(request_data.substr(0, header_end + 4));
-// 			std::string line;
-// 			// Parse the request line (e.g., GET /index.html HTTP/1.1)
-// 			std::getline(header_stream, line);
-// 			parseRequestLine(line);
-
-// 			// Parse all the headers
-// 			while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n")
-// 				parseHeaders(line);
-
-// 			// Determine where the body starts
-// 			size_t body_start = header_end + 4;
-
-// 			// Handle the body if Content-Length is specified
-// 			if (_headers.find("Content-Length") != _headers.end())
-// 			{
-// 				size_t content_length = std::stoi(_headers["Content-Length"]);
-// 				if (request_data.size() >= body_start + content_length)
-// 				{
-// 					std::istringstream body_stream(request_data.substr(body_start, content_length));
-// 					parseBody(body_stream);
-// 					break;
-// 				}
-// 			}
-// 			// Handle the body if Transfer-Encoding is chunked
-// 			else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
-// 			{
-// 				processChunkedBody(fd, request_data.substr(body_start));
-// 				break;
-// 			}
-// 			// No body to process
-// 			else
-// 				break;
-// 		}
-// 	}
-
-// 	// Handle errors during reading
-// 	if (has_content < 0)
-// 		throw std::runtime_error("Error reading from socket");
-// 	else if (has_content == 0 && request_data.empty())
-// 		throw std::runtime_error("Client disconnected");
-// }
-
 void Request::Body(std::string current_buffer)
 {
 	unsigned int bodySize = _body.size();
@@ -453,8 +293,8 @@ void Request::Body(std::string current_buffer)
 		_body += current_buffer[j++];
 		if (current_buffer[j] == NULL)
 		{
-			//Change status
-			break ;
+			// Change status
+			break;
 		}
 	}
 	if (current_buffer[j] != NULL)
@@ -465,41 +305,113 @@ void Request::Body(std::string current_buffer)
 	}
 }
 
+std::string Request::parseRequestLine(std::string &current_buffer)
+{
+	_buffer += current_buffer;
+	std::istringstream ss(_buffer);
+	std::string line;
+	if (!std::getline(ss, line)) // As long as we are not able to form a full line, it returns an empty string
+		return ("");
+
+	std::string remainingString = ss.str(); // Remainding string after the line
+	std::istringstream lineStream(line);
+	_buffer.clear();
+
+	lineStream >> _method >> _uri >> _httpVersion; // Extract method, URI, and HTTP version from the string stream
+	if (_uri.find('?') != std::string::npos)	   // If URI contains a query string, extract it
+		extractQueryString();
+
+	char extra; // Validate the extracted components and ensure no extra characters in the stream
+	if (_method.empty() || _uri.empty() || _uri.front() != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/" || ss >> extra)
+		throw wrongRLInput(400); // Throw exception for invalid request line input
+
+	if (_httpVersion != "HTTP/1.1")		   // Ensure the HTTP version is supported
+		throw unsupportedHTTPVersion(505); // Throw exception for unsupported HTTP version
+	status = PARSING_HEADERS;
+	return (remainingString);
+}
+
+std::string Request::parseHeaders(std::string &current_buffer)
+{
+	_buffer += current_buffer;
+	std::istringstream ss(_buffer);
+	std::string line;
+
+	while (std::getline(ss, line))
+	{
+		std::istringstream ss(line); // Create a string stream from the header line
+		std::string key, value;
+		if (std::getline(ss, key, ':') && std::getline(ss, value))
+		{
+			size_t start = value.find_first_not_of(" \t\r\n");
+			if (start != std::string::npos)
+				value.erase(0, start);
+			size_t end = value.find_last_not_of(" \t\r\n");
+			if (end != std::string::npos)
+				value.erase(end + 1);
+			_headers[key] = value;
+		}
+		else
+			throw headerParsingError(400); // Throw exception for invalid header format
+	}
+	std::string remainingString = ss.str();					   // Ce qui n'a pas ete transformé en ligne
+	if (remainingString.find('/n/r/n/r') == std::string::npos) // Si on ne trouve pas la fin des headers on remplit le buffer avec ce qu'il reste
+	{
+		_buffer = remainingString;
+		return ("");
+	}
+	if (_headers.count(_headers["Expect"])) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
+	{
+		client->setFlag(EXPECTING);
+		status = PARSING_BODY;
+		return ("");
+	}
+	// * on check si il y a quelque chose derriere (du body)
+	if (remainingString.empty())
+	{
+		_buffer.clear();
+		status = FINISHED;
+		client->setFlag(HANDLING_REQUEST);
+		return "";
+	}
+	status = PARSING_BODY;
+	return remainingString;
+}
+
 void Request::parseRequest(int fd)
 {
-	// On lit d'entrée car si on arrive ici c'est que le flag de parsing n'est pas set a FINISHED
-	int buffer_size = 1024;
-	char current_buffer[buffer_size];
-	read(fd, current_buffer, buffer_size);
-	std::string current_buffers = std::to_string(current_buffer[buffer_size]);
-	// _buffer.push_back(current_buffers);
+	int buffer_size = 1024; // On lit d'entrée car si on arrive ici c'est que le flag de parsing n'est pas set a FINISHED
+	char buffer[buffer_size];
+	size_t bytes_read = read(fd, buffer, buffer_size);
+	if (bytes_read < 0)
+		throw errorReadingFD(500);
+	if (bytes_read == 0)
+		throw connectionCloseEarly(499);
+	std::string current_buffer(buffer, bytes_read);
 
 	switch (status)
 	{
 	case PARSING_RL:
-		// * On continue le parsing de la requete et on et actualise le status
-		// * On check si on a fini les headers, si oui on set et actualise le status
-		// * On verifie si il reste qqch ou non, si fini on set le status du CLIENT a REQUEST_PARSED
-		// * Si il restait, on parse le body en fonction de normal ou chunked
-		// ! _buffer = substring de ce qui n'a pas ete utilisé
-
+	{
+		current_buffer = parseRequestLine(current_buffer);
+		if (current_buffer.empty() && status == PARSING_RL)
+			break;
+	}
 	case PARSING_HEADERS:
-		// * On check si on a fini les headers, si oui on set et actualise le status
-		// * On verifie si il reste qqch ou non, si fini on set le status du CLIENT a REQUEST_PARSED
-		// * Si il restait, on parse le body en fonction de normal ou chunked
-		// ? current_buffer = on enleve ce qui a ete utilisé, substring de ce qui n'a pas ete utilisé, on change le status !
-		// ! _buffer = substring de ce qui n'a pas ete utilisé
-
+	{
+		current_buffer = parseHeaders(current_buffer);
+		if (current_buffer.empty() && (status == PARSING_HEADERS || client->getFlag() == HANDLING_REQUEST) || status == client->getFlag() == EXPECTING)
+			break;
+	}
 	case PARSING_BODY:
 		// * On parse le body normal tant que le buffer accumulé n'est pas >= a [content-length]
 		// ! _buffer = substring de ce qui n'a pas ete utilisé
 		if (_headers.count("Content-Length"))
-			Body(current_buffers);
+			Body(current_buffer);
 		else
-			//Partsing chunk body
-			// * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa
-		break ;
-		
+			// Partsing chunk body
+			//  * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa
+			break;
 	}
 }
 

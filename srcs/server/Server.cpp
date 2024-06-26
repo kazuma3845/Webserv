@@ -93,7 +93,7 @@ void Server::run_server(void)
 		// Reading new request
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
-				// this->_client_sds_map[i].getReq()->printRequest();
+			// this->_client_sds_map[i].getReq()->printRequest();
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
 				read_socket(this->_client_sds_map[i]);
 			// std::cerr << "####### Client : "  << this->_client_sds_map[i].getReq()->getClient()->get_fd() << std::endl;
@@ -146,28 +146,47 @@ void Server::add_client(ListenSocket &listen_socket)
 	if (_client_sds_map.count(new_socket) != 0)
 		_client_sds_map.erase(new_socket);
 	this->_client_sds_map[new_socket] = new_client;
-	std::cerr << "####### Client 2 : "  << this->_client_sds_map[new_socket].getReq()->getClient()->get_fd() << std::endl;
+	std::cerr << "####### Client 2 : " << this->_client_sds_map[new_socket].getReq()->getClient()->get_fd() << std::endl;
 }
 
 void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
+	Flag status = client.getFlag();
 	Redirection redirect;
 	Response response;
 
 	try
 	{
-		client.setTimeout();
-		client.getReq()->parseRequest(socket);
-		client.getReq()->checkRequest();
-		client.getReq()->printRequest();
-		redirect.path(*client.getReq(), response);
-		response.setHTTPVersion(client.getReq()->getHttpVersion());
-		response.setConnectionType(client.getKeepAlive());
-		if (client.getReq()->getHasReturn())
-			response.setStatusCode(301);
-		response.formatResponse(client, *client.getReq());
-		client.setResp(response.getResp());
+		switch (status)
+		{
+		case PARSING_REQUEST:
+		{
+			client.setTimeout();
+			client.getReq()->parseRequest(socket);
+			break;
+		}
+		case EXPECTING:
+		{
+			FD_CLR(socket, &this->_read_sds);
+			FD_SET(socket, &this->_write_sds);
+			break;
+		}
+		case HANDLING_REQUEST:
+		{
+			client.getReq()->checkRequest();
+			redirect.path(*client.getReq(), response);
+			response.setHTTPVersion(client.getReq()->getHttpVersion());
+			response.setConnectionType(client.getKeepAlive());
+			if (client.getReq()->getHasReturn())
+				response.setStatusCode(301);
+			response.formatResponse(client, *client.getReq());
+			client.setResp(response.getResp());
+			FD_CLR(socket, &this->_read_sds);
+			FD_SET(socket, &this->_write_sds);
+			break;
+		}
+		}
 	}
 	catch (const ErrorWebServ &e)
 	{
@@ -185,16 +204,15 @@ void Server::read_socket(Client &client)
 		response.setContentType("text/html");
 		response.formatResponse(client, *client.getReq());
 		client.setResp(response.getResp());
+		FD_CLR(socket, &this->_read_sds);
+		FD_SET(socket, &this->_write_sds);
 	}
-
-	FD_CLR(socket, &this->_read_sds);
-	FD_SET(socket, &this->_write_sds);
 }
 
 void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
-
+	
 	write(socket, client.getResp().c_str(), client.getResp().length());
 
 	//-----------------------------------------------------------------------

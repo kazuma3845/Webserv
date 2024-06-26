@@ -110,7 +110,7 @@ void	Client::setTimeout(void)
 	_connected_time = time(NULL);
 }
 
-void Client::setFlag(int flag)
+void Client::setFlag(Flag flag)
 {
 	this->_flag = flag;
 }
