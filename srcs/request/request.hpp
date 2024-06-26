@@ -69,7 +69,7 @@ private:
 	bool _hasReturn;
 	Client *client;
 	parsingStatus status;
-	std::vector<std::string> _buffer;
+	std::string _buffer;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
@@ -85,6 +85,9 @@ private:
 	void parseUri();
 	void checkFile(int mode);
 	bool checkfolder(std::string uri);
+
+
+	void Body(std::string current_buffer);
 
 	// ------------------------------------------ ERROR
 
