@@ -13,6 +13,13 @@ class Request;
 #include "../errors/ErrorWebServ.hpp"
 #include "Client.hpp"
 
+enum parsingStatus {
+	FRESH, 
+	PARSING_RL, 
+	PARSING_HEADERS,
+	PARSING_BODY,
+	PARSING_CHUNKED_BODY
+};
 
 class Request
 {
@@ -61,6 +68,8 @@ private:
 	std::string _full_path;
 	bool _hasReturn;
 	Client *client;
+	parsingStatus status;
+	std::vector<std::string> _buffer;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
@@ -169,9 +178,3 @@ private:
 
 void replaceDoubleSlashes(std::string &str);
 bool isDirectory(std::string &path);
-
-template <typename T>
-T min(T a, T b)
-{
-	return (a < b) ? a : b;
-}

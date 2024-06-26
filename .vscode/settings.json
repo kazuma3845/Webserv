@@ -1,17 +1,37 @@
 {
 	"files.associations": {
+<<<<<<< HEAD
 		"__bit_reference": "cpp",
 		"__config": "cpp",
 		"__hash_table": "cpp",
 		"__locale": "cpp",
+=======
+		"iosfwd": "cpp",
+		"map": "cpp",
+		"string": "cpp",
+		"__bit_reference": "cpp",
+		"__config": "cpp",
+		"__debug": "cpp",
+		"__errc": "cpp",
+		"__hash_table": "cpp",
+		"__locale": "cpp",
+		"__mutex_base": "cpp",
+>>>>>>> origin/Neah
 		"__node_handle": "cpp",
 		"__split_buffer": "cpp",
 		"__threading_support": "cpp",
 		"__tree": "cpp",
 		"__verbose_abort": "cpp",
 		"array": "cpp",
+<<<<<<< HEAD
 		"bitset": "cpp",
 		"cctype": "cpp",
+=======
+		"atomic": "cpp",
+		"bitset": "cpp",
+		"cctype": "cpp",
+		"charconv": "cpp",
+>>>>>>> origin/Neah
 		"clocale": "cpp",
 		"cmath": "cpp",
 		"complex": "cpp",
@@ -24,32 +44,64 @@
 		"ctime": "cpp",
 		"cwchar": "cpp",
 		"cwctype": "cpp",
+<<<<<<< HEAD
 		"execution": "cpp",
+=======
+		"deque": "cpp",
+		"exception": "cpp",
+>>>>>>> origin/Neah
 		"fstream": "cpp",
 		"initializer_list": "cpp",
 		"iomanip": "cpp",
 		"ios": "cpp",
+<<<<<<< HEAD
 		"iosfwd": "cpp",
+=======
+>>>>>>> origin/Neah
 		"iostream": "cpp",
 		"istream": "cpp",
 		"limits": "cpp",
 		"locale": "cpp",
+<<<<<<< HEAD
 		"map": "cpp",
+=======
+>>>>>>> origin/Neah
 		"mutex": "cpp",
 		"new": "cpp",
 		"optional": "cpp",
 		"ostream": "cpp",
 		"ratio": "cpp",
 		"sstream": "cpp",
+<<<<<<< HEAD
 		"stdexcept": "cpp",
 		"streambuf": "cpp",
 		"string": "cpp",
 		"string_view": "cpp",
+=======
+		"stack": "cpp",
+		"stdexcept": "cpp",
+		"streambuf": "cpp",
+		"string_view": "cpp",
+		"system_error": "cpp",
+>>>>>>> origin/Neah
 		"tuple": "cpp",
 		"typeinfo": "cpp",
 		"unordered_map": "cpp",
 		"variant": "cpp",
 		"vector": "cpp",
+<<<<<<< HEAD
+=======
+		"__bits": "cpp",
+		"__nullptr": "cpp",
+		"__string": "cpp",
+		"__tuple": "cpp",
+		"bit": "cpp",
+		"chrono": "cpp",
+		"compare": "cpp",
+		"concepts": "cpp",
+		"memory": "cpp",
+		"type_traits": "cpp",
+>>>>>>> origin/Neah
 		"algorithm": "cpp"
 	}
 }
