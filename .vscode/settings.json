@@ -1,5 +1,14 @@
 {
 	"files.associations": {
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		"__bit_reference": "cpp",
+		"__config": "cpp",
+		"__hash_table": "cpp",
+		"__locale": "cpp",
+=======
+>>>>>>> origin/main
 		"iosfwd": "cpp",
 		"map": "cpp",
 		"string": "cpp",
@@ -10,16 +19,31 @@
 		"__hash_table": "cpp",
 		"__locale": "cpp",
 		"__mutex_base": "cpp",
+<<<<<<< HEAD
+=======
+>>>>>>> origin/Neah
+>>>>>>> origin/main
 		"__node_handle": "cpp",
 		"__split_buffer": "cpp",
 		"__threading_support": "cpp",
 		"__tree": "cpp",
 		"__verbose_abort": "cpp",
 		"array": "cpp",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		"bitset": "cpp",
+		"cctype": "cpp",
+=======
+>>>>>>> origin/main
 		"atomic": "cpp",
 		"bitset": "cpp",
 		"cctype": "cpp",
 		"charconv": "cpp",
+<<<<<<< HEAD
+=======
+>>>>>>> origin/Neah
+>>>>>>> origin/main
 		"clocale": "cpp",
 		"cmath": "cpp",
 		"complex": "cpp",
@@ -32,32 +56,73 @@
 		"ctime": "cpp",
 		"cwchar": "cpp",
 		"cwctype": "cpp",
+<<<<<<< HEAD
 		"deque": "cpp",
 		"exception": "cpp",
+=======
+<<<<<<< HEAD
+		"execution": "cpp",
+=======
+		"deque": "cpp",
+		"exception": "cpp",
+>>>>>>> origin/Neah
+>>>>>>> origin/main
 		"fstream": "cpp",
 		"initializer_list": "cpp",
 		"iomanip": "cpp",
 		"ios": "cpp",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		"iosfwd": "cpp",
+=======
+>>>>>>> origin/Neah
+>>>>>>> origin/main
 		"iostream": "cpp",
 		"istream": "cpp",
 		"limits": "cpp",
 		"locale": "cpp",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		"map": "cpp",
+=======
+>>>>>>> origin/Neah
+>>>>>>> origin/main
 		"mutex": "cpp",
 		"new": "cpp",
 		"optional": "cpp",
 		"ostream": "cpp",
 		"ratio": "cpp",
 		"sstream": "cpp",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+		"stdexcept": "cpp",
+		"streambuf": "cpp",
+		"string": "cpp",
+		"string_view": "cpp",
+=======
+>>>>>>> origin/main
 		"stack": "cpp",
 		"stdexcept": "cpp",
 		"streambuf": "cpp",
 		"string_view": "cpp",
 		"system_error": "cpp",
+<<<<<<< HEAD
+=======
+>>>>>>> origin/Neah
+>>>>>>> origin/main
 		"tuple": "cpp",
 		"typeinfo": "cpp",
 		"unordered_map": "cpp",
 		"variant": "cpp",
 		"vector": "cpp",
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
 		"__bits": "cpp",
 		"__nullptr": "cpp",
 		"__string": "cpp",
@@ -68,6 +133,10 @@
 		"concepts": "cpp",
 		"memory": "cpp",
 		"type_traits": "cpp",
+<<<<<<< HEAD
+=======
+>>>>>>> origin/Neah
+>>>>>>> origin/main
 		"algorithm": "cpp"
 	}
 }

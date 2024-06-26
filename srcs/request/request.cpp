@@ -9,7 +9,7 @@ Request::Request()
 
 Request::Request(Client *client) : _hasReturn(false), client(client)
 {
-	// std::cout << "Request instance with pointer on client created." << std::endl;
+	// std::cout << "Request instance with pointer on client created : " << this->client->get_fd() << std::endl;
 }
 
 Request::~Request()
@@ -102,6 +102,7 @@ void Request::setClient(Client *client)
 {
 	this->client = client;
 }
+
 // ---------------------------------- OTHER FUNCTIONS -- //
 
 // * This function prints out the parsed contents of an HTTP request, including method, URI, headers, body, and other details.
@@ -187,7 +188,6 @@ void Request::parseHeaders(std::string line)
 	// Create a string stream from the header line
 	std::istringstream ss(line);
 	std::string key, value;
-
 	// Extract key and value from the string stream, separated by ':'
 	if (std::getline(ss, key, ':') && std::getline(ss, value))
 	{
@@ -374,6 +374,7 @@ void Request::parseRequest(int fd)
 	while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n") // Loop to parse headers until an empty line or newline sequence
 		parseHeaders(line);
 
+
 	prepareBodyParsing(fd);
 }
 
@@ -439,6 +440,48 @@ void Request::parseRequest(int fd)
 // 	else if (has_content == 0 && request_data.empty())
 // 		throw std::runtime_error("Client disconnected");
 // }
+
+parsingChunkedBody 
+{
+	case PARSING_HEXA
+		chunk_size = taille;
+	case PARSE_CHUNK
+		tant que chunk < taille
+	case CHUNK_SIZE == 0
+}
+
+void Request::parseRequest(int fd)
+{
+	// On lit d'entrée car si on arrive ici c'est que le flag de parsing n'est pas set a FINISHED
+	int buffer_size = 1024;
+	std::string current_buffer[buffer_size];
+	read(fd, current_buffer, buffer_size);
+	_buffer += current_buffer;
+
+	switch (status)
+	{
+	case PARSING_RL:
+		// * On continue le parsing de la requete et on et actualise le status
+		// * On check si on a fini les headers, si oui on set et actualise le status
+		// * On verifie si il reste qqch ou non, si fini on set le status du CLIENT a REQUEST_PARSED
+		// * Si il restait, on parse le body en fonction de normal ou chunked
+		// ! _buffer = substring de ce qui n'a pas ete utilisé
+
+	case PARSING_HEADERS:
+		// * On check si on a fini les headers, si oui on set et actualise le status
+		// * On verifie si il reste qqch ou non, si fini on set le status du CLIENT a REQUEST_PARSED
+		// * Si il restait, on parse le body en fonction de normal ou chunked
+		// ? current_buffer = on enleve ce qui a ete utilisé, substring de ce qui n'a pas ete utilisé, on change le status !
+		// ! _buffer = substring de ce qui n'a pas ete utilisé
+
+	case PARSING_BODY:
+		// * On parse le body normal tant que le buffer accumulé n'est pas >= a [content-length]
+		// ! _buffer = substring de ce qui n'a pas ete utilisé
+
+	case PARSING_CHUNKED_BODY:
+		// * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa
+	}
+}
 
 // * This function parses the URI to determine the current location and file path.
 // * It extracts the location and file paths from the URI and sets the appropriate
