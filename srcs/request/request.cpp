@@ -213,86 +213,91 @@ void Request::parseHeaders(std::string line)
 
 void Request::processChunkedBody(int fd)
 {
-	char buffer[1024];											   // Buffer for reading data
-	ssize_t bytesRead = 0;										   // Number of bytes read from socket
-	std::string chunkSizeLine;									   // String to store chunk size line
-	size_t chunkSize = 0;										   // Size of current chunk being read
-	size_t maxSize = client->get_listen_socket().get_clientSize(); // Maximum allowed size of body
-	size_t totalSize = 0;										   // Total size of body read so far
+	char buffer[1024];
+	ssize_t bytesRead = 0;
+	std::string chunkSizeLine;
+	size_t chunkSize = 0;
+	size_t maxSize = client->get_listen_socket().get_clientSize(); // Example max size
+	size_t totalSize = 0;
 
+	std::cout << "Starting to read chunked body ..." << std::endl;
 	while (true)
 	{
-		chunkSizeLine.clear(); // Clear chunk size line for next read
-
-		while (true) // Read line for chunk size
+		// Read until \r\n is found (start of chunk size line)
+		do
 		{
-			bytesRead = read(fd, buffer, 1); // Read one byte
+			bytesRead = read(fd, buffer, 1);
 			if (bytesRead < 1)
-				throw chunkSizeError(500);
-			if (buffer[0] == '\r')
 			{
-				bytesRead = read(fd, buffer + 1, 1);
-				if (buffer[1] != '\n')
-					throw chunkSizeError(400);
-				break; // End of chunk size line
+				throw std::runtime_error("Failed to read from socket");
 			}
-			chunkSizeLine += buffer[0]; // Append byte to chunk size line
+			chunkSizeLine += buffer[0];
+		} while (chunkSizeLine.size() < 2 || chunkSizeLine.substr(chunkSizeLine.size() - 2) != "\r\n");
+
+		chunkSizeLine = chunkSizeLine.substr(0, chunkSizeLine.size() - 2); // Remove \r\n
+		std::stringstream ss(chunkSizeLine);
+		ss >> std::hex >> chunkSize;
+		std::cout << "ChunkSize is :" << chunkSize << std::endl;
+
+		if (chunkSize == 0)
+			break;
+
+		if (totalSize + chunkSize > maxSize)
+		{
+			throw std::runtime_error("Payload too large");
 		}
 
-		std::stringstream ss(chunkSizeLine);
-		ss >> std::hex >> chunkSize; // Convert chunk size line
-		if (chunkSize == 0)
-			break; // End of chunks is signaled by a chunk of 0
-
-		if (totalSize + chunkSize > maxSize) // Checking if we overload the server for each chunk
-			throw bodySize(413);
-
-		totalSize += chunkSize;
-
-		char *chunkData = new char[chunkSize];
+		std::vector<char> chunkData(chunkSize);
 		size_t totalRead = 0;
 
 		while (totalRead < chunkSize)
 		{
-			bytesRead = read(fd, chunkData + totalRead, chunkSize - totalRead);
+			bytesRead = read(fd, &chunkData[totalRead], chunkSize - totalRead);
 			if (bytesRead < 1)
 			{
-				delete[] chunkData; // Clean up memory allocation in case of failure
-				throw chunkDataError(500);
+				throw std::runtime_error("Failed to read chunk data");
 			}
 			totalRead += bytesRead;
 		}
-		_body.append(chunkData, chunkSize);
-		delete[] chunkData; // Free memory after appending data
+
+		_body.append(chunkData.begin(), chunkData.end());
+		read(fd, buffer, 2); // Read trailing \r\n
+		chunkSizeLine.clear();
 	}
-}
+};
 
 // * Parses the body of an HTTP request from a given file descriptor.
 void Request::parseBody(int fd, unsigned int length)
 {
-	size_t buffer_size = 4096;
 	if (client->get_listen_socket().get_clientSize() < length) // Check if client request size exceeds allowed limit
 		throw bodySize(413);
 
-	std::vector<char> bodyData;
-	bodyData.reserve(length); // Réserver de l'espace pour optimiser les allocations
-
-	char buffer[buffer_size];
+	char *buffer = new char[length + 1]; // Allocate buffer for reading body content
 	size_t totalBytesRead = 0;
 	ssize_t bytesRead = 0;
-	while (totalBytesRead < length)
+
+	while (totalBytesRead < length) // Loop until entire body length is read
 	{
-		bytesRead = read(fd, buffer, min(buffer_size, length - totalBytesRead));
-		if (bytesRead < 0)
-			throw errorReadingFD(500);
-		else if (bytesRead == 0)
-			throw connectionCloseEarly(499);
-		bodyData.insert(bodyData.end(), buffer, buffer + bytesRead); // Ajouter au vecteur
-		totalBytesRead += bytesRead;
+		bytesRead = read(fd, buffer + totalBytesRead, length - totalBytesRead);
+		if (bytesRead < 0) // Check for read error
+		{
+			delete[] buffer;
+			throw std::runtime_error("Error reading file");
+		}
+		else if (bytesRead == 0) // Check if client closed connection prematurely
+		{
+			delete[] buffer;
+			throw std::runtime_error("Connection closed by client");
+		}
+		totalBytesRead += bytesRead; // Update total bytes read counter
 	}
 	if (totalBytesRead != length)
 		throw shorterBodyContent(400);
-	_body.assign(bodyData.begin(), bodyData.end()); // Assigner les données lues au corps de la requête
+	buffer[totalBytesRead] = '\0';
+	_body.assign(buffer, totalBytesRead);
+	delete[] buffer;
+
+	std::cout << "Length expected: " << length << ", Bytes read: " << totalBytesRead << std::endl;
 }
 
 // * This function checks various aspects of an HTTP request to ensure it meets certain criteria.
@@ -328,6 +333,7 @@ std::string Request::readUntilHeadersEnd(int fd)
 		if (request.find("\r\n\r\n") != std::string::npos) // If the end of the headers is found, break the loop
 			break;
 	}
+
 	// Handle errors during reading
 	if (has_content < 0) // If read returns a negative value, an error occurred
 		throw errorReadingFD(500);
@@ -371,6 +377,69 @@ void Request::parseRequest(int fd)
 
 	prepareBodyParsing(fd);
 }
+
+// ! WORKING VERSION DONT DELETE
+// void Request::parseRequest(int fd)
+// {
+// 	char buffer[MESSAGE_BUFFER]; // Buffer to hold incoming data from the file descriptor
+// 	std::string request_data; // String to accumulate the request data
+// 	int has_content; // Variable to hold the number of bytes read from the file descriptor
+
+// 	// Read from the file descriptor in a loop until there is no more data
+// 	while ((has_content = read(fd, buffer, MESSAGE_BUFFER)) > 0)
+// 	{
+// 		// Append the read data to the request_data string
+// 		request_data.append(buffer, has_content);
+// 		// Clear the buffer
+// 		memset(buffer, 0, has_content);
+
+// 		// Find the end of the HTTP headers
+// 		size_t header_end = request_data.find("\r\n\r\n");
+// 		if (header_end != std::string::npos)
+// 		{
+// 			// Create a stream to process the headers
+// 			std::istringstream header_stream(request_data.substr(0, header_end + 4));
+// 			std::string line;
+// 			// Parse the request line (e.g., GET /index.html HTTP/1.1)
+// 			std::getline(header_stream, line);
+// 			parseRequestLine(line);
+
+// 			// Parse all the headers
+// 			while (std::getline(header_stream, line) && !line.empty() && line != "\r" && line != "\r\n")
+// 				parseHeaders(line);
+
+// 			// Determine where the body starts
+// 			size_t body_start = header_end + 4;
+
+// 			// Handle the body if Content-Length is specified
+// 			if (_headers.find("Content-Length") != _headers.end())
+// 			{
+// 				size_t content_length = std::stoi(_headers["Content-Length"]);
+// 				if (request_data.size() >= body_start + content_length)
+// 				{
+// 					std::istringstream body_stream(request_data.substr(body_start, content_length));
+// 					parseBody(body_stream);
+// 					break;
+// 				}
+// 			}
+// 			// Handle the body if Transfer-Encoding is chunked
+// 			else if (_headers.count("Transfer-Encoding") && _headers["Transfer-Encoding"] == "chunked")
+// 			{
+// 				processChunkedBody(fd, request_data.substr(body_start));
+// 				break;
+// 			}
+// 			// No body to process
+// 			else
+// 				break;
+// 		}
+// 	}
+
+// 	// Handle errors during reading
+// 	if (has_content < 0)
+// 		throw std::runtime_error("Error reading from socket");
+// 	else if (has_content == 0 && request_data.empty())
+// 		throw std::runtime_error("Client disconnected");
+// }
 
 // * This function parses the URI to determine the current location and file path.
 // * It extracts the location and file paths from the URI and sets the appropriate
