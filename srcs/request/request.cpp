@@ -446,7 +446,7 @@ parsingChunkedBody
 	case PARSING_HEXA
 		chunk_size = taille;
 	case PARSE_CHUNK
-		tant que chunk < taille
+		tant que chunk < taille;
 	case CHUNK_SIZE == 0
 }
 
@@ -477,6 +477,25 @@ void Request::parseRequest(int fd)
 	case PARSING_BODY:
 		// * On parse le body normal tant que le buffer accumulé n'est pas >= a [content-length]
 		// ! _buffer = substring de ce qui n'a pas ete utilisé
+		unsigned int bodySize = _body.size();
+		unsigned int j = 0;
+		unsigned int ContentLenghtSize = 0;
+		std::stringstream tmp(_headers["Content-Length"]);
+		ContentLenghtSize << tmp;
+		for (; bodySize < ContentLenghtSize; bodySize++)
+		{
+			_body += current_buffer[j++];
+			if (current_buffer[j] == NULL)
+			{
+				break ;
+			}
+		}
+		if (current_buffer[j] != NULL)
+		{
+			current_buffer = current_buffer.substr(j);
+			if (current_buffer.size() != 0 && bodySize >= ContentLenghtSize)
+				_buffer += current_buffer;
+		}
 
 	case PARSING_CHUNKED_BODY:
 		// * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa
