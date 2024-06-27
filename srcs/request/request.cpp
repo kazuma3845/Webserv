@@ -253,10 +253,12 @@ void Request::Body(std::string current_buffer)
 std::string Request::parseRequestLine(std::string &current_buffer)
 {
 	_buffer += current_buffer;
+	if (_buffer.find("\r\n") == std::string::npos)
+		return ("");
+
 	std::stringstream ss(_buffer);
 	std::string line;
-	if (!std::getline(ss, line)) // As long as we are not able to form a full line, it returns an empty string
-		return ("");
+	std::getline(ss, line); // As long as we are not able to form a full line, it returns an empty string
 
 	// std::cout << "REQUEST LINE PARSING" << std::endl;
 	// std::cout << "Current line is " << line << std::endl;
@@ -275,7 +277,7 @@ std::string Request::parseRequestLine(std::string &current_buffer)
 	if (_uri.find('?') != std::string::npos)	   // If URI contains a query string, extract it
 		extractQueryString();
 
-	if (_method.empty() || _uri.empty() || _uri[0] != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/") 
+	if (_method.empty() || _uri.empty() || _uri[0] != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/")
 		throw wrongRLInput(400); // Throw exception for invalid request line input
 
 	if (_httpVersion != "HTTP/1.1")		   // Ensure the HTTP version is supported
@@ -296,8 +298,8 @@ std::string Request::cleanString(std::string toClean)
 }
 
 std::string Request::parseHeaders(std::string &current_buffer)
-{	
-	std::cout << "----------------       PARSING HEADER START        -------------------" << std::endl; 
+{
+	std::cout << "----------------       PARSING HEADER START        -------------------" << std::endl;
 	// std::cout << "Received the current buffer : " << current_buffer << std::endl;
 	_buffer += current_buffer;
 	// std::cout << "Merged buffer is currently : " << _buffer << std::endl;
@@ -325,7 +327,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	}
 
 	std::string remainingString = _buffer.substr(end + 4);
-	// std::cout <<  "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;  
+	// std::cout <<  "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
 	_buffer.clear();
 
 	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
@@ -348,7 +350,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 
 void Request::parseRequest(int fd)
 {
-	int buffer_size = 30;
+	int buffer_size = 1024;
 	char buffer[buffer_size];
 	size_t bytes_read = read(fd, buffer, buffer_size);
 	if (bytes_read < 0)
@@ -363,7 +365,10 @@ void Request::parseRequest(int fd)
 	{
 		current_buffer = parseRequestLine(current_buffer);
 		if (current_buffer.empty() && status == PARSING_RL)
+		{
 			break;
+		}
+		std::cout << "##### triple  : " << _buffer << std::endl;
 	}
 	case PARSING_HEADERS:
 	{

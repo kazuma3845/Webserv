@@ -146,7 +146,6 @@ void Server::add_client(ListenSocket &listen_socket)
 	if (_client_sds_map.count(new_socket) != 0)
 		_client_sds_map.erase(new_socket);
 	this->_client_sds_map[new_socket] = new_client;
-	std::cerr << "####### Client 2 : " << this->_client_sds_map[new_socket].getReq()->getClient()->get_fd() << std::endl;
 }
 
 void Server::read_socket(Client &client)
