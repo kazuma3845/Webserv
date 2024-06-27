@@ -253,21 +253,29 @@ void Request::Body(std::string current_buffer)
 std::string Request::parseRequestLine(std::string &current_buffer)
 {
 	_buffer += current_buffer;
-	std::istringstream ss(_buffer);
+	std::stringstream ss(_buffer);
 	std::string line;
 	if (!std::getline(ss, line)) // As long as we are not able to form a full line, it returns an empty string
 		return ("");
 
-	std::string remainingString = ss.str(); // Remainding string after the line
+	// std::cout << "REQUEST LINE PARSING" << std::endl;
+	// std::cout << "Current line is " << line << std::endl;
+
+	std::string remainingString = ss.str().substr(ss.tellg()); // Remainding string after the line
+	std::cout << "Remaining is currently : " << remainingString << std::endl;
 	std::istringstream lineStream(line);
 	_buffer.clear();
 
 	lineStream >> _method >> _uri >> _httpVersion; // Extract method, URI, and HTTP version from the string stream
+
+	// std::cout << "Method is : " << _method << std::endl;
+	// std::cout << "URI is : " << _uri << std::endl;
+	// std::cout << "HTTP version : " << _httpVersion << std::endl;
+
 	if (_uri.find('?') != std::string::npos)	   // If URI contains a query string, extract it
 		extractQueryString();
 
-	char extra; // Validate the extracted components and ensure no extra characters in the stream
-	if (_method.empty() || _uri.empty() || _uri.front() != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/" || ss >> extra)
+	if (_method.empty() || _uri.empty() || _uri[0] != '/' || _httpVersion.empty() || _httpVersion.substr(0, 5) != "HTTP/") 
 		throw wrongRLInput(400); // Throw exception for invalid request line input
 
 	if (_httpVersion != "HTTP/1.1")		   // Ensure the HTTP version is supported
@@ -288,17 +296,22 @@ std::string Request::cleanString(std::string toClean)
 }
 
 std::string Request::parseHeaders(std::string &current_buffer)
-{
+{	
+	std::cout << "----------------       PARSING HEADER START        -------------------" << std::endl; 
+	// std::cout << "Received the current buffer : " << current_buffer << std::endl;
 	_buffer += current_buffer;
+	// std::cout << "Merged buffer is currently : " << _buffer << std::endl;
 	size_t end = _buffer.find("\r\n\r\n");
 	if (end == std::string::npos)
 		return ("");
+	std::cout << "We found ending header line at index : " << end << std::endl;
 
 	std::istringstream ss(_buffer);
 	std::string line, key, value;
 	while (std::getline(ss, line))
 	{
-		if (line.empty())
+		std::cout << "Current line is : " << line << std::endl;
+		if (line == "\r")
 			break;
 		std::istringstream sS(line); // Create a string stream from the header line
 		if (std::getline(sS, key, ':') && std::getline(sS, value))
@@ -312,6 +325,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	}
 
 	std::string remainingString = _buffer.substr(end + 4);
+	std::cout <<  "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;  
 	_buffer.clear();
 
 	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
@@ -354,6 +368,8 @@ void Request::parseRequest(int fd)
 	{
 		current_buffer = parseHeaders(current_buffer);
 		if (current_buffer.empty() && (status == PARSING_HEADERS || client->getFlag() == HANDLING_REQUEST || client->getFlag() == EXPECTING))
+			// std::cout << "ABOUT TO BREAK AFTER HEADERS" << std::endl;
+			// std::cout << "Current client status : " << client->getFlag() << std::endl;
 			break;
 	}
 	case PARSING_BODY:
