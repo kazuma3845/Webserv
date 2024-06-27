@@ -304,13 +304,13 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	size_t end = _buffer.find("\r\n\r\n");
 	if (end == std::string::npos)
 		return ("");
-	std::cout << "We found ending header line at index : " << end << std::endl;
+	// std::cout << "We found ending header line at index : " << end << std::endl;
 
 	std::istringstream ss(_buffer);
 	std::string line, key, value;
 	while (std::getline(ss, line))
 	{
-		std::cout << "Current line is : " << line << std::endl;
+		// std::cout << "Current line is : " << line << std::endl;
 		if (line == "\r")
 			break;
 		std::istringstream sS(line); // Create a string stream from the header line
@@ -325,7 +325,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	}
 
 	std::string remainingString = _buffer.substr(end + 4);
-	std::cout <<  "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;  
+	// std::cout <<  "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;  
 	_buffer.clear();
 
 	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
@@ -339,6 +339,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	{
 		status = PARSING_FINISHED;
 		client->setFlag(HANDLING_REQUEST);
+		std::cout << "CHANGED FLAGS AND BREAKING" << std::endl;
 		return "";
 	}
 	status = PARSING_BODY;
@@ -347,7 +348,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 
 void Request::parseRequest(int fd)
 {
-	int buffer_size = 1024;
+	int buffer_size = 30;
 	char buffer[buffer_size];
 	size_t bytes_read = read(fd, buffer, buffer_size);
 	if (bytes_read < 0)

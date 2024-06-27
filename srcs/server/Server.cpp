@@ -152,29 +152,28 @@ void Server::add_client(ListenSocket &listen_socket)
 void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
-	Flag status = client.getFlag();
 	Redirection redirect;
 	Response response;
 
 	client.setTimeout();
+
+	std::cout << "COMING IN THE LOOP : " << socket << std::endl;
 	try
 	{
 		std::cout << socket << std::endl;
-		switch (status)
-		{
-		case PARSING_REQUEST:
+		if (client.getFlag() == PARSING_REQUEST)
 		{
 			client.getReq()->parseRequest(socket);
-			break;
+			std::cout << "Current client status is : " << client.getFlag() << std::endl;
 		}
-		case EXPECTING:
+		if (client.getFlag() == EXPECTING)
 		{
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
-			break;
 		}
-		case HANDLING_REQUEST:
+		if (client.getFlag() == HANDLING_REQUEST)
 		{
+			std::cout << "-----------     HANDLING BEGIN     -----------" << std::endl;
 			client.getReq()->checkRequest();
 			redirect.path(*client.getReq(), response);
 			response.setHTTPVersion(client.getReq()->getHttpVersion());
@@ -185,12 +184,6 @@ void Server::read_socket(Client &client)
 			client.setResp(response.getResp());
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
-			break;
-		}
-		case FINISHED:
-		{
-			break;
-		}
 		}
 	}
 	catch (const ErrorWebServ &e)
