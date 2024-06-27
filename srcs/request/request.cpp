@@ -368,7 +368,6 @@ void Request::parseRequest(int fd)
 		{
 			break;
 		}
-		std::cout << "##### triple  : " << _buffer << std::endl;
 	}
 	case PARSING_HEADERS:
 	{
