@@ -8,7 +8,7 @@ Client::Client(int fd, ListenSocket &listen_socket)
 	this->_connected_sd = fd;
 	this->_connected_time = time(NULL);
 	this->_request = new Request(this);
-	this->_flag = NEW;
+	this->_flag = PARSING_REQUEST;
 	// std::cout << "Client was called. " << std::endl;
 }
 Client::Client() {
@@ -47,7 +47,7 @@ void Client::reUseClient(void)
 	_rep.clear();
 	delete _request;
 	_request = new Request(this);
-	this->_flag = NEW;
+	this->_flag = PARSING_REQUEST;
 }
 
 int Client::get_fd(void)
@@ -90,7 +90,7 @@ time_t Client::get_connected_time(void)
 	return _connected_time;
 }
 
-int Client::getFlag()
+Flag Client::getFlag()
 {
 	return _flag;
 }

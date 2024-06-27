@@ -3,10 +3,15 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> main
 		"__bit_reference": "cpp",
 		"__config": "cpp",
 		"__hash_table": "cpp",
 		"__locale": "cpp",
+<<<<<<< HEAD
+=======
 =======
 >>>>>>> origin/main
 		"iosfwd": "cpp",
@@ -23,12 +28,17 @@
 =======
 >>>>>>> origin/Neah
 >>>>>>> origin/main
+>>>>>>> main
 		"__node_handle": "cpp",
 		"__split_buffer": "cpp",
 		"__threading_support": "cpp",
 		"__tree": "cpp",
 		"__verbose_abort": "cpp",
 		"array": "cpp",
+<<<<<<< HEAD
+		"bitset": "cpp",
+		"cctype": "cpp",
+=======
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -44,6 +54,7 @@
 =======
 >>>>>>> origin/Neah
 >>>>>>> origin/main
+>>>>>>> main
 		"clocale": "cpp",
 		"cmath": "cpp",
 		"complex": "cpp",
@@ -57,6 +68,9 @@
 		"cwchar": "cpp",
 		"cwctype": "cpp",
 <<<<<<< HEAD
+		"execution": "cpp",
+=======
+<<<<<<< HEAD
 		"deque": "cpp",
 		"exception": "cpp",
 =======
@@ -67,10 +81,14 @@
 		"exception": "cpp",
 >>>>>>> origin/Neah
 >>>>>>> origin/main
+>>>>>>> main
 		"fstream": "cpp",
 		"initializer_list": "cpp",
 		"iomanip": "cpp",
 		"ios": "cpp",
+<<<<<<< HEAD
+		"iosfwd": "cpp",
+=======
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -78,10 +96,14 @@
 =======
 >>>>>>> origin/Neah
 >>>>>>> origin/main
+>>>>>>> main
 		"iostream": "cpp",
 		"istream": "cpp",
 		"limits": "cpp",
 		"locale": "cpp",
+<<<<<<< HEAD
+		"map": "cpp",
+=======
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -89,6 +111,7 @@
 =======
 >>>>>>> origin/Neah
 >>>>>>> origin/main
+>>>>>>> main
 		"mutex": "cpp",
 		"new": "cpp",
 		"optional": "cpp",
@@ -98,10 +121,15 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> main
 		"stdexcept": "cpp",
 		"streambuf": "cpp",
 		"string": "cpp",
 		"string_view": "cpp",
+<<<<<<< HEAD
+=======
 =======
 >>>>>>> origin/main
 		"stack": "cpp",
@@ -113,11 +141,14 @@
 =======
 >>>>>>> origin/Neah
 >>>>>>> origin/main
+>>>>>>> main
 		"tuple": "cpp",
 		"typeinfo": "cpp",
 		"unordered_map": "cpp",
 		"variant": "cpp",
 		"vector": "cpp",
+<<<<<<< HEAD
+=======
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -137,6 +168,7 @@
 =======
 >>>>>>> origin/Neah
 >>>>>>> origin/main
+>>>>>>> main
 		"algorithm": "cpp"
 	}
 }

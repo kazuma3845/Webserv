@@ -103,6 +103,11 @@ void Request::setClient(Client *client)
 	this->client = client;
 }
 
+void Request::setStatus(parsingStatus status)
+{
+	this->status = status;
+}
+
 // ---------------------------------- OTHER FUNCTIONS -- //
 
 // * This function prints out the parsed contents of an HTTP request, including method, URI, headers, body, and other details.
@@ -355,7 +360,7 @@ void Request::parseRequest(int fd)
 // 				break;
 // 		}
 // 	}
-// 
+//
 	// Handle errors during reading
 // 	if (has_content < 0)
 // 		throw std::runtime_error("Error reading from socket");
@@ -363,6 +368,101 @@ void Request::parseRequest(int fd)
 // 		throw std::runtime_error("Client disconnected");
 // }
 
+
+void Request::ChunkedBody()
+{
+	std::string chunkSizeLine;
+	size_t chunkSize = 0;
+	size_t maxSize = client->get_listen_socket().get_clientSize();  // Taille maximale
+	int start;
+	size_t pos;
+	std::cout << "Starting to process chunked body from buffer..." << std::endl;
+
+	// Ajout du buffer actuel au corps de la requête
+	_body += _current_buffer;
+	_current_buffer.clear();
+
+	while ()
+	{
+		if (_chunkBodySize == null)
+			start = 0;
+		else
+			start = _chunkBodySize;
+
+		pos = _body.find("\r\n", start); // cherche la fin "\r\n" du chunkSizeLine
+		if (pos != std::string::npos) {
+			chunkSizeLine = _body.substr(start, pos);
+			_body.erase(start, pos + 2);  // Supprime la chunkSizeLine
+
+			std::stringstream ss(chunkSizeLine);
+			ss >> std::hex >> chunkSize;
+			std::cout << "Chunk size is: " << chunkSize << std::endl;
+
+			if (chunkSize > maxSize)
+				throw std::runtime_error("Payload too large");
+			_chunkBodySize += (chunkSize + 2); // rajoute un "\r\n" du chunkSizeLine
+
+			if (chunkSize == 0) {
+				std::cout << "End of chunks detected." << std::endl;
+				client->setFlag(HANDLING_REQUEST);
+				status = PARSING_FINISHED;
+				return ;  // Finish
+			}
+		}
+		else
+			return;  // continue to read, si aucuns "\r\n" trouver dans le body
+	}
+}
+
+void Request::parseRequest(int fd)
+{
+	// On lit d'entrée car si on arrive ici c'est que le flag de parsing n'est pas set a FINISHED
+	int buffer_size = 1024;
+	std::string current_buffer[buffer_size];
+	read(fd, current_buffer, buffer_size);
+	_buffer += current_buffer;
+
+	switch (status)
+	{
+	case PARSING_RL:
+		// * On continue le parsing de la requete et on et actualise le status
+		// * On check si on a fini les headers, si oui on set et actualise le status
+		// * On verifie si il reste qqch ou non, si fini on set le status du CLIENT a REQUEST_PARSED
+		// * Si il restait, on parse le body en fonction de normal ou chunked
+		// ! _buffer = substring de ce qui n'a pas ete utilisé
+
+	case PARSING_HEADERS:
+		// * On check si on a fini les headers, si oui on set et actualise le status
+		// * On verifie si il reste qqch ou non, si fini on set le status du CLIENT a REQUEST_PARSED
+		// * Si il restait, on parse le body en fonction de normal ou chunked
+		// ? current_buffer = on enleve ce qui a ete utilisé, substring de ce qui n'a pas ete utilisé, on change le status !
+		// ! _buffer = substring de ce qui n'a pas ete utilisé
+
+	case PARSING_BODY:
+		// * On parse le body normal tant que le buffer accumulé n'est pas >= a [content-length]
+		// ! _buffer = substring de ce qui n'a pas ete utilisé
+		unsigned int bodySize = _body.size();
+		unsigned int j = 0;
+		unsigned int ContentLenghtSize = 0;
+		std::stringstream tmp(_headers["Content-Length"]);
+		ContentLenghtSize << tmp;
+		for (; bodySize < ContentLenghtSize; bodySize++)
+		{
+			_body += current_buffer[j++];
+			if (current_buffer[j] == NULL)
+			{
+				break ;
+			}
+		}
+		if (current_buffer[j] != NULL)
+		{
+			current_buffer = current_buffer.substr(j);
+			if (current_buffer.size() != 0 && bodySize >= ContentLenghtSize)
+				_buffer += current_buffer;
+		}
+
+	case PARSING_CHUNKED_BODY:
+		// * On parse le body chunked d'abord le hexadecimal puis on accumule le buffer jusqu'a avoir la taille en hexa
 void Request::Body(std::string current_buffer)
 {
 	unsigned int bodySize = _body.size();
