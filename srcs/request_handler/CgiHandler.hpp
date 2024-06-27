@@ -2,6 +2,7 @@
 
 #include <map>
 #include <iostream>
+#include <sstream>
 #include "../request/request.hpp"
 #include "../response/response.hpp"
 
