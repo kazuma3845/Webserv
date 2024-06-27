@@ -69,12 +69,11 @@ private:
 	bool _hasReturn;
 	Client *client;
 	parsingStatus status;
-	// <std::string> _buffer;
+	std::string _buffer;
 	unsigned int _chunkBodySize;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
-	std::string readUntilHeadersEnd(int fd);
 	void prepareBodyParsing(int fd);
 	std::string parseRequestLine(std::string &current_buffer);
 	std::string parseHeaders(std::string &current_buffer);
@@ -87,7 +86,7 @@ private:
 	void checkFile(int mode);
 	bool checkfolder(std::string uri);
 	std::string cleanString(std::string toClean);
-
+	void ChunkedBody(std::string &current_buffer);
 	void Body(std::string current_buffer);
 
 	// ------------------------------------------ ERROR

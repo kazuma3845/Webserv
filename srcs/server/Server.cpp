@@ -68,7 +68,7 @@ void Server::run_server(void)
 {
 	fd_set temp_read_sds;
 	fd_set temp_write_sds;
-	struct timeval timeout;
+	// struct timeval timeout;
 
 	std::cout << std::endl
 			  << "##################" << std::endl
@@ -78,11 +78,11 @@ void Server::run_server(void)
 	{
 		temp_read_sds = this->_read_sds;
 		temp_write_sds = this->_write_sds;
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
+		// timeout.tv_sec = 1;
+		// timeout.tv_usec = 0;
 
 		// Wait for an activity on one of the , select return the value of readies FD
-		if (select(this->_max_sd + 1, &temp_read_sds, &temp_write_sds, NULL, &timeout) < 0)
+		if (select(this->_max_sd + 1, &temp_read_sds, &temp_write_sds, NULL, NULL) < 0)
 			exit(1);
 		for (unsigned int i = 0; i < this->_ListenSockets.size(); ++i)
 		{
@@ -159,6 +159,7 @@ void Server::read_socket(Client &client)
 	client.setTimeout();
 	try
 	{
+		std::cout << socket << std::endl;
 		switch (status)
 		{
 		case PARSING_REQUEST:
