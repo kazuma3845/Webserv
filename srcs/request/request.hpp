@@ -14,11 +14,10 @@ class Request;
 #include "Client.hpp"
 
 enum parsingStatus {
-	FRESH,
 	PARSING_RL,
 	PARSING_HEADERS,
 	PARSING_BODY,
-	PARSING_CHUNKED_BODY
+	PARSING_FINISHED,
 };
 
 class Request
@@ -53,6 +52,7 @@ public:
 	void setFullPath(std::string fullPath);
 	void setQueryString(std::string queryString);
 	void setClient(Client *client);
+	void setStatus(parsingStatus status);
 
 private:
 	// ------------------------------------------ ATTRIBUTES
@@ -69,7 +69,7 @@ private:
 	bool _hasReturn;
 	Client *client;
 	parsingStatus status;
-	std::vector<std::string> _buffer;
+	// <std::string> _buffer;
 	unsigned int _chunkBodySize;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS

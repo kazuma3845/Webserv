@@ -152,22 +152,45 @@ void Server::add_client(ListenSocket &listen_socket)
 void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
+	Flag status = client.getFlag();
 	Redirection redirect;
 	Response response;
 
+	client.setTimeout();
 	try
 	{
-		client.setTimeout();
-		client.getReq()->parseRequest(socket);
-		client.getReq()->checkRequest();
-		client.getReq()->printRequest();
-		redirect.path(*client.getReq(), response);
-		response.setHTTPVersion(client.getReq()->getHttpVersion());
-		response.setConnectionType(client.getKeepAlive());
-		if (client.getReq()->getHasReturn())
-			response.setStatusCode(301);
-		response.formatResponse(client, *client.getReq());
-		client.setResp(response.getResp());
+		switch (status)
+		{
+		case PARSING_REQUEST:
+		{
+			client.getReq()->parseRequest(socket);
+			break;
+		}
+		case EXPECTING:
+		{
+			FD_CLR(socket, &this->_read_sds);
+			FD_SET(socket, &this->_write_sds);
+			break;
+		}
+		case HANDLING_REQUEST:
+		{
+			client.getReq()->checkRequest();
+			redirect.path(*client.getReq(), response);
+			response.setHTTPVersion(client.getReq()->getHttpVersion());
+			response.setConnectionType(client.getKeepAlive());
+			if (client.getReq()->getHasReturn())
+				response.setStatusCode(301);
+			response.formatResponse(client, *client.getReq());
+			client.setResp(response.getResp());
+			FD_CLR(socket, &this->_read_sds);
+			FD_SET(socket, &this->_write_sds);
+			break;
+		}
+		case FINISHED:
+		{
+			break;
+		}
+		}
 	}
 	catch (const ErrorWebServ &e)
 	{
@@ -185,17 +208,27 @@ void Server::read_socket(Client &client)
 		response.setContentType("text/html");
 		response.formatResponse(client, *client.getReq());
 		client.setResp(response.getResp());
+		FD_CLR(socket, &this->_read_sds);
+		FD_SET(socket, &this->_write_sds);
 	}
-
-	FD_CLR(socket, &this->_read_sds);
-	FD_SET(socket, &this->_write_sds);
 }
 
 void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
 
+	if (client.getFlag() == EXPECTING)
+		client.setResp("HTTP/1.1 100 Continue\r\n\r\n");
 	write(socket, client.getResp().c_str(), client.getResp().length());
+	if (client.getFlag() == EXPECTING)
+	{
+		client.setResp(NULL);
+		client.setFlag(PARSING_REQUEST);
+		client.getReq()->setStatus(PARSING_BODY);
+		FD_CLR(socket, &this->_write_sds);
+		FD_SET(socket, &this->_read_sds);
+		return;
+	}
 
 	//-----------------------------------------------------------------------
 	// Only to show the request content; PRINT REPONSE

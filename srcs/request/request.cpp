@@ -103,6 +103,11 @@ void Request::setClient(Client *client)
 	this->client = client;
 }
 
+void Request::setStatus(parsingStatus status)
+{
+	this->status = status;
+}
+
 // ---------------------------------- OTHER FUNCTIONS -- //
 
 // * This function prints out the parsed contents of an HTTP request, including method, URI, headers, body, and other details.
@@ -441,15 +446,6 @@ void Request::parseRequest(int fd)
 // 		throw std::runtime_error("Client disconnected");
 // }
 
-parsingChunkedBody
-{
-	case PARSING_HEXA
-		chunk_size = taille;
-	case PARSE_CHUNK
-		tant que chunk < taille;
-	case CHUNK_SIZE == 0
-}
-
 {
 	_body += _current_buffer
 	si content_length est null:
@@ -480,7 +476,7 @@ void Request::ChunkedBody()
 		else
 			start = _chunkBodySize;
 
-		pos = _body.find("\r\n", start); // cherche le prochain "\r\n" du chunkSizeLine
+		pos = _body.find("\r\n", start); // cherche la fin "\r\n" du chunkSizeLine
 		if (pos != std::string::npos) {
 			chunkSizeLine = _body.substr(start, pos);
 			_body.erase(start, pos + 2);  // Supprime la chunkSizeLine
@@ -495,11 +491,13 @@ void Request::ChunkedBody()
 
 			if (chunkSize == 0) {
 				std::cout << "End of chunks detected." << std::endl;
-				break ;  // Finish
+				client->setFlag(HANDLING_REQUEST);
+				status = PARSING_FINISHED;
+				return ;  // Finish
 			}
 		}
 		else
-			break;  // continue to read, si aucuns "\r\n" trouver dans le body
+			return;  // continue to read, si aucuns "\r\n" trouver dans le body
 	}
 }
 

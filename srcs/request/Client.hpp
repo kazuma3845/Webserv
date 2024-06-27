@@ -13,8 +13,9 @@
 
 enum Flag
 {
-	NEW,
-	READING,
+	PARSING_REQUEST,
+	EXPECTING,
+	HANDLING_REQUEST,
 	FINISHED
 };
 
@@ -34,7 +35,7 @@ private:
 	std::map<std::string, std::string> _headers;
 	bool _keepAlive;
 	Request* _request;
-	int _flag;
+	Flag _flag;
 
 public:
 	Client();
@@ -50,7 +51,7 @@ public:
 	time_t get_connected_time(void);
 	bool getKeepAlive();
 	Request *getReq(void);
-	int getFlag();
+	Flag getFlag();
 
 	// --------------------------------------------- SETTERS
 	void setReq(Request *request);
@@ -58,5 +59,5 @@ public:
 	void setKeepAlive(bool status);
 	void setResp(std::string rep);
 	void setTimeout(void);
-	void setFlag(int flag);
+	void setFlag(Flag flag);
 };
