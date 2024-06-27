@@ -242,11 +242,16 @@ void Request::Body(std::string current_buffer)
 			break;
 		}
 	}
+	current_buffer = current_buffer.substr(j);
 	if (!current_buffer.empty())
 	{
-		current_buffer = current_buffer.substr(j);
 		if (current_buffer.size() != 0 && bodySize >= ContentLenghtSize)
 			_buffer += current_buffer;
+	}
+	else
+	{
+		status = PARSING_FINISHED;
+		client->setFlag(HANDLING_REQUEST);
 	}
 }
 

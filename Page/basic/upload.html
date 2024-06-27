@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload d'image</title>
+    <title>Télécharger un fichier</title>
     <style>
         body {
             margin: 0;
@@ -60,29 +60,38 @@
             padding: 10px 20px;
             font-size: 1em;
             color: white;
-            background-color: #00bfff;
+            background-color: #4CAF50; /* Couleur verte */
             text-decoration: none;
             border-radius: 5px;
             transition: background-color 0.3s;
             cursor: pointer;
             border: none;
+            margin-top: 10px;
         }
         .upload-btn:hover {
-            background-color: #009acd;
+            background-color: #45a049; /* Couleur verte foncée */
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f2dede;
+            color: #a94442;
+            border-radius: 5px;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Upload d'image</h1>
-        <p>Choisissez une image à télécharger :</p>
-        <div class="form-container">
-            <form action="/cgi/upload_image.py" method="POST" enctype="multipart/form-data">
-                <label for="image">Choisir une image :</label>
-                <input type="file" id="image" name="image"><br><br>
-                <input type="submit" value="Upload" class="upload-btn">
-            </form>
-        </div>
+        <h1>Télécharger un fichier</h1>
+        <p>Choisissez un fichier à télécharger :</p>
+        <form class="form-container" method="POST" action="/cgi/upload.py" enctype="multipart/form-data">
+            <label for="file" class="file-label">Choisir un fichier :</label>
+            <input type="file" id="file" name="file">
+            <input type="submit" value="Télécharger le fichier" class="upload-btn">
+        </form>
+        <div id="error-msg" class="message"></div>
+        <div id="success-msg" class="message"></div>
     </div>
 </body>
 </html>
