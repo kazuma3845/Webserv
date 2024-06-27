@@ -13,7 +13,6 @@ int main(int argc, char **argv)
 	{
 		web.parsing(argv, argc);	// init struct and check error
 		web.run();		// Run programme
-		// web.clean();		// Clean all
 	}
 	catch(const std::exception& e)
 	{
@@ -79,7 +78,6 @@ void Web::parsing(char **argv, int argc)
 					{
 						if (w.substr(w.size() - 1).compare(";") == 0)
 							w = w.substr(0, w.size() - 1);
-						std::cout << "=====W======== " << w << std::endl;
 						word.push_back(w);
 					}
 				}
@@ -106,8 +104,6 @@ void Web::parsing(char **argv, int argc)
 		fileline.clear();
 	}
 	check();
-	// for (unsigned int m = 0; m < _serv.size(); m++)
-	// 	_serv[m].print();
 }
 
 void Web::run() const
@@ -115,11 +111,6 @@ void Web::run() const
 	Server server = Server(this->_serv);
 	server.set_server();
 	server.run_server();
-}
-
-void Web::clean() const
-{
-
 }
 
 const char *Web::ExceptionErrorFile::what() const throw()

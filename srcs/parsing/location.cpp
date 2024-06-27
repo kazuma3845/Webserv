@@ -97,25 +97,6 @@ void location::init(std::vector< std::vector<std::string> > file, unsigned int &
 	}
 }
 
-void location::print()
-{
-	std::cout << "---------------------------" << std::endl;
-	std::cout << "Location: " << std::endl;
-	std::cout << "Name: " << _name << std::endl;
-	std::cout << "Root: " << _root << std::endl;
-	std::cout << "Autoindex: " << _autoindex << std::endl;
-	std::cout << "Client size: " << _client_size << std::endl;
-	std::cout << "Index: " << _index << std::endl;
-	std::cout << "Alias: " << _alias << std::endl;
-	std::cout << "Return: " << _return << std::endl;
-	for (unsigned int i = 0; i < _allow_methods.size(); i++)
-		std::cout << "Allow_methods: " << _allow_methods[i] << std::endl;
-	for (unsigned int i = 0; i < _cgi_path.size(); i++)
-		std::cout << "Cgi_path: " << _cgi_path[i] << std::endl;
-	for (unsigned int i = 0; i < _cgi_ext.size(); i++)
-		std::cout << "Cgi_ext: " << _cgi_ext[i] << std::endl;
-}
-
 std::string location::getName() const
 {
 	return _name;
