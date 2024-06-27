@@ -185,7 +185,7 @@ void Request::ChunkedBody(std::string &current_buffer) {
 
 	// std::cout << "Coming into CHUNKING parsing" << std::endl;
     // Ajouter le buffer courant au buffer de chunk temporaire pour traitement
-    _chunkBuffer += current_buffer;  
+    _chunkBuffer += current_buffer;
     current_buffer.clear();
 
     while (true) {
@@ -201,7 +201,7 @@ void Request::ChunkedBody(std::string &current_buffer) {
 
             std::stringstream ss(chunkSizeLine);
             ss >> std::hex >> chunkSize;
-			std::cout << "Current CHUNKSIZE : " << chunkSize << std::endl;
+			// std::cout << "Current CHUNKSIZE : " << chunkSize << std::endl;
             if (chunkSize == 0) {
                 // Fin des chunks
                 status = PARSING_FINISHED;
@@ -339,7 +339,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 		status = PARSING_BODY;
 		return ("");
 	}
-	
+
 	if (remainingString.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
 	{
 		status = PARSING_FINISHED;

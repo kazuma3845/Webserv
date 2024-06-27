@@ -215,7 +215,7 @@ void Server::write_socket(Client &client)
 	write(socket, client.getResp().c_str(), client.getResp().length());
 	if (client.getFlag() == EXPECTING)
 	{
-		client.setResp(NULL);
+		client.setResp("");
 		client.setFlag(PARSING_REQUEST);
 		client.getReq()->setStatus(PARSING_BODY);
 		FD_CLR(socket, &this->_write_sds);
