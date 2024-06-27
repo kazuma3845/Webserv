@@ -178,51 +178,49 @@ void Request::checkRequest()
 		client->setKeepAlive(true);
 }
 
-void Request::ChunkedBody(std::string &current_buffer)
-{
-	std::string chunkSizeLine;
-	size_t chunkSize = 0;
-	size_t maxSize = client->get_listen_socket().get_clientSize(); // Taille maximale
-	int start;
-	size_t pos;
-	std::cout << "Starting to process chunked body from buffer..." << std::endl;
+void Request::ChunkedBody(std::string &current_buffer) {
+    size_t pos = 0;
+    std::string chunkSizeLine;
+    size_t chunkSize = 0;
 
-	// Ajout du buffer actuel au corps de la requête
-	_body += current_buffer;
-	current_buffer.clear();
+	// std::cout << "Coming into CHUNKING parsing" << std::endl;
+    // Ajouter le buffer courant au buffer de chunk temporaire pour traitement
+    _chunkBuffer += current_buffer;  
+    current_buffer.clear();
 
-	while (1)
-	{
-		if (_chunkBodySize == 0)
-			start = 0;
-		else
-			start = _chunkBodySize;
+    while (true) {
+        if (_chunkBodySize == 0) {
+            pos = _chunkBuffer.find("\r\n");
+            if (pos == std::string::npos) {
+                // Si on ne trouve pas de fin de ligne, on a besoin de plus de données
+                return;
+            }
+            // Extraire la ligne de taille de chunk
+            chunkSizeLine = _chunkBuffer.substr(0, pos);
+            _chunkBuffer.erase(0, pos + 2);  // Supprimer la taille du chunk et le \r\n du buffer de chunk
 
-		pos = _body.find("\r\n", start); // cherche la fin "\r\n" du chunkSizeLine
-		if (pos != std::string::npos)
-		{
-			chunkSizeLine = _body.substr(start, pos);
-			_body.erase(start, pos + 2); // Supprime la chunkSizeLine
+            std::stringstream ss(chunkSizeLine);
+            ss >> std::hex >> chunkSize;
+			std::cout << "Current CHUNKSIZE : " << chunkSize << std::endl;
+            if (chunkSize == 0) {
+                // Fin des chunks
+                status = PARSING_FINISHED;
+                client->setFlag(HANDLING_REQUEST);
+                return;
+            }
+            _chunkBodySize = chunkSize;
+        }
 
-			std::stringstream ss(chunkSizeLine);
-			ss >> std::hex >> chunkSize;
-			std::cout << "Chunk size is: " << chunkSize << std::endl;
-
-			if (chunkSize > maxSize)
-				throw std::runtime_error("Payload too large");
-			_chunkBodySize += (chunkSize + 2); // rajoute un "\r\n" du chunkSizeLine
-
-			if (chunkSize == 0)
-			{
-				std::cout << "End of chunks detected." << std::endl;
-				client->setFlag(HANDLING_REQUEST);
-				status = PARSING_FINISHED;
-				return; // Finish
-			}
-		}
-		else
-			return; // continue to read, si aucuns "\r\n" trouver dans le body
-	}
+        if (_chunkBuffer.size() >= _chunkBodySize + 2) {  // +2 pour inclure le \r\n final du chunk
+            // Ajouter le chunk au body final
+            _body.append(_chunkBuffer, 0, _chunkBodySize);
+            _chunkBuffer.erase(0, _chunkBodySize + 2);  // Enlever le chunk traité et le \r\n
+            _chunkBodySize = 0;  // Réinitialiser pour le prochain chunk
+        } else {
+            // Pas assez de données dans _chunkBuffer pour compléter le chunk actuel
+            return;
+        }
+    }
 }
 
 void Request::Body(std::string current_buffer)
@@ -332,7 +330,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	}
 
 	std::string remainingString = _buffer.substr(end + 4);
-	// std::cout <<  "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
+	std::cout <<  "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
 	_buffer.clear();
 
 	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
@@ -341,12 +339,12 @@ std::string Request::parseHeaders(std::string &current_buffer)
 		status = PARSING_BODY;
 		return ("");
 	}
-	// * on check si il y a quelque chose derriere (du body)
-	if (remainingString.empty())
+	
+	if (remainingString.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
 	{
 		status = PARSING_FINISHED;
 		client->setFlag(HANDLING_REQUEST);
-		std::cout << "CHANGED FLAGS AND BREAKING" << std::endl;
+		// std::cout << "CHANGED FLAGS AND BREAKING" << std::endl;
 		return "";
 	}
 	status = PARSING_BODY;

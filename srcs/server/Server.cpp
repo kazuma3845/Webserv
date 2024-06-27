@@ -156,14 +156,12 @@ void Server::read_socket(Client &client)
 
 	client.setTimeout();
 
-	std::cout << "COMING IN THE LOOP : " << socket << std::endl;
 	try
 	{
-		std::cout << socket << std::endl;
 		if (client.getFlag() == PARSING_REQUEST)
 		{
 			client.getReq()->parseRequest(socket);
-			std::cout << "Current client status is : " << client.getFlag() << std::endl;
+			// std::cout << "Current client status is : " << client.getFlag() << std::endl;
 		}
 		if (client.getFlag() == EXPECTING)
 		{
