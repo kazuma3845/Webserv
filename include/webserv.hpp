@@ -28,7 +28,6 @@ class Web
 		//main fonction
 		void parsing(char **argv, int argc);
 		void run() const;
-		void clean() const;
 
 
 		//fonction additionnal

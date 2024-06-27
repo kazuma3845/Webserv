@@ -15,6 +15,7 @@ void CgiHandler::initenv(Request &request)
     _env["AUTH_TYPE"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
 	ss << request.getBody().size();
     _env["CONTENT_LENGTH"] = ss.str();
+	ss.str("");
     _env["CONTENT_TYPE"] = request.getHeaders().count("Content-Type") ? request.getHeaders()["Content-Type"] : "";
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";
     _env["PATH_INFO"] = request.getFullPath();

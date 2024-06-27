@@ -27,7 +27,6 @@ class location
 		~location(){};
 
 		void init(std::vector< std::vector<std::string> > file, unsigned int &i);
-		void print();
 
 		//GET
 		std::string getName() const;

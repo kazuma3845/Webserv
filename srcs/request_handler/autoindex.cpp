@@ -2,11 +2,9 @@
 
 std::string AutoIndex::create(std::string uri, std::string root) {
     std::string page;
-    // char* path = uri.c_str();
     std::string dirName(uri.c_str());
     std::string purePath(uri.substr(root.size(), uri.size()).c_str());
     DIR* dir = opendir(uri.c_str());
-    // uri.substr(root.size(), uri.size())
     page = "<html>\n"
            "    <head>\n"
            "        <title>Index of " + purePath + "</title>\n"
