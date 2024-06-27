@@ -331,36 +331,45 @@ std::string Request::parseRequestLine(std::string &current_buffer)
 	return (remainingString);
 }
 
+std::string cleanString(std::string toClean)
+{
+	size_t start = toClean.find_first_not_of(" \t\r\n");
+	if (start != std::string::npos)
+		toClean.erase(0, start);
+	size_t end = toClean.find_last_not_of(" \t\r\n");
+	if (end != std::string::npos)
+		toClean.erase(end + 1);
+	return toClean;
+}
+
 std::string Request::parseHeaders(std::string &current_buffer)
 {
 	_buffer += current_buffer;
-	std::istringstream ss(_buffer);
-	std::string line;
+	size_t end = _buffer.find("\r\n\r\n");
+	if (end == std::string::npos)
+		return ("");
 
+	std::istringstream ss(_buffer);
+	std::string line, key, value;
 	while (std::getline(ss, line))
 	{
-		std::istringstream ss(line); // Create a string stream from the header line
-		std::string key, value;
-		if (std::getline(ss, key, ':') && std::getline(ss, value))
+		if (line.empty())
+			break;
+		std::istringstream sS(line); // Create a string stream from the header line
+		if (std::getline(sS, key, ':') && std::getline(sS, value))
 		{
-			size_t start = value.find_first_not_of(" \t\r\n");
-			if (start != std::string::npos)
-				value.erase(0, start);
-			size_t end = value.find_last_not_of(" \t\r\n");
-			if (end != std::string::npos)
-				value.erase(end + 1);
+			value = cleanString(value);
+			key = cleanString(key);
 			_headers[key] = value;
 		}
 		else
 			throw headerParsingError(400); // Throw exception for invalid header format
 	}
-	std::string remainingString = ss.str();					   // Ce qui n'a pas ete transformé en ligne
-	if (remainingString.find('/n/r/n/r') == std::string::npos) // Si on ne trouve pas la fin des headers on remplit le buffer avec ce qu'il reste
-	{
-		_buffer = remainingString;
-		return ("");
-	}
-	if (_headers.count(_headers["Expect"])) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
+
+	std::string remainingString = _buffer.substr(end + 4);
+	_buffer.clear();
+
+	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
 	{
 		client->setFlag(EXPECTING);
 		status = PARSING_BODY;
@@ -369,8 +378,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	// * on check si il y a quelque chose derriere (du body)
 	if (remainingString.empty())
 	{
-		_buffer.clear();
-		status = FINISHED;
+		status = PARSING_FINISHED;
 		client->setFlag(HANDLING_REQUEST);
 		return "";
 	}

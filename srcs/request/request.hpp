@@ -17,7 +17,7 @@ enum parsingStatus {
 	PARSING_RL,
 	PARSING_HEADERS,
 	PARSING_BODY,
-	FINISHED,
+	PARSING_FINISHED,
 };
 
 class Request
@@ -84,7 +84,7 @@ private:
 	void parseUri();
 	void checkFile(int mode);
 	bool checkfolder(std::string uri);
-
+	std::string cleanString(std::string toClean);
 
 	void Body(std::string current_buffer);
 
