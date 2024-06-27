@@ -446,15 +446,6 @@ void Request::parseRequest(int fd)
 // 		throw std::runtime_error("Client disconnected");
 // }
 
-{
-	_body += _current_buffer
-	si content_length est null:
-		chercher le chunkSize
-		si chunkSize = 0 -> return success
-	si content_length =< _body(size)
-		chercher le chunkSize a l index content_length
-		si chunkSize = 0 -> return success
-}
 
 void Request::ChunkedBody()
 {
