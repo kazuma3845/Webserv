@@ -71,6 +71,7 @@ private:
 	parsingStatus status;
 	std::string _buffer;
 	unsigned int _chunkBodySize;
+	std::string _chunkBuffer;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
