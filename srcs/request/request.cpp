@@ -334,7 +334,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	}
 
 	std::string remainingString = _buffer.substr(end + 4);
-	std::cout << "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
+	// std::cout << "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
 	_buffer.clear();
 
 	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
@@ -599,7 +599,7 @@ const char *Request::chunkDataError::what() const throw()
 }
 const char *Request::connectionCloseEarly::what() const throw()
 {
-	return ("Connexion closed by server.");
+	return ("Connexion between client and server closed.");
 }
 const char *Request::errorReadingFD::what() const throw()
 {
