@@ -10,6 +10,7 @@ Request::Request()
 Request::Request(Client *client) : _hasReturn(false), client(client)
 {
 	status = PARSING_RL;
+	_chunkBodySize = 0;
 	// std::cout << "Request instance with pointer on client created : " << this->client->get_fd() << std::endl;
 }
 
@@ -184,7 +185,7 @@ void Request::ChunkedBody(std::string &current_buffer)
 	std::string chunkSizeLine;
 	size_t chunkSize = 0;
 
-	// std::cout << "Coming into CHUNKING parsing" << std::endl;
+	// std::cout << " -------  Coming into CHUNKING parsing  ---------" << std::endl;
 	// Ajouter le buffer courant au buffer de chunk temporaire pour traitement
 	_chunkBuffer += current_buffer;
 	current_buffer.clear();
@@ -339,18 +340,17 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
 	{
 		client->setFlag(EXPECTING);
-		status = PARSING_BODY;
-		return ("");
+		client->setResp("HTTP/1.1 100 Continue\r\n\r\n");
 	}
 
 	if (remainingString.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
 	{
 		status = PARSING_FINISHED;
 		client->setFlag(HANDLING_REQUEST);
-		// std::cout << "CHANGED FLAGS AND BREAKING" << std::endl;
-		return "";
 	}
-	status = PARSING_BODY;
+	else
+		status = PARSING_BODY;
+	std::cout << "----------------       PARSING HEADER COMPLETED        -------------------" << std::endl;
 	return remainingString;
 }
 

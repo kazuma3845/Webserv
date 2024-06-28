@@ -210,19 +210,17 @@ void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
 
-	if (client.getFlag() == EXPECTING)
-		client.setResp("HTTP/1.1 100 Continue\r\n\r\n");
+
 	write(socket, client.getResp().c_str(), client.getResp().length());
 	if (client.getFlag() == EXPECTING)
-	{
-		client.setResp(NULL);
+	{	
+		client.setResp(""); //NULL segfault
 		client.setFlag(PARSING_REQUEST);
 		client.getReq()->setStatus(PARSING_BODY);
 		FD_CLR(socket, &this->_write_sds);
 		FD_SET(socket, &this->_read_sds);
 		return;
 	}
-
 	//-----------------------------------------------------------------------
 	// Only to show the request content; PRINT REPONSE
 	std::istringstream contentStream(client.getResp());
