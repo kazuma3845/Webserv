@@ -251,7 +251,7 @@ void Response::printResponse() const
 
 void Response::loadContent(const std::string &filePath)
 {
-	std::ifstream file(filePath);
+	std::ifstream file(filePath.c_str());
 	if (!file)
 		throw cantLoadContent(404);
 	else
@@ -278,23 +278,28 @@ std::string Response::takeTime() const
 
 void Response::formatResponse(Client &a, Request &b)
 {
-    std::string    loc_path;
-    if (!b.getFullPath().empty())
-        loc_path = b.getFullPath().substr(a.get_listen_socket().get_root().size(), b.getFullPath().size());
+	std::string loc_path;
+	if (!b.getFullPath().empty())
+	{
+		loc_path = b.getFullPath().substr(a.get_listen_socket().get_root().size(), b.getFullPath().size());
+	}
 	std::stringstream ss;
 	ss << _statusCode;
-    _resp += "HTTP/1.1 " + ss.str() + " " + _statusMessage + "\r\n"
-    "Date: " + takeTime() + "\r\n"
-    "Content-Type: " + _contentType + "\r\n";
+	_resp += "HTTP/1.1 " + ss.str() + " " + _statusMessage + "\r\n"
+															 "Date: " +
+			 takeTime() + "\r\n"
+						  "Content-Type: " +
+			 _contentType + "\r\n";
 	ss.str("");
 	ss << a.get_listen_socket().get_port();
-   _resp += "Location: http://" + a.get_listen_socket().get_host() + ":" + ss.str() + "/" + loc_path + "\r\n"
-    "Connection: " + _connectionType + "\r\n";
+	_resp += "Location: http://" + a.get_listen_socket().get_host() + ":" + ss.str() + "/" + loc_path + "\r\n"
+																										"Connection: " +
+			 _connectionType + "\r\n";
 	ss.str("");
 	ss << _body.size();
-    _resp += "Content-Length: " + ss.str() + "\r\n"
-    "\r\n";
-    _resp += _body;
+	_resp += "Content-Length: " + ss.str() + "\r\n"
+											 "\r\n";
+	_resp += _body;
 }
 
 void Response::ErrorBody(int error_code, Client &a, bool b)
@@ -312,12 +317,12 @@ void Response::ErrorBody(int error_code, Client &a, bool b)
 	}
 	else
 		path = a.get_listen_socket().get_error_path()[a.get_listen_socket().get_error()];
-	std::ifstream file(path);
+	std::ifstream file(path.c_str());
 	if (!file)
 	{
 		std::cerr << "Failed to open file: " << path << '\n';
 		ErrorBody(error_code, a, false);
-		return ;
+		return;
 	}
 	std::stringstream buffer;
 	buffer << file.rdbuf();
@@ -330,7 +335,6 @@ const char *Response::settingHeadersError::what() const throw()
 {
 	return ("Setting headers durign response failed.");
 }
-
 
 const char *Response::cantLoadContent::what() const throw()
 {

@@ -5,6 +5,7 @@
 #include <sstream>
 #include "../request/request.hpp"
 #include "../response/response.hpp"
+#include <sys/wait.h>
 
 #define BUFFER 1000
 
