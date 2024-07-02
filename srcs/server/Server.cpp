@@ -159,10 +159,8 @@ void Server::read_socket(Client &client)
 	try
 	{
 		if (client.getFlag() == PARSING_REQUEST)
-		{
 			client.getReq()->parseRequest(socket);
-			// std::cout << "Current client status is : " << client.getFlag() << std::endl;
-		}
+	
 		if (client.getFlag() == EXPECTING)
 		{
 			FD_CLR(socket, &this->_read_sds);
@@ -170,18 +168,12 @@ void Server::read_socket(Client &client)
 		}
 		if (client.getFlag() == REDIRECTING)
 		{
-			std::cout << "-----------     REDIRECTION     -----------" << std::endl;
 			client.getReq()->checkRequest();
 			redirect.path(*client.getReq(), *client.getResponse());
 		}
 		if (client.getFlag() == HANDLING_REQUEST)
-		{
-			std::cout << "-----------     HANDLING REQUEST     -----------" << std::endl;
-			client.getHandler()->getRequest().printRequest();
 			client.getHandler()->start();
-			std::cout << "-----------     HANDLING OVER     -----------" << std::endl;
-
-		}
+	
 		if (client.getFlag() == WRITING_RESPONSE)
 		{
 			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());

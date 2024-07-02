@@ -13,7 +13,6 @@ Client::Client(int fd, ListenSocket &listen_socket)
 	this->_response = new Response();
 	this->_handler = new Handler(*_request, *_response);
 	this->_flag = PARSING_REQUEST;
-	// std::cout << "Client was called. " << std::endl;
 }
 Client::Client()
 {
@@ -22,37 +21,26 @@ Client::Client()
 Client::~Client(void)
 {
 	delete _request;
-	// std::cout << "Client was destroyed." << std::endl;
 }
-
-// Client::Client( const Client& copy )
-// {
-// 	// std::cout << "Client copy constructor called" << std::endl;
-// 	*this = copy;
-// }
 
 Client &Client::operator=(const Client &ref)
 {
 	if (this != &ref)
 	{
-		// Libération des ressources actuelles
 		delete _handler;
 		delete _response;
 		delete _request;
 
-		// Copie des valeurs primitives
 		_connected_sd = ref._connected_sd;
-		_listen_socket = ref._listen_socket; // Assurez-vous que cette copie est correcte
+		_listen_socket = ref._listen_socket;
 		_connected_time = ref._connected_time;
 		_flag = ref._flag;
 
-		// Création de nouvelles instances pour les ressources dynamiques
 		_request = new Request(*ref._request);
 		_response = new Response(*ref._response);
 		_handler = new Handler(*_request, *_response);
 
-		// Rétablissement des liens
-		_request->setClient(this);
+		_request->setClient(this); //! important pour set up le client de la requete a cette nouvelle instance
 	}
 	return *this;
 }

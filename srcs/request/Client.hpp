@@ -32,31 +32,36 @@ class Client
 {
 private:
 	// ---------------------------------------------- ATTRIBUTES
+
 	int _connected_sd;
-	ListenSocket _listen_socket;
+	bool _keepAlive;
+
 	std::string _rep;
 	time_t _connected_time;
 	std::map<std::string, std::string> _headers;
-	bool _keepAlive;
-	Request* _request;
-	Response* _response;
-	Handler* _handler;
+
+	ListenSocket _listen_socket;
+	Request *_request;
+	Response *_response;
+	Handler *_handler;
 
 	Flag _flag;
 
 public:
 	Client();
 	Client(int fd, ListenSocket &listen_socket);
-	~Client();
 	Client &operator=(const Client &ref);
+	~Client();
 
 	void reUseClient(void);
 	// --------------------------------------------- GETTERS
-	std::string getResp() const;
-	int get_fd(void);
-	ListenSocket get_listen_socket(void);
-	time_t get_connected_time(void);
 	bool getKeepAlive();
+	int get_fd(void);
+
+	std::string getResp() const;
+	time_t get_connected_time(void);
+
+	ListenSocket get_listen_socket(void);
 	Request *getReq(void);
 	Handler *getHandler();
 	Response *getResponse();
