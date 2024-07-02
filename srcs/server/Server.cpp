@@ -168,7 +168,7 @@ void Server::read_socket(Client &client)
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
 		}
-		if (client.getFlag() == HANDLING_REQUEST)
+		if (client.getFlag() == REDIRECTING)
 		{
 			std::cout << "-----------     HANDLING BEGIN     -----------" << std::endl;
 			client.getReq()->checkRequest();

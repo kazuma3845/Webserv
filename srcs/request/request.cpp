@@ -211,7 +211,7 @@ void Request::ChunkedBody(std::string &current_buffer)
 			{
 				// Fin des chunks
 				status = PARSING_FINISHED;
-				client->setFlag(HANDLING_REQUEST);
+				client->setFlag(REDIRECTING);
 				return;
 			}
 			_chunkBodySize = chunkSize;
@@ -245,7 +245,7 @@ void Request::Body(std::string current_buffer)
 		if (current_buffer.empty())
 		{
 			status = PARSING_FINISHED;
-			client->setFlag(HANDLING_REQUEST);
+			client->setFlag(REDIRECTING);
 			break;
 		}
 	}
@@ -346,7 +346,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	if (remainingString.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
 	{
 		status = PARSING_FINISHED;
-		client->setFlag(HANDLING_REQUEST);
+		client->setFlag(REDIRECTING);
 	}
 	else
 		status = PARSING_BODY;
