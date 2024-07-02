@@ -68,7 +68,6 @@ void Server::run_server(void)
 {
 	fd_set temp_read_sds;
 	fd_set temp_write_sds;
-	// struct timeval timeout;
 
 	std::cout << std::endl
 			  << "##################" << std::endl
@@ -78,8 +77,6 @@ void Server::run_server(void)
 	{
 		temp_read_sds = this->_read_sds;
 		temp_write_sds = this->_write_sds;
-		// timeout.tv_sec = 1;
-		// timeout.tv_usec = 0;
 
 		// Wait for an activity on one of the , select return the value of readies FD
 		if (select(this->_max_sd + 1, &temp_read_sds, &temp_write_sds, NULL, NULL) < 0)
@@ -90,15 +87,11 @@ void Server::run_server(void)
 				this->add_client(_ListenSockets[i]);
 		}
 
-		// Reading new request
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
-			// this->_client_sds_map[i].getReq()->printRequest();
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
 				read_socket(this->_client_sds_map[i]);
-			// std::cerr << "####### Client : "  << this->_client_sds_map[i].getReq()->getClient()->get_fd() << std::endl;
 		}
-		// Writing request response
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_write_sds))
@@ -152,7 +145,6 @@ void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
 	Redirection redirect;
-	// Response response;
 
 	client.setTimeout();
 
@@ -160,7 +152,7 @@ void Server::read_socket(Client &client)
 	{
 		if (client.getFlag() == PARSING_REQUEST)
 			client.getReq()->parseRequest(socket);
-	
+
 		if (client.getFlag() == EXPECTING)
 		{
 			FD_CLR(socket, &this->_read_sds);
@@ -172,16 +164,24 @@ void Server::read_socket(Client &client)
 			redirect.path(*client.getReq(), *client.getResponse());
 		}
 		if (client.getFlag() == HANDLING_REQUEST)
-			client.getHandler()->start();
-	
+		{
+			client.getHandler()->process();
+			if (client.getFlag() == HANDLING_REQUEST)
+			{
+				std::cout << "Leaving read socket" << std::endl;
+				return;
+			}
+		}
 		if (client.getFlag() == WRITING_RESPONSE)
 		{
+			std::cout << "-----------      Currently writing response         ------------" << std::endl;
 			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
 			client.getResponse()->setConnectionType(client.getKeepAlive());
 			if (client.getReq()->getHasReturn())
 				client.getResponse()->setStatusCode(301);
 			client.getResponse()->formatResponse(client, *client.getReq());
 			client.setResp(client.getResponse()->getResp());
+			client.setFlag(FINISHED);
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
 		}
@@ -203,7 +203,8 @@ void Server::read_socket(Client &client)
 		client.getResponse()->setConnectionType(false);
 		client.getResponse()->setContentType("text/html");
 		client.getResponse()->formatResponse(client, *client.getReq());
-		client.setResp(client.getResponse()->getResp());
+		client.setResp(client.getResponse()->getResp());		
+		client.setFlag(FINISHED);
 		FD_CLR(socket, &this->_read_sds);
 		FD_SET(socket, &this->_write_sds);
 	}

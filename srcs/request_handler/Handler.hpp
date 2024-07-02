@@ -2,6 +2,7 @@
 #include "../response/response.hpp"
 #include "../request/request.hpp"
 #include "../errors/ErrorWebServ.hpp"
+#define MAX_BATCH 5000
 
 class Handler
 {
@@ -9,7 +10,7 @@ public:
 	Handler(Request &request, Response &response);
 	~Handler();
 
-	void start();
+	void process();
 	void setRequest(Request &req);
 	Request getRequest();
 
@@ -19,14 +20,21 @@ private:
 	Response &_response;
 	std::map<std::string, void (Handler::*)()> _methodFunctions;
 
+	std::istringstream _currentStream;
+	std::string _currentBoundary;
+	std::string _currentFilename;
+	bool _inFile;
+	std::ofstream _currentFile;
+	bool _streamInitialized;
+
 	// ----------------------------------------- FUNCTIONS //
 
 	void handleGet();
 	void handlePost();
 	void handleDelete();
+
 	std::string extractBoundary(const std::string &contentType);
-	bool processPart(const std::string &partContent, const std::string &boundary);
-	bool getNextPart(std::istringstream &stream, const std::string &boundary, std::string &partContent);
+	std::string extractFilename(const std::string &partContent);
 
 	// ------------------------------------------ ERRORS //
 
