@@ -10,6 +10,8 @@ public:
 	~Handler();
 
 	void start();
+	void setRequest(Request &req);
+	Request getRequest();
 
 private:
 	// ----------------------------------------- ATTRIBUTES //
@@ -54,5 +56,4 @@ private:
 		unsupportedMediaType(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	
 };

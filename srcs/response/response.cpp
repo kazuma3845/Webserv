@@ -17,13 +17,20 @@ Response::Response(const Response &other)
 
 Response &Response::operator=(const Response &other)
 {
-	// Copy assignment operator implementation
 	if (this != &other)
 	{
-		// Example: this->attribute = other.attribute;
+		_httpVersion = other._httpVersion;
+		_statusCode = other._statusCode;
+		_statusMessage = other._statusMessage;
+		_headers = other._headers;
+		_body = other._body;
+		_resp = other._resp;
+		_contentType = other._contentType;
+		_connectionType = other._connectionType;
 	}
 	return *this;
 }
+
 
 Response::~Response()
 {

@@ -14,6 +14,33 @@ Request::Request(Client *client) : _hasReturn(false), client(client)
 	// std::cout << "Request instance with pointer on client created : " << this->client->get_fd() << std::endl;
 }
 
+Request::Request(const Request &other)
+{
+	*this = other;
+}
+
+Request &Request::operator=(const Request &other)
+{
+	if (this != &other)
+	{
+		_method = other._method;
+		_uri = other._uri;
+		_httpVersion = other._httpVersion;
+		_headers = other._headers;
+		_body = other._body;
+		_queryString = other._queryString;
+		_curr_loc = other._curr_loc;
+		_file_path = other._file_path;
+		_full_path = other._full_path;
+		_hasReturn = other._hasReturn;
+		status = other.status;
+		_buffer = other._buffer;
+		_chunkBodySize = other._chunkBodySize;
+		_chunkBuffer = other._chunkBuffer;
+	}
+	return *this;
+}
+
 Request::~Request()
 {
 	// std::cout << "Request instance destroyed ..." << std::endl;
@@ -271,7 +298,7 @@ std::string Request::parseRequestLine(std::string &current_buffer)
 	// std::cout << "Current line is " << line << std::endl;
 
 	std::string remainingString = ss.str().substr(ss.tellg()); // Remainding string after the line
-	std::cout << "Remaining is currently : " << remainingString << std::endl;
+	// std::cout << "Remaining is currently : " << remainingString << std::endl;
 	std::istringstream lineStream(line);
 	_buffer.clear();
 

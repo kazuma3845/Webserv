@@ -19,6 +19,7 @@ Handler::~Handler()
 
 void Handler::start()
 {
+	std::cout << "Current METHOD is " << _request.getMethod() << std::endl;
 	// Find the request method in the map of method functions
 	std::map<std::string, void (Handler::*)()>::iterator it = _methodFunctions.find(_request.getMethod());
 	if (it != _methodFunctions.end()) // If method is found, call the corresponding function
@@ -49,6 +50,7 @@ void Handler::handlePost()
 		_response.setStatusCode(201);
 		_response.setContentType("text/plain");
 		_response.setBody("POST data received and written.");
+		_request.getClient()->setFlag(WRITING_RESPONSE);
 	}
 	else if (contentType.find("multipart/form-data") != std::string::npos)
 	{
@@ -68,6 +70,7 @@ void Handler::handlePost()
 			_response.setStatusCode(201);
 			_response.setContentType("text/plain");
 			_response.setBody("Files uploaded successfully.");
+			_request.getClient()->setFlag(WRITING_RESPONSE);
 		}
 		else
 			throw postFailed(500); // No part processed successfully
@@ -180,6 +183,7 @@ void Handler::handleGet()
 		_response.setContentType("text/plain");
 	_response.loadContent(_request.getFullPath()); // Load the content of the requested file into the response.
 	_response.setStatusCode(200);
+	_request.getClient()->setFlag(WRITING_RESPONSE);
 }
 
 // * This function handles a DELETE request
@@ -192,6 +196,15 @@ void Handler::handleDelete()
 	_response.setStatusCode(204);
 	_response.setContentType("text/plain");
 	_response.setBody("Content deleted successfully.");
+	_request.getClient()->setFlag(WRITING_RESPONSE);
+}
+Request Handler::getRequest()
+{
+	return (_request);
+}
+void Handler::setRequest(Request &req)
+{
+	_request = req;
 }
 
 // ------------------------------------------------------ ERRORS //

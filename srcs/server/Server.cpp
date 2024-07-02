@@ -152,7 +152,7 @@ void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
 	Redirection redirect;
-	Response response;
+	// Response response;
 
 	client.setTimeout();
 
@@ -170,15 +170,26 @@ void Server::read_socket(Client &client)
 		}
 		if (client.getFlag() == REDIRECTING)
 		{
-			std::cout << "-----------     HANDLING BEGIN     -----------" << std::endl;
+			std::cout << "-----------     REDIRECTION     -----------" << std::endl;
 			client.getReq()->checkRequest();
-			redirect.path(*client.getReq(), response);
-			response.setHTTPVersion(client.getReq()->getHttpVersion());
-			response.setConnectionType(client.getKeepAlive());
+			redirect.path(*client.getReq(), *client.getResponse());
+		}
+		if (client.getFlag() == HANDLING_REQUEST)
+		{
+			std::cout << "-----------     HANDLING REQUEST     -----------" << std::endl;
+			client.getHandler()->getRequest().printRequest();
+			client.getHandler()->start();
+			std::cout << "-----------     HANDLING OVER     -----------" << std::endl;
+
+		}
+		if (client.getFlag() == WRITING_RESPONSE)
+		{
+			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
+			client.getResponse()->setConnectionType(client.getKeepAlive());
 			if (client.getReq()->getHasReturn())
-				response.setStatusCode(301);
-			response.formatResponse(client, *client.getReq());
-			client.setResp(response.getResp());
+				client.getResponse()->setStatusCode(301);
+			client.getResponse()->formatResponse(client, *client.getReq());
+			client.setResp(client.getResponse()->getResp());
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
 		}
@@ -189,18 +200,18 @@ void Server::read_socket(Client &client)
 		std::cerr << "Error number: " << e.getErrorCode() << std::endl;
 		std::cerr << "What happened : " << e.what() << std::endl;
 		client.setKeepAlive(false);
-		response.setStatusCode(e.getErrorCode());
-		response.setStatusMessage(e.what());
+		client.getResponse()->setStatusCode(e.getErrorCode());
+		client.getResponse()->setStatusMessage(e.what());
 		std::stringstream ss;
 		ss << e.getErrorCode();
 		if (client.get_listen_socket().get_error().compare(ss.str()) == 0)
-			response.ErrorBody(e.getErrorCode(), client, true);
+			client.getResponse()->ErrorBody(e.getErrorCode(), client, true);
 		else
-			response.ErrorBody(e.getErrorCode(), client, false);
-		response.setConnectionType(false);
-		response.setContentType("text/html");
-		response.formatResponse(client, *client.getReq());
-		client.setResp(response.getResp());
+			client.getResponse()->ErrorBody(e.getErrorCode(), client, false);
+		client.getResponse()->setConnectionType(false);
+		client.getResponse()->setContentType("text/html");
+		client.getResponse()->formatResponse(client, *client.getReq());
+		client.setResp(client.getResponse()->getResp());
 		FD_CLR(socket, &this->_read_sds);
 		FD_SET(socket, &this->_write_sds);
 	}
@@ -210,11 +221,10 @@ void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
 
-
 	write(socket, client.getResp().c_str(), client.getResp().length());
 	if (client.getFlag() == EXPECTING)
-	{	
-		client.setResp(""); //NULL segfault
+	{
+		client.setResp(""); // NULL segfault
 		client.setFlag(PARSING_REQUEST);
 		client.getReq()->setStatus(PARSING_BODY);
 		FD_CLR(socket, &this->_write_sds);
@@ -222,14 +232,14 @@ void Server::write_socket(Client &client)
 		return;
 	}
 	//-----------------------------------------------------------------------
-	// Only to show the request content; PRINT REPONSE
-	std::istringstream contentStream(client.getResp());
-	std::string line;
-	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
-	while (std::getline(contentStream, line))
-	{
-		std::cerr << line << std::endl;
-	}
+	// // Only to show the request content; PRINT REPONSE
+	// std::istringstream contentStream(client.getResp());
+	// std::string line;
+	// // std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
+	// while (std::getline(contentStream, line))
+	// {
+	// 	std::cerr << line << std::endl;
+	// }
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write

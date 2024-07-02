@@ -1,4 +1,6 @@
 #include "Client.hpp"
+#include "../response/response.hpp"
+#include "../request_handler/Handler.hpp"
 
 // ------------------- Constructors -------------------
 
@@ -8,11 +10,13 @@ Client::Client(int fd, ListenSocket &listen_socket)
 	this->_connected_sd = fd;
 	this->_connected_time = time(NULL);
 	this->_request = new Request(this);
+	this->_response = new Response();
+	this->_handler = new Handler(*_request, *_response);
 	this->_flag = PARSING_REQUEST;
 	// std::cout << "Client was called. " << std::endl;
 }
-Client::Client() {
-
+Client::Client()
+{
 }
 
 Client::~Client(void)
@@ -27,16 +31,27 @@ Client::~Client(void)
 // 	*this = copy;
 // }
 
-Client& Client::operator=( const Client& ref )
+Client &Client::operator=(const Client &ref)
 {
-	// std::cout << "Client assignment operator called" << std::endl;
-	if ( this != &ref )
+	if (this != &ref)
 	{
-		this->_connected_sd = ref._connected_sd;
-		this->_listen_socket = ref._listen_socket;
-		this->_connected_time = ref._connected_time;
-		this->_flag = ref._flag;
-		this->_request = new Request(*ref._request);
+		// Libération des ressources actuelles
+		delete _handler;
+		delete _response;
+		delete _request;
+
+		// Copie des valeurs primitives
+		_connected_sd = ref._connected_sd;
+		_listen_socket = ref._listen_socket; // Assurez-vous que cette copie est correcte
+		_connected_time = ref._connected_time;
+		_flag = ref._flag;
+
+		// Création de nouvelles instances pour les ressources dynamiques
+		_request = new Request(*ref._request);
+		_response = new Response(*ref._response);
+		_handler = new Handler(*_request, *_response);
+
+		// Rétablissement des liens
 		_request->setClient(this);
 	}
 	return *this;
@@ -47,6 +62,13 @@ void Client::reUseClient(void)
 	_rep.clear();
 	delete _request;
 	_request = new Request(this);
+
+	delete _response;
+	_response = new Response();
+
+	delete _handler;
+	_handler = new Handler(*_request, *_response);
+
 	this->_flag = PARSING_REQUEST;
 }
 
@@ -68,6 +90,14 @@ bool Client::getKeepAlive()
 Request *Client::getReq(void)
 {
 	return this->_request;
+}
+Response *Client::getResponse()
+{
+	return (this->_response);
+}
+Handler *Client::getHandler()
+{
+	return (this->_handler);
 }
 
 void Client::setResp(std::string rep)
@@ -95,7 +125,7 @@ Flag Client::getFlag()
 	return _flag;
 }
 
-void Client::setHeaders(const std::map<std::string, std::string>& headers)
+void Client::setHeaders(const std::map<std::string, std::string> &headers)
 {
 	_headers = headers;
 }
@@ -105,7 +135,7 @@ void Client::setKeepAlive(bool status)
 	_keepAlive = status;
 }
 
-void	Client::setTimeout(void)
+void Client::setTimeout(void)
 {
 	_connected_time = time(NULL);
 }

@@ -25,6 +25,8 @@ class Request
 public:
 	Request();
 	Request(Client *client);
+	Request(const Request &other);
+	Request& operator=(const Request& other);
 	~Request();
 	void parseRequest(int fd);
 	void printRequest();

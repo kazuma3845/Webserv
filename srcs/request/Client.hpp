@@ -17,10 +17,13 @@ enum Flag
 	EXPECTING,
 	REDIRECTING,
 	HANDLING_REQUEST,
+	WRITING_RESPONSE,
 	FINISHED
 };
 
 class Client;
+class Handler;
+class Response;
 
 #include "request.hpp"
 #include "../server/ListenSocket.hpp"
@@ -36,6 +39,9 @@ private:
 	std::map<std::string, std::string> _headers;
 	bool _keepAlive;
 	Request* _request;
+	Response* _response;
+	Handler* _handler;
+
 	Flag _flag;
 
 public:
@@ -52,6 +58,8 @@ public:
 	time_t get_connected_time(void);
 	bool getKeepAlive();
 	Request *getReq(void);
+	Handler *getHandler();
+	Response *getResponse();
 	Flag getFlag();
 
 	// --------------------------------------------- SETTERS
