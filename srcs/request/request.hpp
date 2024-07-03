@@ -69,12 +69,18 @@ private:
 	location _curr_loc;
 	std::string _file_path;
 	std::string _full_path;
+	
 	bool _hasReturn;
 	Client *client;
+
 	parsingStatus status;
+
 	std::string _buffer;
 	unsigned int _chunkBodySize;
 	std::string _chunkBuffer;
+
+	std::string _currentBoundary;
+	std::string _currentFilename;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 

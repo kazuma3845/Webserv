@@ -206,7 +206,7 @@ void Request::checkRequest()
 		client->setKeepAlive(true);
 	if (status == PARSING_FINISHED)
 		getClient()->setFlag(WRITING_RESPONSE);
-	else 
+	else
 		getClient()->setFlag(HANDLING_BODY);
 }
 
@@ -401,21 +401,30 @@ void Request::parseRequest(int fd)
 
 	if (status == PARSING_HEADERS)
 		current_buffer = parseHeaders(current_buffer);
-	
+
 	if (status == PARSING_BODY)
-		_buffer = current_buffer;
+		_buffer = current_buffer; // pour stocker le restant pour la suite.
 }
 
 void Request::parseBody(int fd)
 {
-	int buffer_size = 1024;
-	char buffer[buffer_size];
-	ssize_t bytes_read = read(fd, buffer, buffer_size);
-	if (bytes_read < 0)
-		throw errorReadingFD(500);
-	if (bytes_read == 0)
-		throw connectionCloseEarly(499);
-	std::string current_buffer(buffer, bytes_read);
+	std::string current_buffer;
+	if (_buffer.empty())
+	{
+		int buffer_size = 1024;
+		char buffer[buffer_size];
+		ssize_t bytes_read = read(fd, buffer, buffer_size);
+		if (bytes_read < 0)
+			throw errorReadingFD(500);
+		if (bytes_read == 0)
+			throw connectionCloseEarly(499);
+		std::string current_buffer(buffer, bytes_read);
+	}
+	else
+	{
+		std::string current_buffer = _buffer;
+		_buffer.clear();
+	}
 
 	if (_headers.count("Content-Length"))
 		Body(current_buffer);
