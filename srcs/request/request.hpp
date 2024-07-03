@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <sstream>
 #include <sys/stat.h>
+#include <fstream>
 
 #include <cstring>
 
@@ -13,9 +14,11 @@ class Request;
 #include "../errors/ErrorWebServ.hpp"
 #include "Client.hpp"
 
-enum parsingStatus {
+enum parsingStatus
+{
 	PARSING_RL,
 	PARSING_HEADERS,
+	CHECKING_HEADERS,
 	PARSING_BODY,
 	PARSING_FINISHED,
 };
@@ -26,11 +29,11 @@ public:
 	Request();
 	Request(Client *client);
 	Request(const Request &other);
-	Request& operator=(const Request& other);
+	Request &operator=(const Request &other);
 	~Request();
 	void parseRequest(int fd);
 	void printRequest();
-	void checkRequest();
+	void checkRequest(std::string &currentBuffer);
 
 	// ------------------------------------------- GETTERS
 
@@ -55,7 +58,6 @@ public:
 	void setQueryString(std::string queryString);
 	void setClient(Client *client);
 	void setStatus(parsingStatus status);
-	void parseBody(int fd);
 
 private:
 	// ------------------------------------------ ATTRIBUTES
@@ -69,25 +71,26 @@ private:
 	location _curr_loc;
 	std::string _file_path;
 	std::string _full_path;
-	
+
 	bool _hasReturn;
 	Client *client;
 
 	parsingStatus status;
 
 	std::string _buffer;
+	unsigned int _bytesWritten;
 	unsigned int _chunkBodySize;
 	std::string _chunkBuffer;
 
 	std::string _currentBoundary;
 	std::string _currentFilename;
+	std::ofstream _currentFile;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
 	void prepareBodyParsing(int fd);
 	std::string parseRequestLine(std::string &current_buffer);
 	std::string parseHeaders(std::string &current_buffer);
-	void processChunkedBody(int fd);
 	void extractQueryString();
 	void isMethodAllowed();
 	void redirectInURI();
@@ -97,6 +100,9 @@ private:
 	std::string cleanString(std::string toClean);
 	void ChunkedBody(std::string &current_buffer);
 	void Body(std::string current_buffer);
+	std::string extractFilename(const std::string &contentDisposition);
+	std::string extractBoundary(const std::string &contentType);
+	void ensureDirectoryExists(const std::string &path);
 
 	// ------------------------------------------ ERROR
 
@@ -184,6 +190,12 @@ private:
 	{
 	public:
 		errorReadingFD(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
+	class cantOpenFile : public ErrorWebServ
+	{
+	public:
+		cantOpenFile(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
 };

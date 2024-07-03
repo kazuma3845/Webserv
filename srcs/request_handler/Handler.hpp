@@ -20,13 +20,6 @@ private:
 	Response &_response;
 	std::map<std::string, void (Handler::*)()> _methodFunctions;
 
-	std::istringstream _currentStream;
-	std::string _currentBoundary;
-	std::string _currentFilename;
-	bool _inFile;
-	std::ofstream _currentFile;
-	bool _streamInitialized;
-
 	// ----------------------------------------- FUNCTIONS //
 
 	void handleGet();

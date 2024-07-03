@@ -11,6 +11,8 @@ Request::Request(Client *client) : _hasReturn(false), client(client)
 {
 	status = PARSING_RL;
 	_chunkBodySize = 0;
+	_bytesWritten = 0;
+	_currentFilename = "";
 	// std::cout << "Request instance with pointer on client created : " << this->client->get_fd() << std::endl;
 }
 
@@ -37,6 +39,7 @@ Request &Request::operator=(const Request &other)
 		_buffer = other._buffer;
 		_chunkBodySize = other._chunkBodySize;
 		_chunkBuffer = other._chunkBuffer;
+		_bytesWritten = other._bytesWritten;
 	}
 	return *this;
 }
@@ -191,7 +194,7 @@ void Request::extractQueryString()
 // * This function checks various aspects of an HTTP request to ensure it meets certain criteria.
 // * It parses the URI, checks if the method is allowed, handles redirections, checks file existence,
 
-void Request::checkRequest()
+void Request::checkRequest(std::string &currentBuffer)
 {
 	parseUri(); // Parses the URI to get the location of the requested resource.
 
@@ -204,10 +207,20 @@ void Request::checkRequest()
 	// Sets up the connection mode in the Client object to keep-alive if the "Connection" header is set to "keep-alive".
 	if (_headers["Connection"] == "keep-alive")
 		client->setKeepAlive(true);
-	if (status == PARSING_FINISHED)
-		getClient()->setFlag(WRITING_RESPONSE);
+
+	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
+	{
+		client->setFlag(EXPECTING);
+		client->setResp("HTTP/1.1 100 Continue\r\n\r\n");
+	}
+
+	if (currentBuffer.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
+	{
+		status = PARSING_FINISHED;
+		client->setFlag(WRITING_RESPONSE);
+	}
 	else
-		getClient()->setFlag(HANDLING_BODY);
+		status = PARSING_BODY;
 }
 
 void Request::ChunkedBody(std::string &current_buffer)
@@ -265,27 +278,87 @@ void Request::ChunkedBody(std::string &current_buffer)
 
 void Request::Body(std::string current_buffer)
 {
-	unsigned int bodySize = _body.size();
-	unsigned int j = 0;
-	unsigned int ContentLenghtSize = 0;
-	std::stringstream tmp(_headers["Content-Length"]);
-	tmp >> ContentLenghtSize;
-	for (; bodySize < ContentLenghtSize; bodySize++)
+	std::string contentType = _headers["Content-Type"];
+	unsigned int currentBufferSize = current_buffer.size();
+
+	if (_currentFilename.empty())
 	{
-		_body += current_buffer[j++];
-		if (current_buffer.empty())
+		if (contentType.find("multipart/form-data") != std::string::npos)
 		{
-			status = PARSING_FINISHED;
-			client->setFlag(CHECKING_REQUEST);
-			break;
+			_currentFilename = extractFilename(current_buffer);
+			std::cout << "Filename is : " << _currentFilename << std::endl;
+			_currentBoundary = extractBoundary(contentType);
+		}
+		std::string baseDir = "Page/data/";
+		ensureDirectoryExists(baseDir);
+		std::string fullPath = baseDir + _currentFilename;
+		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary);
+		if (!_currentFile.is_open())
+			throw cantOpenFile(500);
+	}
+
+	unsigned int ContentLengthSize = 0;
+	std::stringstream tmp(_headers["Content-Length"]);
+	tmp >> ContentLengthSize; // taille max du body
+	std::string boundaryDelimiter = "--" + _currentBoundary;
+	size_t dataStart = current_buffer.find(boundaryDelimiter + "\r\n\r\n") + boundaryDelimiter.size() + 4; // Saute la frontière et les en-têtes
+
+	size_t nextBoundaryIndex = current_buffer.find(boundaryDelimiter, dataStart); // Find the start of the next boundary
+	if (nextBoundaryIndex == std::string::npos)
+		nextBoundaryIndex = currentBufferSize;
+
+	for (unsigned int i = dataStart; i < nextBoundaryIndex && _bytesWritten < ContentLengthSize; i++)
+	{
+		_currentFile << current_buffer[i];
+		_bytesWritten++;
+	}
+
+	std::cout << "Current bytes written is : " << _bytesWritten << std::endl;
+
+	if (_bytesWritten >= ContentLengthSize)
+	{
+		status = PARSING_FINISHED;
+		_currentFilename.clear();
+		_currentFile.close();
+	}
+	std::cout << ContentLengthSize << std::endl;
+}
+
+void Request::ensureDirectoryExists(const std::string &path)
+{
+	struct stat st;
+	if (stat(path.c_str(), &st) != 0)
+		mkdir(path.c_str(), 0777);
+}
+
+std::string Request::extractBoundary(const std::string &contentType)
+{
+	std::size_t pos = contentType.find("boundary=");
+	if (pos != std::string::npos)
+		return "--" + contentType.substr(pos + 9); // 9 pour passer 'boundary=' et ajouter '--' pour correspondre au format des délimiteurs
+	return "";
+}
+std::string Request::extractFilename(const std::string &contentDisposition)
+{
+	std::istringstream headerStream(contentDisposition);
+	std::string line;
+	std::string filename;
+
+	while (std::getline(headerStream, line))
+	{
+		std::size_t pos = line.find("Content-Disposition:");
+		if (pos != std::string::npos)
+		{
+			pos = line.find("filename=");
+			if (pos != std::string::npos)
+			{
+				filename = line.substr(pos + 10);				   // 10 pour passer 'filename="'
+				filename = filename.substr(0, filename.find('"')); // Trouver la prochaine guillemet et substr jusqu'à ça
+				break;
+			}
 		}
 	}
-	if (!current_buffer.empty())
-	{
-		current_buffer = current_buffer.substr(j);
-		if (current_buffer.size() != 0 && bodySize >= ContentLenghtSize)
-			_buffer += current_buffer;
-	}
+	return filename;
 }
 
 std::string Request::parseRequestLine(std::string &current_buffer)
@@ -367,20 +440,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	std::string remainingString = _buffer.substr(end + 4);
 	// std::cout << "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
 	_buffer.clear();
-
-	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
-	{
-		client->setFlag(EXPECTING);
-		client->setResp("HTTP/1.1 100 Continue\r\n\r\n");
-	}
-
-	if (remainingString.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
-	{
-		status = PARSING_FINISHED;
-		client->setFlag(CHECKING_REQUEST);
-	}
-	else
-		status = PARSING_BODY;
+	status = CHECKING_HEADERS;
 	std::cout << "----------------       PARSING HEADER COMPLETED        -------------------" << std::endl;
 	return remainingString;
 }
@@ -402,34 +462,19 @@ void Request::parseRequest(int fd)
 	if (status == PARSING_HEADERS)
 		current_buffer = parseHeaders(current_buffer);
 
+	if (status == CHECKING_HEADERS)
+		checkRequest(current_buffer);
+
 	if (status == PARSING_BODY)
-		_buffer = current_buffer; // pour stocker le restant pour la suite.
-}
-
-void Request::parseBody(int fd)
-{
-	std::string current_buffer;
-	if (_buffer.empty())
 	{
-		int buffer_size = 1024;
-		char buffer[buffer_size];
-		ssize_t bytes_read = read(fd, buffer, buffer_size);
-		if (bytes_read < 0)
-			throw errorReadingFD(500);
-		if (bytes_read == 0)
-			throw connectionCloseEarly(499);
-		std::string current_buffer(buffer, bytes_read);
-	}
-	else
-	{
-		std::string current_buffer = _buffer;
-		_buffer.clear();
+		if (_headers.count("Content-Length"))
+			Body(current_buffer);
+		else
+			ChunkedBody(current_buffer);
 	}
 
-	if (_headers.count("Content-Length"))
-		Body(current_buffer);
-	else
-		ChunkedBody(current_buffer);
+	if (status == PARSING_FINISHED)
+		client->setFlag(WRITING_RESPONSE);
 }
 
 // * This function parses the URI to determine the current location and file path.
@@ -656,4 +701,9 @@ const char *Request::connectionCloseEarly::what() const throw()
 const char *Request::errorReadingFD::what() const throw()
 {
 	return ("Error while trying to read fd.");
+}
+
+const char *Request::cantOpenFile::what() const throw()
+{
+	return ("Error while opening/creating file.");
 }

@@ -1,6 +1,6 @@
 #include "Handler.hpp"
 
-Handler::Handler(Request &request, Response &response) : _request(request), _response(response), _streamInitialized(false)
+Handler::Handler(Request &request, Response &response) : _request(request), _response(response)
 
 {
 	_methodFunctions["GET"] = &Handler::handleGet;
@@ -55,45 +55,11 @@ void Handler::handlePost()
 	}
 	else if (contentType.find("multipart/form-data") != std::string::npos)
 	{
-		if (!_streamInitialized)
-		{
-			_currentStream.str(_request.getBody());
-			_streamInitialized = true;
-		}
-		if (!_inFile)
-		{
-			_currentBoundary = extractBoundary(contentType);
-			std::cout << "Current Boundary is : " << _currentBoundary << std::endl;
-			_currentFilename = extractFilename(_currentStream.str());
-			std::cout << "Current filename : " << _currentFilename << std::endl;
-			_currentFile.open(_currentFilename, std::ios::binary);
-			if (!_currentFile.is_open())
-				throw postFailed(500);
-			_inFile = true;
-		}
-
-		std::string line;
-		int lineCount = 0;
-		while (std::getline(_currentStream, line) && lineCount < MAX_BATCH)
-		{
-			if (line.find(_currentBoundary) != std::string::npos)
-			{
-				_inFile = false;
-				_currentFile.close();
-				break;
-			}
-			_currentFile << line << std::endl;
-			lineCount++;
-		}
-		if (!_inFile && _currentStream.eof())
-		{
-			_response.setStatusCode(201);
-			_response.setContentType("text/plain");
-			_response.setBody("File upload completed.");
-			_request.getClient()->setFlag(WRITING_RESPONSE);
-		}
-	}		
-	std::cout << "Leaving POST handler" << std::endl;
+		_response.setStatusCode(201);
+		_response.setContentType("text/plain");
+		_response.setBody("File upload completed.");
+		_request.getClient()->setFlag(WRITING_RESPONSE);
+	}
 }
 
 std::string Handler::extractBoundary(const std::string &contentType)
