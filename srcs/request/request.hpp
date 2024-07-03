@@ -55,6 +55,7 @@ public:
 	void setQueryString(std::string queryString);
 	void setClient(Client *client);
 	void setStatus(parsingStatus status);
+	void parseBody(int fd);
 
 private:
 	// ------------------------------------------ ATTRIBUTES
@@ -80,7 +81,6 @@ private:
 	void prepareBodyParsing(int fd);
 	std::string parseRequestLine(std::string &current_buffer);
 	std::string parseHeaders(std::string &current_buffer);
-	void parseBody(int fd, unsigned int length);
 	void processChunkedBody(int fd);
 	void extractQueryString();
 	void isMethodAllowed();

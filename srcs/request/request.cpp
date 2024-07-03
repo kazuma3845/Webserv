@@ -204,6 +204,10 @@ void Request::checkRequest()
 	// Sets up the connection mode in the Client object to keep-alive if the "Connection" header is set to "keep-alive".
 	if (_headers["Connection"] == "keep-alive")
 		client->setKeepAlive(true);
+	if (status == PARSING_FINISHED)
+		getClient()->setFlag(WRITING_RESPONSE);
+	else 
+		getClient()->setFlag(HANDLING_BODY);
 }
 
 void Request::ChunkedBody(std::string &current_buffer)
@@ -238,7 +242,7 @@ void Request::ChunkedBody(std::string &current_buffer)
 			{
 				// Fin des chunks
 				status = PARSING_FINISHED;
-				client->setFlag(REDIRECTING);
+				client->setFlag(CHECKING_REQUEST);
 				return;
 			}
 			_chunkBodySize = chunkSize;
@@ -272,7 +276,7 @@ void Request::Body(std::string current_buffer)
 		if (current_buffer.empty())
 		{
 			status = PARSING_FINISHED;
-			client->setFlag(REDIRECTING);
+			client->setFlag(CHECKING_REQUEST);
 			break;
 		}
 	}
@@ -373,7 +377,7 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	if (remainingString.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
 	{
 		status = PARSING_FINISHED;
-		client->setFlag(REDIRECTING);
+		client->setFlag(CHECKING_REQUEST);
 	}
 	else
 		status = PARSING_BODY;
@@ -397,14 +401,26 @@ void Request::parseRequest(int fd)
 
 	if (status == PARSING_HEADERS)
 		current_buffer = parseHeaders(current_buffer);
-
+	
 	if (status == PARSING_BODY)
-	{
-		if (_headers.count("Content-Length"))
-			Body(current_buffer);
-		else
-			ChunkedBody(current_buffer);
-	}
+		_buffer = current_buffer;
+}
+
+void Request::parseBody(int fd)
+{
+	int buffer_size = 1024;
+	char buffer[buffer_size];
+	ssize_t bytes_read = read(fd, buffer, buffer_size);
+	if (bytes_read < 0)
+		throw errorReadingFD(500);
+	if (bytes_read == 0)
+		throw connectionCloseEarly(499);
+	std::string current_buffer(buffer, bytes_read);
+
+	if (_headers.count("Content-Length"))
+		Body(current_buffer);
+	else
+		ChunkedBody(current_buffer);
 }
 
 // * This function parses the URI to determine the current location and file path.

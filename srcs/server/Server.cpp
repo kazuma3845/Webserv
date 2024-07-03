@@ -158,22 +158,16 @@ void Server::read_socket(Client &client)
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
 		}
-		if (client.getFlag() == REDIRECTING)
-		{
+
+		if (client.getFlag() == CHECKING_REQUEST)
 			client.getReq()->checkRequest();
-			redirect.path(*client.getReq(), *client.getResponse());
-		}
-		if (client.getFlag() == HANDLING_REQUEST)
-		{
-			client.getHandler()->process();
-			if (client.getFlag() == HANDLING_REQUEST)
-			{
-				std::cout << "Leaving read socket" << std::endl;
-				return;
-			}
-		}
+
+		if (client.getFlag() == HANDLING_BODY)
+			client.getReq()->parseBody(socket);
+
 		if (client.getFlag() == WRITING_RESPONSE)
 		{
+			redirect.path(*client.getReq(), *client.getResponse());
 			std::cout << "-----------      Currently writing response         ------------" << std::endl;
 			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
 			client.getResponse()->setConnectionType(client.getKeepAlive());
@@ -203,7 +197,7 @@ void Server::read_socket(Client &client)
 		client.getResponse()->setConnectionType(false);
 		client.getResponse()->setContentType("text/html");
 		client.getResponse()->formatResponse(client, *client.getReq());
-		client.setResp(client.getResponse()->getResp());		
+		client.setResp(client.getResponse()->getResp());
 		client.setFlag(FINISHED);
 		FD_CLR(socket, &this->_read_sds);
 		FD_SET(socket, &this->_write_sds);
@@ -218,7 +212,7 @@ void Server::write_socket(Client &client)
 	if (client.getFlag() == EXPECTING)
 	{
 		client.setResp(""); // NULL segfault
-		client.setFlag(PARSING_REQUEST);
+		client.setFlag(CHECKING_REQUEST);
 		client.getReq()->setStatus(PARSING_BODY);
 		FD_CLR(socket, &this->_write_sds);
 		FD_SET(socket, &this->_read_sds);
