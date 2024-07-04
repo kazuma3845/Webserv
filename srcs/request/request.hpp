@@ -88,7 +88,6 @@ private:
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
 
-	void prepareBodyParsing(int fd);
 	std::string parseRequestLine(std::string &current_buffer);
 	std::string parseHeaders(std::string &current_buffer);
 	void extractQueryString();
@@ -98,11 +97,13 @@ private:
 	void checkFile(int mode);
 	bool checkfolder(std::string uri);
 	std::string cleanString(std::string toClean);
+	void parseBody(std::string &current_buffer);
 	void ChunkedBody(std::string &current_buffer);
-	void Body(std::string current_buffer);
+	void ProcessMultipart(std::string &current_buffer);
 	std::string extractFilename(const std::string &contentDisposition);
 	std::string extractBoundary(const std::string &contentType);
 	void ensureDirectoryExists(const std::string &path);
+	void skipHeaders(std::string &current_buffer);
 
 	// ------------------------------------------ ERROR
 

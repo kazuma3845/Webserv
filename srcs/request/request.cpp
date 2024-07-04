@@ -212,6 +212,7 @@ void Request::checkRequest(std::string &currentBuffer)
 	{
 		client->setFlag(EXPECTING);
 		client->setResp("HTTP/1.1 100 Continue\r\n\r\n");
+		return ;
 	}
 
 	if (currentBuffer.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
@@ -276,52 +277,60 @@ void Request::ChunkedBody(std::string &current_buffer)
 	}
 }
 
-void Request::Body(std::string current_buffer)
+void Request::skipHeaders(std::string &current_buffer)
 {
-	std::string contentType = _headers["Content-Type"];
-	unsigned int currentBufferSize = current_buffer.size();
+	size_t pos = current_buffer.find("\r\n\r\n");
+	current_buffer = current_buffer.substr(pos + 4);
+}
 
+void Request::ProcessMultipart(std::string &current_buffer)
+{
+	if (current_buffer.empty())
+		return;
 	if (_currentFilename.empty())
 	{
-		if (contentType.find("multipart/form-data") != std::string::npos)
-		{
-			_currentFilename = extractFilename(current_buffer);
-			std::cout << "Filename is : " << _currentFilename << std::endl;
-			_currentBoundary = extractBoundary(contentType);
-		}
+		_currentBoundary = extractBoundary(_headers["Content-Type"]);
+		std::cout << "Current buffer before filename is : " << current_buffer << std::endl;
+		_currentFilename = extractFilename(current_buffer);
+		std::cout << "Filename is: " << _currentFilename << std::endl;
 		std::string baseDir = "Page/data/";
 		ensureDirectoryExists(baseDir);
 		std::string fullPath = baseDir + _currentFilename;
-		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary);
+		_currentFile.open(fullPath, std::ios::out | std::ios::binary);
 		if (!_currentFile.is_open())
 			throw cantOpenFile(500);
+		skipHeaders(current_buffer);
 	}
 
-	unsigned int ContentLengthSize = 0;
-	std::stringstream tmp(_headers["Content-Length"]);
-	tmp >> ContentLengthSize; // taille max du body
-	std::string boundaryDelimiter = "--" + _currentBoundary;
-	size_t dataStart = current_buffer.find(boundaryDelimiter + "\r\n\r\n") + boundaryDelimiter.size() + 4; // Saute la frontière et les en-têtes
+	std::string remaining;
+	size_t foundAnotherFileBeginning = current_buffer.find("--" + _currentBoundary);
+	size_t endFound = current_buffer.find(_currentBoundary + "--");
 
-	size_t nextBoundaryIndex = current_buffer.find(boundaryDelimiter, dataStart); // Find the start of the next boundary
-	if (nextBoundaryIndex == std::string::npos)
-		nextBoundaryIndex = currentBufferSize;
-
-	for (unsigned int i = dataStart; i < nextBoundaryIndex && _bytesWritten < ContentLengthSize; i++)
+	// making sure the boundary we found is not the ending one (-2 to take the "--" before)
+	if (foundAnotherFileBeginning != std::string::npos && foundAnotherFileBeginning != endFound - 2)
 	{
-		_currentFile << current_buffer[i];
-		_bytesWritten++;
+		remaining = current_buffer.substr(foundAnotherFileBeginning);
+		current_buffer = current_buffer.substr(0, foundAnotherFileBeginning);
 	}
 
-	std::cout << "Current bytes written is : " << _bytesWritten << std::endl;
+	if (endFound != std::string::npos)
+		current_buffer = current_buffer.substr(0, endFound);
 
-	if (_bytesWritten >= ContentLengthSize)
+	_currentFile << current_buffer;
+
+	if (!remaining.empty())
+	{	
+		_currentFile.close();
+		_currentFilename.clear();
+		ProcessMultipart(remaining);
+	}
+
+	if (endFound != std::string::npos)
 	{
 		status = PARSING_FINISHED;
 		_currentFilename.clear();
 		_currentFile.close();
 	}
-	std::cout << ContentLengthSize << std::endl;
 }
 
 void Request::ensureDirectoryExists(const std::string &path)
@@ -335,28 +344,19 @@ std::string Request::extractBoundary(const std::string &contentType)
 {
 	std::size_t pos = contentType.find("boundary=");
 	if (pos != std::string::npos)
-		return "--" + contentType.substr(pos + 9); // 9 pour passer 'boundary=' et ajouter '--' pour correspondre au format des délimiteurs
+		return contentType.substr(pos + 9); // 9 pour passer 'boundary=' et ajouter '--' pour correspondre au format des délimiteurs
 	return "";
 }
-std::string Request::extractFilename(const std::string &contentDisposition)
-{
-	std::istringstream headerStream(contentDisposition);
-	std::string line;
-	std::string filename;
 
-	while (std::getline(headerStream, line))
+std::string Request::extractFilename(const std::string &buffer)
+{
+	std::string filename;
+	size_t filenamePos = buffer.find("filename=\"");
+	if (filenamePos != std::string::npos)
 	{
-		std::size_t pos = line.find("Content-Disposition:");
-		if (pos != std::string::npos)
-		{
-			pos = line.find("filename=");
-			if (pos != std::string::npos)
-			{
-				filename = line.substr(pos + 10);				   // 10 pour passer 'filename="'
-				filename = filename.substr(0, filename.find('"')); // Trouver la prochaine guillemet et substr jusqu'à ça
-				break;
-			}
-		}
+		size_t start = filenamePos + 10;
+		size_t end = buffer.find("\"", start);
+		filename = buffer.substr(start, end - start);
 	}
 	return filename;
 }
@@ -445,6 +445,17 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	return remainingString;
 }
 
+void Request::parseBody(std::string &current_buffer)
+{
+	std::string contentType = _headers["Content-Type"];
+	std::cout << "Content type : " << contentType << std::endl;
+
+	if (contentType.find("multipart/form-data") != std::string::npos)
+		NoChunkedBodyMultipart(current_buffer);
+	else
+		ChunkedBody(current_buffer);
+}
+
 void Request::parseRequest(int fd)
 {
 	int buffer_size = 1024;
@@ -466,12 +477,7 @@ void Request::parseRequest(int fd)
 		checkRequest(current_buffer);
 
 	if (status == PARSING_BODY)
-	{
-		if (_headers.count("Content-Length"))
-			Body(current_buffer);
-		else
-			ChunkedBody(current_buffer);
-	}
+		parseBody(current_buffer);
 
 	if (status == PARSING_FINISHED)
 		client->setFlag(WRITING_RESPONSE);
