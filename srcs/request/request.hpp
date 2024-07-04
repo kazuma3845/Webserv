@@ -99,11 +99,17 @@ private:
 	std::string cleanString(std::string toClean);
 	void parseBody(std::string &current_buffer);
 	void ChunkedBody(std::string &current_buffer);
-	void ProcessMultipart(std::string &current_buffer);
+	void processMultipart(std::string &current_buffer);
 	std::string extractFilename(const std::string &contentDisposition);
 	std::string extractBoundary(const std::string &contentType);
 	void ensureDirectoryExists(const std::string &path);
 	void skipHeaders(std::string &current_buffer);
+	void processUniqueBody(std::string &current_buffer);
+	void processUniqueBodyChunked(std::string &current_buffer);
+	std::string generateUniqueFilename(const std::string &baseDir, std::string filename);
+	bool fileExists(const std::string &filename);
+	std::string filenameByContentType(const std::string &contentType);
+	std::string extensionBasedOnContentType(const std::string &contentType);
 
 	// ------------------------------------------ ERROR
 

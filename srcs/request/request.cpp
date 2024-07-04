@@ -212,7 +212,7 @@ void Request::checkRequest(std::string &currentBuffer)
 	{
 		client->setFlag(EXPECTING);
 		client->setResp("HTTP/1.1 100 Continue\r\n\r\n");
-		return ;
+		return;
 	}
 
 	if (currentBuffer.empty() && !_headers.count("Content-Type")) // on check si il y a quelque chose derriere (du body)
@@ -254,9 +254,11 @@ void Request::ChunkedBody(std::string &current_buffer)
 			std::cout << "Current CHUNKSIZE : " << chunkSize << std::endl;
 			if (chunkSize == 0)
 			{
-				// Fin des chunks
 				status = PARSING_FINISHED;
 				client->setFlag(CHECKING_REQUEST);
+				_currentFile.close();
+				_currentFilename.clear();
+				_bytesWritten = 0;
 				return;
 			}
 			_chunkBodySize = chunkSize;
@@ -264,16 +266,16 @@ void Request::ChunkedBody(std::string &current_buffer)
 
 		if (_chunkBuffer.size() >= _chunkBodySize + 2)
 		{ // +2 pour inclure le \r\n final du chunk
-			// Ajouter le chunk au body final
-			_body.append(_chunkBuffer, 0, _chunkBodySize);
-			_chunkBuffer.erase(0, _chunkBodySize + 2); // Enlever le chunk traité et le \r\n
-			_chunkBodySize = 0;						   // Réinitialiser pour le prochain chunk
+			std::string chunkData = _chunkBuffer.substr(0, _chunkBodySize);
+			_chunkBuffer.erase(0, _chunkBodySize + 2); // Enlever le chunk et le \r\n
+			if (_headers["Content-Type"].find("multipart/form-data") != std::string::npos)
+				processMultipart(chunkData);
+			else
+				processUniqueBodyChunked(chunkData);
+			_chunkBodySize = 0; // Préparer pour le prochain chunk
 		}
 		else
-		{
-			// Pas assez de données dans _chunkBuffer pour compléter le chunk actuel
 			return;
-		}
 	}
 }
 
@@ -283,7 +285,132 @@ void Request::skipHeaders(std::string &current_buffer)
 	current_buffer = current_buffer.substr(pos + 4);
 }
 
-void Request::ProcessMultipart(std::string &current_buffer)
+bool Request::fileExists(const std::string &filename)
+{
+	struct stat buffer;
+	return (stat(filename.c_str(), &buffer) == 0);
+}
+
+std::string Request::generateUniqueFilename(const std::string &baseDir, std::string filename)
+{
+	int counter = 1;
+	std::string newFilename;
+	std::string fileExtension;
+
+	size_t extPos = filename.find_last_of('.');
+	if (extPos != std::string::npos)
+	{
+		fileExtension = filename.substr(extPos);
+		filename.erase(extPos);
+	}
+
+	std::ostringstream oss;
+	do
+	{
+		oss.str(""); // Nettoyer le flux
+		oss << filename << counter << fileExtension;
+		newFilename = oss.str();
+		counter++;
+	} while (fileExists(baseDir + newFilename));
+
+	return newFilename;
+}
+std::string Request::filenameByContentType(const std::string &contentType)
+{
+	std::map<std::string, std::string> mimeTypeToExtension;
+	mimeTypeToExtension["image/jpeg"] = "uploaded_image.jpg";
+	mimeTypeToExtension["image/png"] = "uploaded_image.png";
+	mimeTypeToExtension["application/pdf"] = "document.pdf";
+	mimeTypeToExtension["text/plain"] = "text_file.txt";
+	mimeTypeToExtension["application/octet-stream"] = "binary_file.dat";
+
+	std::map<std::string, std::string>::iterator it = mimeTypeToExtension.find(contentType);
+	if (it != mimeTypeToExtension.end())
+		return it->second;
+
+	return "unknown_file.dat";
+}
+std::string Request::extensionBasedOnContentType(const std::string &contentType)
+{
+	std::map<std::string, std::string> mimeTypeToExtension;
+	mimeTypeToExtension["image/jpeg"] = ".jpg";
+	mimeTypeToExtension["image/png"] = ".png";
+	mimeTypeToExtension["application/pdf"] = ".pdf";
+	mimeTypeToExtension["text/plain"] = ".txt";
+	mimeTypeToExtension["application/octet-stream"] = ".dat";
+
+	std::map<std::string, std::string>::iterator it = mimeTypeToExtension.find(contentType);
+	if (it != mimeTypeToExtension.end())
+		return it->second;
+
+	return ".dat";
+}
+
+void Request::processUniqueBodyChunked(std::string &current_buffer)
+{
+	if (_currentFilename.empty())
+	{
+		std::string baseDir = "Page/data/";
+		ensureDirectoryExists(baseDir);
+		std::string filename;
+		if (_headers.find("X-Filename") != _headers.end())
+			filename = _headers["X-Filename"] + extensionBasedOnContentType(_headers["Content-Type"]);
+		else
+			filename = filenameByContentType(_headers["Content-Type"]);
+		_currentFilename = generateUniqueFilename(baseDir, filename);
+		std::string fullPath = baseDir + _currentFilename;
+
+		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::app);
+		if (!_currentFile.is_open())
+		{
+			std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
+			throw cantOpenFile(500);
+		}
+	}
+	_currentFile << current_buffer;
+}
+
+void Request::processUniqueBody(std::string &current_buffer)
+{
+	if (_currentFilename.empty())
+	{
+		std::string baseDir = "Page/data/";
+		ensureDirectoryExists(baseDir);
+		std::string filename;
+		if (_headers.find("X-Filename") != _headers.end())
+			filename = _headers["X-Filename"] + extensionBasedOnContentType(_headers["Content-Type"]);
+		else
+			filename = filenameByContentType(_headers["Content-Type"]);
+		_currentFilename = generateUniqueFilename(baseDir, filename);
+		_currentFilename = generateUniqueFilename(baseDir, filename);
+		std::string fullPath = baseDir + _currentFilename;
+
+		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::app);
+		if (!_currentFile.is_open())
+		{
+			std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
+			throw cantOpenFile(500);
+		}
+	}
+
+	_currentFile << current_buffer;
+	_bytesWritten += current_buffer.size();
+
+	std::istringstream contentLengthStream(_headers["Content-Length"]);
+	unsigned int contentLength;
+	contentLengthStream >> contentLength;
+
+	if (_bytesWritten >= contentLength)
+	{
+		_currentFile.close();
+		_currentFilename.clear();
+		_bytesWritten = 0;
+		status = PARSING_FINISHED;
+		getClient()->setFlag(WRITING_RESPONSE);
+	}
+}
+
+void Request::processMultipart(std::string &current_buffer)
 {
 	if (current_buffer.empty())
 		return;
@@ -319,10 +446,10 @@ void Request::ProcessMultipart(std::string &current_buffer)
 	_currentFile << current_buffer;
 
 	if (!remaining.empty())
-	{	
+	{
 		_currentFile.close();
 		_currentFilename.clear();
-		ProcessMultipart(remaining);
+		processMultipart(remaining);
 	}
 
 	if (endFound != std::string::npos)
@@ -448,12 +575,16 @@ std::string Request::parseHeaders(std::string &current_buffer)
 void Request::parseBody(std::string &current_buffer)
 {
 	std::string contentType = _headers["Content-Type"];
-	std::cout << "Content type : " << contentType << std::endl;
 
-	if (contentType.find("multipart/form-data") != std::string::npos)
-		NoChunkedBodyMultipart(current_buffer);
-	else
+	if (_headers.find("Transfer-Encoding") != _headers.end() && _headers["Transfer-Encoding"] == "chunked")
 		ChunkedBody(current_buffer);
+	else if (contentType.find("multipart/form-data") != std::string::npos)
+		processMultipart(current_buffer);
+	else
+	{
+		std::cout << "UNIQUE" << std::endl;
+		processUniqueBody(current_buffer);
+	}
 }
 
 void Request::parseRequest(int fd)
