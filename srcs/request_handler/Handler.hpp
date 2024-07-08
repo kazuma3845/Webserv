@@ -28,7 +28,7 @@ private:
 
 	std::string extractBoundary(const std::string &contentType);
 	std::string extractFilename(const std::string &partContent);
-
+	std::map<std::string, std::string> initializeMIMEMap();
 	// ------------------------------------------ ERRORS //
 
 	class unknownMethod : public ErrorWebServ

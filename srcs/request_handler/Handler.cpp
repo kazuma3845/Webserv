@@ -35,33 +35,86 @@ void Handler::process()
 
 void Handler::handlePost()
 {
-	std::string contentType = _request.getHeaders()["Content-Type"];
-
-	if (contentType.find("application/x-www-form-urlencoded") != std::string::npos)
-	{
-		std::string postData = _request.getBody();
-		std::string outputPath = "Page/data/post_data.txt"; // Predefined file path
-
-		// Open file to append post data
-		std::ofstream outFile(outputPath.c_str(), std::ios::app);
-		if (!outFile.is_open())
-			throw postFailed(500);
-		outFile << postData << std::endl;
-		outFile.close();
-		_response.setStatusCode(201);
-		_response.setContentType("text/plain");
-		_response.setBody("POST data received and written.");
-		_request.getClient()->setFlag(WRITING_RESPONSE);
-	}
-	else if (contentType.find("multipart/form-data") != std::string::npos)
-	{
-		_response.setStatusCode(201);
-		_response.setContentType("text/plain");
-		_response.setBody("File upload completed.");
-		_request.getClient()->setFlag(WRITING_RESPONSE);
-	}
+	_response.setStatusCode(201);
+	_response.setContentType("text/plain");
+	_response.setBody("POST successful.");
+	_request.getClient()->setFlag(WRITING_RESPONSE);
 }
 
+std::map<std::string, std::string> Handler::initializeMIMEMap()
+{
+	std::map<std::string, std::string> extensionToMIME;
+	// Audio types
+	extensionToMIME["aac"] = "audio/aac";
+	extensionToMIME["mp3"] = "audio/mpeg";
+	extensionToMIME["oga"] = "audio/ogg";
+	extensionToMIME["opus"] = "audio/opus";
+	extensionToMIME["wav"] = "audio/wav";
+	extensionToMIME["weba"] = "audio/webm";
+	extensionToMIME["mid"] = "audio/midi";
+	extensionToMIME["midi"] = "audio/midi";
+	// Video types
+	extensionToMIME["mp4"] = "video/mp4";
+	extensionToMIME["mpeg"] = "video/mpeg";
+	extensionToMIME["ogv"] = "video/ogg";
+	extensionToMIME["webm"] = "video/webm";
+	extensionToMIME["avi"] = "video/x-msvideo";
+	extensionToMIME["3gp"] = "video/3gpp";
+	extensionToMIME["3g2"] = "video/3gpp2";
+	// Image types
+	extensionToMIME["apng"] = "image/apng";
+	extensionToMIME["avif"] = "image/avif";
+	extensionToMIME["bmp"] = "image/bmp";
+	extensionToMIME["gif"] = "image/gif";
+	extensionToMIME["jpeg"] = "image/jpeg";
+	extensionToMIME["jpg"] = "image/jpeg";
+	extensionToMIME["png"] = "image/png";
+	extensionToMIME["svg"] = "image/svg+xml";
+	extensionToMIME["tif"] = "image/tiff";
+	extensionToMIME["tiff"] = "image/tiff";
+	extensionToMIME["webp"] = "image/webp";
+	extensionToMIME["ico"] = "image/x-icon";
+	// Text types
+	extensionToMIME["css"] = "text/css";
+	extensionToMIME["csv"] = "text/csv";
+	extensionToMIME["html"] = "text/html";
+	extensionToMIME["htm"] = "text/html";
+	extensionToMIME["js"] = "application/javascript";
+	extensionToMIME["json"] = "application/json";
+	extensionToMIME["jsonld"] = "application/ld+json";
+	extensionToMIME["txt"] = "text/plain";
+	extensionToMIME["xhtml"] = "application/xhtml+xml";
+	extensionToMIME["xml"] = "application/xml";
+	// Application types
+	extensionToMIME["pdf"] = "application/pdf";
+	extensionToMIME["zip"] = "application/zip";
+	extensionToMIME["7z"] = "application/x-7z-compressed";
+	extensionToMIME["rar"] = "application/vnd.rar";
+	extensionToMIME["tar"] = "application/x-tar";
+	extensionToMIME["gz"] = "application/gzip";
+	extensionToMIME["bz"] = "application/x-bzip";
+	extensionToMIME["bz2"] = "application/x-bzip2";
+	extensionToMIME["doc"] = "application/msword";
+	extensionToMIME["docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+	extensionToMIME["ppt"] = "application/vnd.ms-powerpoint";
+	extensionToMIME["pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+	extensionToMIME["xls"] = "application/vnd.ms-excel";
+	extensionToMIME["xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+	extensionToMIME["epub"] = "application/epub+zip";
+	extensionToMIME["jar"] = "application/java-archive";
+	extensionToMIME["rtf"] = "application/rtf";
+	extensionToMIME["sh"] = "application/x-sh";
+	extensionToMIME["vsd"] = "application/vnd.visio";
+	extensionToMIME["csh"] = "application/x-csh";
+	extensionToMIME["php"] = "application/x-httpd-php";
+	extensionToMIME["xul"] = "application/vnd.mozilla.xul+xml";
+	extensionToMIME["ods"] = "application/vnd.oasis.opendocument.spreadsheet";
+	extensionToMIME["odp"] = "application/vnd.oasis.opendocument.presentation";
+	extensionToMIME["odt"] = "application/vnd.oasis.opendocument.text";
+	extensionToMIME["mjs"] = "text/javascript";
+
+	return extensionToMIME;
+}
 
 // * This function handles a GET request by determining the file extension of the requested file,
 // * setting the appropriate content type in the response, loading the file content into the response,
@@ -70,23 +123,14 @@ void Handler::handleGet()
 {
 	std::string filePath = _request.getFilePath();							 // Get the file path from the request object.
 	std::string extension = filePath.substr(filePath.find_last_of('.') + 1); // Extract the file extension.
-
-	// Determine and set the content type based on the file extension.
-	if (extension == "html")
-		_response.setContentType("text/html");
-	else if (extension == "css")
-		_response.setContentType("text/css");
-	else if (extension == "js")
-		_response.setContentType("application/javascript");
-	else if (extension == "json")
-		_response.setContentType("application/json");
-	else if (extension == "jpg" || extension == "jpeg")
-		_response.setContentType("image/jpeg");
-	else if (extension == "png")
-		_response.setContentType("image/png");
+	const static std::map<std::string, std::string> extensionToMIME = initializeMIMEMap();
+	std::map<std::string, std::string>::const_iterator it = extensionToMIME.find(extension);
+	if (it != extensionToMIME.end())
+		_response.setContentType(it->second);
 	else
-		_response.setContentType("text/plain");
-	_response.loadContent(_request.getFullPath()); // Load the content of the requested file into the response.
+		_response.setContentType("application/octet-stream"); // Default MIME type
+
+	_response.loadContent(_request.getFullPath());
 	_response.setStatusCode(200);
 	_request.getClient()->setFlag(WRITING_RESPONSE);
 }
@@ -100,7 +144,7 @@ void Handler::handleDelete()
 		throw deletionFailed(500);
 	_response.setStatusCode(204);
 	_response.setContentType("text/plain");
-	_response.setBody("Content deleted successfully.");
+	_response.setBody("DELETE successful.");
 	_request.getClient()->setFlag(WRITING_RESPONSE);
 }
 Request Handler::getRequest()

@@ -202,6 +202,7 @@ void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
 
+	std::cout << "Resp is : " << client.getResp() << std::endl;
 	write(socket, client.getResp().c_str(), client.getResp().length());
 	if (client.getFlag() == EXPECTING)
 	{

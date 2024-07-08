@@ -315,34 +315,125 @@ std::string Request::generateUniqueFilename(const std::string &baseDir, std::str
 
 	return newFilename;
 }
+std::map<std::string, std::string> Request::initMimeTypeToExtension()
+{
+	std::map<std::string, std::string> mimeTypeToExtension;
+	// Audio/Video files
+	mimeTypeToExtension["audio/aac"] = ".aac";
+	mimeTypeToExtension["video/mp4"] = ".mp4";
+	mimeTypeToExtension["audio/midi"] = ".midi";
+	mimeTypeToExtension["audio/mpeg"] = ".mp3";
+	mimeTypeToExtension["video/mpeg"] = ".mpeg";
+	mimeTypeToExtension["audio/ogg"] = ".oga";
+	mimeTypeToExtension["video/ogg"] = ".ogv";
+	mimeTypeToExtension["audio/opus"] = ".opus";
+	mimeTypeToExtension["audio/wav"] = ".wav";
+	mimeTypeToExtension["audio/webm"] = ".weba";
+	mimeTypeToExtension["video/webm"] = ".webm";
+	// Image files
+	mimeTypeToExtension["image/apng"] = ".apng";
+	mimeTypeToExtension["image/avif"] = ".avif";
+	mimeTypeToExtension["image/bmp"] = ".bmp";
+	mimeTypeToExtension["image/gif"] = ".gif";
+	mimeTypeToExtension["image/jpeg"] = ".jpeg";
+	mimeTypeToExtension["image/png"] = ".png";
+	mimeTypeToExtension["image/svg+xml"] = ".svg";
+	mimeTypeToExtension["image/tiff"] = ".tiff";
+	mimeTypeToExtension["image/webp"] = ".webp";
+	// Text files
+	mimeTypeToExtension["text/css"] = ".css";
+	mimeTypeToExtension["text/csv"] = ".csv";
+	mimeTypeToExtension["text/html"] = ".html";
+	mimeTypeToExtension["text/javascript"] = ".js";
+	mimeTypeToExtension["text/plain"] = ".txt";
+	mimeTypeToExtension["application/json"] = ".json";
+	// Application files
+	mimeTypeToExtension["application/java-archive"] = ".jar";
+	mimeTypeToExtension["application/msword"] = ".doc";
+	mimeTypeToExtension["application/pdf"] = ".pdf";
+	mimeTypeToExtension["application/rtf"] = ".rtf";
+	mimeTypeToExtension["application/vnd.ms-excel"] = ".xls";
+	mimeTypeToExtension["application/vnd.ms-powerpoint"] = ".ppt";
+	mimeTypeToExtension["application/vnd.oasis.opendocument.presentation"] = ".odp";
+	mimeTypeToExtension["application/vnd.oasis.opendocument.spreadsheet"] = ".ods";
+	mimeTypeToExtension["application/vnd.oasis.opendocument.text"] = ".odt";
+	mimeTypeToExtension["application/x-7z-compressed"] = ".7z";
+	mimeTypeToExtension["application/x-bzip"] = ".bz";
+	mimeTypeToExtension["application/x-bzip2"] = ".bz2";
+	mimeTypeToExtension["application/x-rar-compressed"] = ".rar";
+	mimeTypeToExtension["application/zip"] = ".zip";
+	mimeTypeToExtension["application/x-tar"] = ".tar";
+	return mimeTypeToExtension;
+}
+
+std::map<std::string, std::string> Request::initMimeTypeToFilename()
+{
+	std::map<std::string, std::string> mimeTypeToFilename;
+	// Audio files
+	mimeTypeToFilename["audio/aac"] = "audio_track.aac";
+	mimeTypeToFilename["audio/midi"] = "music.midi";
+	mimeTypeToFilename["audio/mpeg"] = "sound.mp3";
+	mimeTypeToFilename["audio/ogg"] = "audio.ogg";
+	mimeTypeToFilename["audio/opus"] = "audio.opus";
+	mimeTypeToFilename["audio/wav"] = "audio.wav";
+	mimeTypeToFilename["audio/webm"] = "audio.webm";
+	// Video files
+	mimeTypeToFilename["video/mp4"] = "video.mp4";
+	mimeTypeToFilename["video/mpeg"] = "video.mpeg";
+	mimeTypeToFilename["video/ogg"] = "video.ogv";
+	mimeTypeToFilename["video/webm"] = "video.webm";
+	mimeTypeToFilename["video/3gpp"] = "video.3gp";
+	mimeTypeToFilename["video/3gpp2"] = "video.3g2";
+	// Image files
+	mimeTypeToFilename["image/apng"] = "image.apng";
+	mimeTypeToFilename["image/avif"] = "image.avif";
+	mimeTypeToFilename["image/bmp"] = "image.bmp";
+	mimeTypeToFilename["image/gif"] = "image.gif";
+	mimeTypeToFilename["image/jpeg"] = "image.jpeg";
+	mimeTypeToFilename["image/png"] = "image.png";
+	mimeTypeToFilename["image/svg+xml"] = "image.svg";
+	mimeTypeToFilename["image/tiff"] = "image.tiff";
+	mimeTypeToFilename["image/webp"] = "image.webp";
+	// Text files
+	mimeTypeToFilename["text/css"] = "stylesheet.css";
+	mimeTypeToFilename["text/csv"] = "data.csv";
+	mimeTypeToFilename["text/html"] = "document.html";
+	mimeTypeToFilename["text/javascript"] = "script.js";
+	mimeTypeToFilename["text/plain"] = "text.txt";
+	// Application-specific files
+	mimeTypeToFilename["application/java-archive"] = "application.jar";
+	mimeTypeToFilename["application/msword"] = "document.doc";
+	mimeTypeToFilename["application/pdf"] = "document.pdf";
+	mimeTypeToFilename["application/rtf"] = "document.rtf";
+	mimeTypeToFilename["application/vnd.ms-excel"] = "spreadsheet.xls";
+	mimeTypeToFilename["application/vnd.ms-powerpoint"] = "presentation.ppt";
+	mimeTypeToFilename["application/vnd.oasis.opendocument.presentation"] = "presentation.odp";
+	mimeTypeToFilename["application/vnd.oasis.opendocument.spreadsheet"] = "spreadsheet.ods";
+	mimeTypeToFilename["application/vnd.oasis.opendocument.text"] = "document.odt";
+	mimeTypeToFilename["application/x-7z-compressed"] = "archive.7z";
+	mimeTypeToFilename["application/x-bzip"] = "archive.bz";
+	mimeTypeToFilename["application/x-bzip2"] = "archive.bz2";
+	mimeTypeToFilename["application/x-rar-compressed"] = "archive.rar";
+	mimeTypeToFilename["application/zip"] = "archive.zip";
+	mimeTypeToFilename["application/x-tar"] = "archive.tar";
+
+	return mimeTypeToFilename;
+}
 std::string Request::filenameByContentType(const std::string &contentType)
 {
-	std::map<std::string, std::string> mimeTypeToExtension;
-	mimeTypeToExtension["image/jpeg"] = "uploaded_image.jpg";
-	mimeTypeToExtension["image/png"] = "uploaded_image.png";
-	mimeTypeToExtension["application/pdf"] = "document.pdf";
-	mimeTypeToExtension["text/plain"] = "text_file.txt";
-	mimeTypeToExtension["application/octet-stream"] = "binary_file.dat";
-
-	std::map<std::string, std::string>::iterator it = mimeTypeToExtension.find(contentType);
-	if (it != mimeTypeToExtension.end())
+	static const std::map<std::string, std::string> mimeTypeToFilename = initMimeTypeToFilename();
+	std::map<std::string, std::string>::const_iterator it = mimeTypeToFilename.find(contentType);
+	if (it != mimeTypeToFilename.end())
 		return it->second;
-
 	return "unknown_file.dat";
 }
+
 std::string Request::extensionBasedOnContentType(const std::string &contentType)
 {
-	std::map<std::string, std::string> mimeTypeToExtension;
-	mimeTypeToExtension["image/jpeg"] = ".jpg";
-	mimeTypeToExtension["image/png"] = ".png";
-	mimeTypeToExtension["application/pdf"] = ".pdf";
-	mimeTypeToExtension["text/plain"] = ".txt";
-	mimeTypeToExtension["application/octet-stream"] = ".dat";
-
-	std::map<std::string, std::string>::iterator it = mimeTypeToExtension.find(contentType);
+	static const std::map<std::string, std::string> mimeTypeToExtension = initMimeTypeToExtension();
+	std::map<std::string, std::string>::const_iterator it = mimeTypeToExtension.find(contentType);
 	if (it != mimeTypeToExtension.end())
 		return it->second;
-
 	return ".dat";
 }
 

@@ -110,6 +110,8 @@ private:
 	bool fileExists(const std::string &filename);
 	std::string filenameByContentType(const std::string &contentType);
 	std::string extensionBasedOnContentType(const std::string &contentType);
+	std::map<std::string, std::string> initMimeTypeToExtension();
+	std::map<std::string, std::string> initMimeTypeToFilename();
 
 	// ------------------------------------------ ERROR
 
