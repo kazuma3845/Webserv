@@ -208,63 +208,7 @@ void Request::checkRequest(std::string &currentBuffer)
 	if (_headers["Connection"] == "keep-alive")
 		client->setKeepAlive(true);
 
-<<<<<<< HEAD
-void Request::ChunkedBody(std::string &current_buffer) {
-    size_t pos = 0;
-    std::string chunkSizeLine;
-    size_t chunkSize = 0;
-
-	// std::cout << "Coming into CHUNKING parsing" << std::endl;
-    // Ajouter le buffer courant au buffer de chunk temporaire pour traitement
-    _chunkBuffer += current_buffer;
-    current_buffer.clear();
-
-    while (true) {
-        if (_chunkBodySize == 0) {
-            pos = _chunkBuffer.find("\r\n");
-            if (pos == std::string::npos) {
-                // Si on ne trouve pas de fin de ligne, on a besoin de plus de données
-                return;
-            }
-            // Extraire la ligne de taille de chunk
-            chunkSizeLine = _chunkBuffer.substr(0, pos);
-            _chunkBuffer.erase(0, pos + 2);  // Supprimer la taille du chunk et le \r\n du buffer de chunk
-
-            std::stringstream ss(chunkSizeLine);
-            ss >> std::hex >> chunkSize;
-			// std::cout << "Current CHUNKSIZE : " << chunkSize << std::endl;
-            if (chunkSize == 0) {
-                // Fin des chunks
-                status = PARSING_FINISHED;
-                client->setFlag(HANDLING_REQUEST);
-                return;
-            }
-            _chunkBodySize = chunkSize;
-        }
-
-        if (_chunkBuffer.size() >= _chunkBodySize + 2) {  // +2 pour inclure le \r\n final du chunk
-            // Ajouter le chunk au body final
-            _body.append(_chunkBuffer, 0, _chunkBodySize);
-            _chunkBuffer.erase(0, _chunkBodySize + 2);  // Enlever le chunk traité et le \r\n
-            _chunkBodySize = 0;  // Réinitialiser pour le prochain chunk
-        } else {
-            // Pas assez de données dans _chunkBuffer pour compléter le chunk actuel
-            return;
-        }
-    }
-}
-
-void Request::Body(std::string current_buffer)
-{
-	unsigned int bodySize = _body.size();
-	unsigned int j = 0;
-	unsigned int ContentLenghtSize = 0;
-	std::stringstream tmp(_headers["Content-Length"]);
-	tmp >> ContentLenghtSize;
-	for (; bodySize < ContentLenghtSize; bodySize++)
-=======
 	if (_headers.count("Expect")) // Si on a trouvé la fin et qu'il y a un expect, on va stocker le reste dans le buffer et actualiser les status
->>>>>>> origin/Neah
 	{
 		client->setFlag(EXPECTING);
 		client->setResp("HTTP/1.1 100 Continue\r\n\r\n");
