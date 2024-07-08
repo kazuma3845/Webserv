@@ -12,32 +12,32 @@ CgiHandler::~CgiHandler()
 void CgiHandler::initenv(Request &request)
 {
 	std::stringstream ss;
-    _env["AUTH_TYPE"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
+	_env["AUTH_TYPE"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
 	ss << request.getBody().size();
-    _env["CONTENT_LENGTH"] = ss.str();
+	_env["CONTENT_LENGTH"] = ss.str();
 	ss.str("");
-    _env["CONTENT_TYPE"] = request.getHeaders().count("Content-Type") ? request.getHeaders()["Content-Type"] : "";
-    _env["GATEWAY_INTERFACE"] = "CGI/1.1";
-    _env["PATH_INFO"] = request.getFullPath();
-    _env["PATH_TRANSLATED"] = request.getFullPath();
-    _env["QUERY_STRING"] = request.getQueryString();
-    _env["REMOTE_ADDR"] = request.getClient()->get_listen_socket().get_host();
-    _env["REMOTE_IDENT"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
-    _env["REMOTE_USER"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
-    _env["REQUEST_METHOD"] = request.getMethod();
-    _env["REQUEST_URI"] = request.getFullPath() + (request.getQueryString().empty() ? "" : "?" + request.getQueryString());
-    _env["SCRIPT_NAME"] = request.getFullPath();
-    _env["SERVER_NAME"] = request.getClient()->get_listen_socket().get_name();
+	_env["CONTENT_TYPE"] = request.getHeaders().count("Content-Type") ? request.getHeaders()["Content-Type"] : "";
+	_env["GATEWAY_INTERFACE"] = "CGI/1.1";
+	_env["PATH_INFO"] = request.getFullPath();
+	_env["PATH_TRANSLATED"] = request.getFullPath();
+	_env["QUERY_STRING"] = request.getQueryString();
+	_env["REMOTE_ADDR"] = request.getClient()->get_listen_socket().get_host();
+	_env["REMOTE_IDENT"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
+	_env["REMOTE_USER"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
+	_env["REQUEST_METHOD"] = request.getMethod();
+	_env["REQUEST_URI"] = request.getFullPath() + (request.getQueryString().empty() ? "" : "?" + request.getQueryString());
+	_env["SCRIPT_NAME"] = request.getFullPath();
+	_env["SERVER_NAME"] = request.getClient()->get_listen_socket().get_name();
 	ss << request.getClient()->get_listen_socket().get_port();
-    _env["SERVER_PORT"] = ss.str();
-    _env["SERVER_PROTOCOL"] = "HTTP/1.1";
-    _env["SERVER_SOFTWARE"] = "Weebserv/1.0";
-    _env["REDIRECT_STATUS"] = "200";
+	_env["SERVER_PORT"] = ss.str();
+	_env["SERVER_PROTOCOL"] = "HTTP/1.1";
+	_env["SERVER_SOFTWARE"] = "Weebserv/1.0";
+	_env["REDIRECT_STATUS"] = "200";
 }
 
 char **CgiHandler::EnvToArray() const
 {
-	char **array = new char*[_env.size() + 1];
+	char **array = new char *[_env.size() + 1];
 	int j = 0;
 	for (std::map<std::string, std::string>::const_iterator i = _env.begin(); i != _env.end(); i++)
 	{
@@ -47,7 +47,7 @@ char **CgiHandler::EnvToArray() const
 		j++;
 	}
 	array[j] = NULL;
-	
+
 	return array;
 }
 
@@ -59,11 +59,11 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 	int fdin = dup(STDIN_FILENO);
 	int fdout = dup(STDOUT_FILENO);
 
-	FILE	*fIn = tmpfile();
-	FILE	*fOut = tmpfile();
-	long	fdIn = fileno(fIn);
-	long	fdOut = fileno(fOut);
-	int		ret = 1;
+	FILE *fIn = tmpfile();
+	FILE *fOut = tmpfile();
+	long fdIn = fileno(fIn);
+	long fdOut = fileno(fOut);
+	int ret = 1;
 
 	write(fdIn, _body.c_str(), _body.size());
 	lseek(fdIn, 0, SEEK_SET);
@@ -76,16 +76,19 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 	}
 	else if (!pid)
 	{
+		char *argv[2];								  // Tableau pour les arguments
+		argv[0] = const_cast<char *>(Script.c_str()); // Convertir std::string en char*
+		argv[1] = NULL;								  // Terminateur NULL
 		dup2(fdIn, STDIN_FILENO);
 		dup2(fdOut, STDOUT_FILENO);
-		execve(Script.c_str(), nullptr, env);
+		execve(Script.c_str(), argv, env);
 		std::cerr << "Execution failed" << std::endl;
 		write(STDOUT_FILENO, "Code 500\n", 10);
 		exit(1);
 	}
 	else
 	{
-		char	buffer[BUFFER];
+		char buffer[BUFFER];
 		waitpid(-1, NULL, 0);
 		lseek(fdOut, 0, SEEK_SET);
 		ret = 1;
@@ -94,7 +97,7 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 			memset(buffer, 0, BUFFER);
 			ret = read(fdOut, buffer, BUFFER - 1);
 			newbody += buffer;
-		}		
+		}
 	}
 
 	dup2(fdin, STDIN_FILENO);
@@ -114,30 +117,30 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 		throw InternalServerError(500);
 
 	size_t pos = newbody.find("\n\n");
-    if (pos != std::string::npos)
-    {
-        std::string headers_str = newbody.substr(0, pos);
-        std::string body = newbody.substr(pos);
-        std::istringstream stream(headers_str);
-        std::string line;
+	if (pos != std::string::npos)
+	{
+		std::string headers_str = newbody.substr(0, pos);
+		std::string body = newbody.substr(pos);
+		std::istringstream stream(headers_str);
+		std::string line;
 
-        while (std::getline(stream, line))
-        {
-            size_t delimiter_pos = line.find(": ");
-            if (delimiter_pos != std::string::npos)
-            {
-                std::string key = line.substr(0, delimiter_pos);
-                std::string value = line.substr(delimiter_pos + 2);
-                if (key == "Content-Type")
-                    resp.setContentType(value);
-            }
-        }
-        newbody = body;
-    }
+		while (std::getline(stream, line))
+		{
+			size_t delimiter_pos = line.find(": ");
+			if (delimiter_pos != std::string::npos)
+			{
+				std::string key = line.substr(0, delimiter_pos);
+				std::string value = line.substr(delimiter_pos + 2);
+				if (key == "Content-Type")
+					resp.setContentType(value);
+			}
+		}
+		newbody = body;
+	}
 	return newbody;
 }
 
-const char* CgiHandler::InternalServerError::what() const throw()
+const char *CgiHandler::InternalServerError::what() const throw()
 {
-    return "Internal Server Error";
+	return "Internal Server Error";
 }

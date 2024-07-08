@@ -1,6 +1,6 @@
 NAME = webserv
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -std=c++98
+CFLAGS = -Wall -Wextra -Werror -std=c++98 -g
 SRCS = $(shell find srcs -name '*.cpp')
 OBJS = $(SRCS:srcs/%.cpp=$(OBJ_DIR)/%.o)
 OBJ_DIR = objects

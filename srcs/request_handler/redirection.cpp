@@ -30,6 +30,7 @@ void Redirection::folderpath(Request &a, Response &resp)
 			AutoIndex index;
 			resp.setBody(index.create(a.getFullPath(), a.getClient()->get_listen_socket().get_root()));
 			resp.setStatusCode(200);
+			a.getClient()->setFlag(WRITING_RESPONSE);
 		}
 		else
 			throw Forbidden(403);
@@ -50,13 +51,12 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 		CgiHandler cgi(a);
 		resp.setContentType("text/plain");
 		resp.setBody(cgi.execute(a.getFullPath(), resp));
-
 	}
 	else if (checkMimeExt(a.getURI()))
 	{
 		Handler handler(a, resp);
 		std::cout << "MIME" << std::endl;
-		handler.start();
+		handler.process();		
 	}
 	else
 		throw UnsupportedMediaType(415);

@@ -68,7 +68,6 @@ void Server::run_server(void)
 {
 	fd_set temp_read_sds;
 	fd_set temp_write_sds;
-	// struct timeval timeout;
 
 	std::cout << std::endl
 			  << "##################" << std::endl
@@ -78,8 +77,6 @@ void Server::run_server(void)
 	{
 		temp_read_sds = this->_read_sds;
 		temp_write_sds = this->_write_sds;
-		// timeout.tv_sec = 1;
-		// timeout.tv_usec = 0;
 
 		// Wait for an activity on one of the , select return the value of readies FD
 		if (select(this->_max_sd + 1, &temp_read_sds, &temp_write_sds, NULL, NULL) < 0)
@@ -90,15 +87,11 @@ void Server::run_server(void)
 				this->add_client(_ListenSockets[i]);
 		}
 
-		// Reading new request
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
-			// this->_client_sds_map[i].getReq()->printRequest();
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
 				read_socket(this->_client_sds_map[i]);
-			// std::cerr << "####### Client : "  << this->_client_sds_map[i].getReq()->getClient()->get_fd() << std::endl;
 		}
-		// Writing request response
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_write_sds))
@@ -152,33 +145,31 @@ void Server::read_socket(Client &client)
 {
 	int socket = client.get_fd();
 	Redirection redirect;
-	Response response;
 
 	client.setTimeout();
 
 	try
 	{
 		if (client.getFlag() == PARSING_REQUEST)
-		{
 			client.getReq()->parseRequest(socket);
-			// std::cout << "Current client status is : " << client.getFlag() << std::endl;
-		}
+
 		if (client.getFlag() == EXPECTING)
 		{
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
 		}
-		if (client.getFlag() == HANDLING_REQUEST)
-		{
-			std::cout << "-----------     HANDLING BEGIN     -----------" << std::endl;
-			client.getReq()->checkRequest();
-			redirect.path(*client.getReq(), response);
-			response.setHTTPVersion(client.getReq()->getHttpVersion());
-			response.setConnectionType(client.getKeepAlive());
+
+		if (client.getFlag() == WRITING_RESPONSE)
+		{			std::cout << "-----------      Currently writing response         ------------" << std::endl;
+
+			redirect.path(*client.getReq(), *client.getResponse());
+			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
+			client.getResponse()->setConnectionType(client.getKeepAlive());
 			if (client.getReq()->getHasReturn())
-				response.setStatusCode(301);
-			response.formatResponse(client, *client.getReq());
-			client.setResp(response.getResp());
+				client.getResponse()->setStatusCode(301);
+			client.getResponse()->formatResponse(client, *client.getReq());
+			client.setResp(client.getResponse()->getResp());
+			client.setFlag(FINISHED);
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
 		}
@@ -189,18 +180,19 @@ void Server::read_socket(Client &client)
 		std::cerr << "Error number: " << e.getErrorCode() << std::endl;
 		std::cerr << "What happened : " << e.what() << std::endl;
 		client.setKeepAlive(false);
-		response.setStatusCode(e.getErrorCode());
-		response.setStatusMessage(e.what());
+		client.getResponse()->setStatusCode(e.getErrorCode());
+		client.getResponse()->setStatusMessage(e.what());
 		std::stringstream ss;
 		ss << e.getErrorCode();
 		if (client.get_listen_socket().get_error().compare(ss.str()) == 0)
-			response.ErrorBody(e.getErrorCode(), client, true);
+			client.getResponse()->ErrorBody(e.getErrorCode(), client, true);
 		else
-			response.ErrorBody(e.getErrorCode(), client, false);
-		response.setConnectionType(false);
-		response.setContentType("text/html");
-		response.formatResponse(client, *client.getReq());
-		client.setResp(response.getResp());
+			client.getResponse()->ErrorBody(e.getErrorCode(), client, false);
+		client.getResponse()->setConnectionType(false);
+		client.getResponse()->setContentType("text/html");
+		client.getResponse()->formatResponse(client, *client.getReq());
+		client.setResp(client.getResponse()->getResp());
+		client.setFlag(FINISHED);
 		FD_CLR(socket, &this->_read_sds);
 		FD_SET(socket, &this->_write_sds);
 	}
@@ -210,28 +202,25 @@ void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
 
-	if (client.getFlag() == EXPECTING)
-		client.setResp("HTTP/1.1 100 Continue\r\n\r\n");
 	write(socket, client.getResp().c_str(), client.getResp().length());
 	if (client.getFlag() == EXPECTING)
 	{
-		client.setResp("");
+		client.setResp(""); // NULL segfault
 		client.setFlag(PARSING_REQUEST);
 		client.getReq()->setStatus(PARSING_BODY);
 		FD_CLR(socket, &this->_write_sds);
 		FD_SET(socket, &this->_read_sds);
 		return;
 	}
-
 	//-----------------------------------------------------------------------
-	// Only to show the request content; PRINT REPONSE
-	std::istringstream contentStream(client.getResp());
-	std::string line;
-	// std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
-	while (std::getline(contentStream, line))
-	{
-		std::cerr << line << std::endl;
-	}
+	// // Only to show the request content; PRINT REPONSE
+	// std::istringstream contentStream(client.getResp());
+	// std::string line;
+	// // std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
+	// while (std::getline(contentStream, line))
+	// {
+	// 	std::cerr << line << std::endl;
+	// }
 	//-----------------------------------------------------------------------
 
 	// Remove socket from read to write
