@@ -62,35 +62,6 @@ void Handler::handlePost()
 	}
 }
 
-std::string Handler::extractBoundary(const std::string &contentType)
-{
-	std::size_t pos = contentType.find("boundary=");
-	if (pos != std::string::npos)
-		return "--" + contentType.substr(pos + 9); // 9 pour passer 'boundary=' et ajouter '--' pour correspondre au format des délimiteurs
-	return "";
-}
-std::string Handler::extractFilename(const std::string &partContent)
-{
-	std::istringstream headerStream(partContent);
-	std::string line;
-	std::string filename;
-
-	while (std::getline(headerStream, line))
-	{
-		std::size_t pos = line.find("Content-Disposition:");
-		if (pos != std::string::npos)
-		{
-			pos = line.find("filename=");
-			if (pos != std::string::npos)
-			{
-				filename = line.substr(pos + 10);				   // 10 pour passer 'filename="'
-				filename = filename.substr(0, filename.find('"')); // Trouver la prochaine guillemet et substr jusqu'à ça
-				break;
-			}
-		}
-	}
-	return filename;
-}
 
 // * This function handles a GET request by determining the file extension of the requested file,
 // * setting the appropriate content type in the response, loading the file content into the response,

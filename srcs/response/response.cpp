@@ -258,7 +258,7 @@ void Response::printResponse() const
 
 void Response::loadContent(const std::string &filePath)
 {
-	std::ifstream file(filePath.c_str());
+	std::ifstream file(filePath.c_str(), std::ios::binary);
 	if (!file)
 		throw cantLoadContent(404);
 	else

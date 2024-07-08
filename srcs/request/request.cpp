@@ -581,10 +581,7 @@ void Request::parseBody(std::string &current_buffer)
 	else if (contentType.find("multipart/form-data") != std::string::npos)
 		processMultipart(current_buffer);
 	else
-	{
-		std::cout << "UNIQUE" << std::endl;
 		processUniqueBody(current_buffer);
-	}
 }
 
 void Request::parseRequest(int fd)
