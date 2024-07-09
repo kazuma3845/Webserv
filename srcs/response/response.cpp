@@ -258,18 +258,19 @@ void Response::printResponse() const
 
 void Response::loadContent(const std::string &filePath)
 {
-    std::ifstream file(filePath.c_str(), std::ios::binary);
-    if (!file) {
-        throw cantLoadContent(404);
-    } else {
-        std::ostringstream buffer;
+	std::ifstream file(filePath.c_str(), std::ios::binary);
+	if (!file) {
+		throw cantLoadContent(404);
+	} else {
+		std::ostringstream buffer;
 
-        std::vector<char> bufferVec(4096); // Taille du buffer de 4KB
-        while (file.read(bufferVec.data(), bufferVec.size()) || file.gcount() > 0) {
-            buffer.write(bufferVec.data(), file.gcount());
-        }
-        _body = buffer.str();
-    }
+		std::vector<char> bufferVec(4096); // Taille du buffer de 4KB
+		while (file.read(bufferVec.data(), bufferVec.size()) || file.gcount() > 0) {
+			buffer.write(bufferVec.data(), file.gcount());
+		}
+		_body = buffer.str();
+		file.close();
+	}
 }
 
 std::string Response::takeTime() const
@@ -310,7 +311,7 @@ void Response::formatResponse(Client &a, Request &b)
 	_resp += "Content-Length: " + ss.str() + "\r\n"
 											 "\r\n";
 	_resp += _body;
-	
+
 }
 
 void Response::ErrorBody(int error_code, Client &a, bool b)

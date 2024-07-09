@@ -56,7 +56,7 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 	{
 		Handler handler(a, resp);
 		std::cout << "MIME" << std::endl;
-		handler.process();		
+		handler.process();
 	}
 	else
 		throw UnsupportedMediaType(415);

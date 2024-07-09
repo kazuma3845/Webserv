@@ -200,15 +200,31 @@ void Server::read_socket(Client &client)
 void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
+	// Assurez-vous que SIGPIPE est ignoré pour éviter que le programme ne se termine lors de l'écriture sur un socket fermé.
+	// signal(SIGPIPE, SIG_IGN);
+
 	size_t remaining = client.getResp().length() - client.getWriteOffset();
+	// const size_t MAX_WRITE_SIZE = 60000; // Assurez-vous que cette constante est définie quelque part accessible
 	size_t toWrite = std::min(remaining, MAX_WRITE_SIZE);
-	int written = write(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite);
-	if (written > 0)
+	std::cout << "Debut write :" << socket << std::endl;
+
+	ssize_t written = send(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite, MSG_NOSIGNAL);
+	// ssize_t written = write(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite);
+	std::cout << "Fin Write:" << socket << " written : "<< written << std::endl;
+
+	if (written > 0) {
 		client.setWriteOffset(client.getWriteOffset() + written);
+	} else if (written <= 1) {
+			// Une erreur sérieuse s'est produite, loguez l'erreur et fermez le socket
+			FD_CLR(socket, &this->_write_sds);
+			close(socket);
+			this->_client_sds_map.erase(socket);
+			return;
+	}
 
 	if (client.getFlag() == EXPECTING)
 	{
-		client.setResp(""); // NULL segfault
+		client.setResp(""); // Nettoyer la réponse
 		client.setFlag(PARSING_REQUEST);
 		client.getReq()->setStatus(PARSING_BODY);
 		FD_CLR(socket, &this->_write_sds);
@@ -217,20 +233,23 @@ void Server::write_socket(Client &client)
 		return;
 	}
 
-	if (client.hasMoreToWrite())
-		return;
+	if (client.hasMoreToWrite()) {
+		return; // Encore des données à envoyer
+	}
 
 	// Remove socket from write set
 	FD_CLR(socket, &this->_write_sds);
-	if (client.getKeepAlive()) // status is herited from Request parsing
+	if (client.getKeepAlive()) // status is inherited from Request parsing
 	{
+		std::cerr << "Taille resp " << client.getResp().length() << std::endl;
 		FD_SET(socket, &this->_read_sds);
 		client.reUseClient();
 	}
 	else
 	{
-		close(socket);
+		std::cerr << "End of connection from client fd : " << socket << std::endl;
 		this->_client_sds_map.erase(socket);
+		close(socket);
 	}
 }
 
