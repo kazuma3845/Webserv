@@ -23,6 +23,8 @@ class Server;
 #include "../response/response.hpp"
 #include "../request_handler/Handler.hpp"
 #define TIMEOUT_LIMIT 60
+#define MAX_WRITE_SIZE static_cast<size_t>(60000)
+
 
 class Server
 {

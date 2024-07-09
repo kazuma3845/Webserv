@@ -161,7 +161,6 @@ void Server::read_socket(Client &client)
 
 		if (client.getFlag() == WRITING_RESPONSE)
 		{			std::cout << "-----------      Currently writing response         ------------" << std::endl;
-
 			redirect.path(*client.getReq(), *client.getResponse());
 			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
 			client.getResponse()->setConnectionType(client.getKeepAlive());
@@ -201,8 +200,12 @@ void Server::read_socket(Client &client)
 void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
+	size_t remaining = client.getResp().length() - client.getWriteOffset();
+	size_t toWrite = std::min(remaining, MAX_WRITE_SIZE);
+	int written = write(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite);
+	if (written > 0)
+		client.setWriteOffset(client.getWriteOffset() + written);
 
-	write(socket, client.getResp().c_str(), client.getResp().length());
 	if (client.getFlag() == EXPECTING)
 	{
 		client.setResp(""); // NULL segfault
@@ -210,20 +213,14 @@ void Server::write_socket(Client &client)
 		client.getReq()->setStatus(PARSING_BODY);
 		FD_CLR(socket, &this->_write_sds);
 		FD_SET(socket, &this->_read_sds);
+		std::cerr << "EXPECTING sent" << std::endl;
 		return;
 	}
-	//-----------------------------------------------------------------------
-	// // Only to show the request content; PRINT REPONSE
-	// std::istringstream contentStream(client.getResp());
-	// std::string line;
-	// // std::cerr << std::endl << "|" << std::endl << "|   CONTENT WRITTEN -> " << socket << std::endl;
-	// while (std::getline(contentStream, line))
-	// {
-	// 	std::cerr << line << std::endl;
-	// }
-	//-----------------------------------------------------------------------
 
-	// Remove socket from read to write
+	if (client.hasMoreToWrite())
+		return;
+
+	// Remove socket from write set
 	FD_CLR(socket, &this->_write_sds);
 	if (client.getKeepAlive()) // status is herited from Request parsing
 	{
@@ -232,7 +229,6 @@ void Server::write_socket(Client &client)
 	}
 	else
 	{
-		std::cerr << "End of connection from client fd : " << socket << std::endl;
 		close(socket);
 		this->_client_sds_map.erase(socket);
 	}

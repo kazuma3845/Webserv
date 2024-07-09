@@ -13,6 +13,7 @@ Client::Client(int fd, ListenSocket &listen_socket)
 	this->_response = new Response();
 	this->_handler = new Handler(*_request, *_response);
 	this->_flag = PARSING_REQUEST;
+	this->_writeOffset = 0;
 }
 Client::Client()
 {
@@ -47,7 +48,8 @@ Client &Client::operator=(const Client &ref)
 
 void Client::reUseClient(void)
 {
-	_rep.clear();
+	_resp.clear();
+	_writeOffset = 0;
 	delete _request;
 	_request = new Request(this);
 
@@ -58,6 +60,21 @@ void Client::reUseClient(void)
 	_handler = new Handler(*_request, *_response);
 
 	this->_flag = PARSING_REQUEST;
+}
+
+void Client::setWriteOffset(size_t offset)
+{
+	_writeOffset = offset;
+}
+
+size_t Client::getWriteOffset() const
+{
+	return _writeOffset;
+}
+
+bool Client::hasMoreToWrite() const
+{
+	return _writeOffset < _resp.size();
 }
 
 int Client::get_fd(void)
@@ -90,7 +107,7 @@ Handler *Client::getHandler()
 
 void Client::setResp(std::string rep)
 {
-	_rep = rep;
+	_resp = rep;
 }
 
 void Client::setReq(Request *request)
@@ -100,7 +117,7 @@ void Client::setReq(Request *request)
 
 std::string Client::getResp() const
 {
-	return _rep;
+	return _resp;
 }
 
 time_t Client::get_connected_time(void)
