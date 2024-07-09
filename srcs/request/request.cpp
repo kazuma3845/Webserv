@@ -859,13 +859,9 @@ bool isDirectory(std::string &path)
 		return false;
 	}
 	else if (info.st_mode & S_IFDIR)
-	{
-		return true; // C'est un répertoire
-	}
+		return true; 
 	else
-	{
-		return false; // C'est un fichier
-	}
+		return false; 
 }
 
 // ------------------------------------------------- ERROR -- //
