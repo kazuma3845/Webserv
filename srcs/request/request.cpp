@@ -514,7 +514,7 @@ void Request::processMultipart(std::string &current_buffer)
 		std::string baseDir = "Page/data/";
 		ensureDirectoryExists(baseDir);
 		std::string fullPath = baseDir + _currentFilename;
-		_currentFile.open(fullPath, std::ios::out | std::ios::binary);
+		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary);
 		if (!_currentFile.is_open())
 			throw cantOpenFile(500);
 		skipHeaders(current_buffer);
