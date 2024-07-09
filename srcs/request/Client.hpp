@@ -36,7 +36,7 @@ private:
 	int _connected_sd;
 	bool _keepAlive;
 
-	std::string _rep;
+	std::string _resp;
 	time_t _connected_time;
 	std::map<std::string, std::string> _headers;
 
@@ -46,6 +46,7 @@ private:
 	Handler *_handler;
 
 	Flag _flag;
+	size_t _writeOffset;
 
 public:
 	Client();
@@ -54,6 +55,9 @@ public:
 	~Client();
 
 	void reUseClient(void);
+	void setWriteOffset(size_t offset);
+	size_t getWriteOffset() const;
+	bool hasMoreToWrite() const;
 	// --------------------------------------------- GETTERS
 	bool getKeepAlive();
 	int get_fd(void);
@@ -74,4 +78,5 @@ public:
 	void setResp(std::string rep);
 	void setTimeout(void);
 	void setFlag(Flag flag);
+
 };
