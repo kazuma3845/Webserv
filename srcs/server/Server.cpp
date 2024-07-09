@@ -200,15 +200,15 @@ void Server::read_socket(Client &client)
 void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
-	// Assurez-vous que SIGPIPE est ignoré pour éviter que le programme ne se termine lors de l'écriture sur un socket fermé.
-	// signal(SIGPIPE, SIG_IGN);
+	client.setTimeout();
+
 
 	size_t remaining = client.getResp().length() - client.getWriteOffset();
 	// const size_t MAX_WRITE_SIZE = 60000; // Assurez-vous que cette constante est définie quelque part accessible
 	size_t toWrite = std::min(remaining, MAX_WRITE_SIZE);
 	std::cout << "Debut write :" << socket << std::endl;
 
-	ssize_t written = send(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite, MSG_NOSIGNAL);
+	ssize_t written = send(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite, 0);
 	// ssize_t written = write(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite);
 	std::cout << "Fin Write:" << socket << " written : "<< written << std::endl;
 

@@ -11,8 +11,9 @@ int main(int argc, char **argv)
 	}
 	try
 	{
-		web.parsing(argv, argc);	// init struct and check error
-		web.run();		// Run programme
+		signal(SIGPIPE, SIG_IGN);
+		web.parsing(argv, argc);	
+		web.run();		
 	}
 	catch(const std::exception& e)
 	{
