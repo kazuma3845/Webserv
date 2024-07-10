@@ -84,7 +84,8 @@ void Server::run_server(void)
 		for (unsigned int i = 0; i < this->_ListenSockets.size(); ++i)
 		{
 			if (FD_ISSET(this->_ListenSockets[i].get_listen_fd(), &temp_read_sds))
-				this->add_client(_ListenSockets[i]);
+				if (this->add_client(_ListenSockets[i]))
+					continue;
 		}
 
 		for (int i = 4; i <= this->_max_sd; ++i)
@@ -103,11 +104,12 @@ void Server::run_server(void)
 			  << std::endl;
 }
 
-void Server::add_client(ListenSocket &listen_socket)
+bool Server::add_client(ListenSocket &listen_socket)
 {
 	struct sockaddr_in address;
 	int addrlen;
 	int new_socket;
+	bool socket_exist = false;
 
 	addrlen = sizeof(address);
 	new_socket = accept(listen_socket.get_listen_fd(), (struct sockaddr *)&address, (socklen_t *)&addrlen);
@@ -133,12 +135,22 @@ void Server::add_client(ListenSocket &listen_socket)
 			  << "|" << std::endl;
 
 	// Add new socket to fd_set
-	FD_SET(new_socket, &this->_read_sds);
 	if (new_socket > this->_max_sd)
 		this->_max_sd = new_socket;
 	if (_client_sds_map.count(new_socket) != 0)
+	{
+		if (FD_ISSET(new_socket, &this->_read_sds))
+			FD_CLR(new_socket, &this->_read_sds);
+		if (FD_ISSET(new_socket, &this->_write_sds))
+			FD_CLR(new_socket, &this->_write_sds);
+		_client_sds_map.erase(new_socket);
+		socket_exist = true;
+	}
+	FD_SET(new_socket, &this->_read_sds);
+	if (_client_sds_map.count(new_socket) != 0)
 		_client_sds_map.erase(new_socket);
 	this->_client_sds_map[new_socket] = new_client;
+	return socket_exist;
 }
 
 void Server::read_socket(Client &client)

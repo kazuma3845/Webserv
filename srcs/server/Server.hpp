@@ -46,7 +46,7 @@ public:
 	Server &operator=(const Server &ref);
 	void set_server(void);
 	void run_server(void);
-	void add_client(ListenSocket &listen_socket);
+	bool add_client(ListenSocket &listen_socket);
 	void read_socket(Client &client);
 	void write_socket(Client &client);
 	void check_timeout(void);
