@@ -2,16 +2,16 @@
 #include <iostream>
 #include <map>
 #include <algorithm>
+#include <fstream>
 #include <sstream>
 #include <sys/stat.h>
-#include <fstream>
-
 #include <cstring>
 
 class Request;
 
 #include "../parsing/location.hpp"
 #include "../errors/ErrorWebServ.hpp"
+#include "../utils/utils.hpp"
 #include "Client.hpp"
 
 enum parsingStatus
@@ -189,18 +189,7 @@ private:
 		chunkDataError(int errorCode) : ErrorWebServ(errorCode) {}
 		const char *what() const throw();
 	};
-	class connectionCloseEarly : public ErrorWebServ
-	{
-	public:
-		connectionCloseEarly(int errorCode) : ErrorWebServ(errorCode) {}
-		const char *what() const throw();
-	};
-	class errorReadingFD : public ErrorWebServ
-	{
-	public:
-		errorReadingFD(int errorCode) : ErrorWebServ(errorCode) {}
-		const char *what() const throw();
-	};
+
 	class cantOpenFile : public ErrorWebServ
 	{
 	public:
@@ -209,5 +198,3 @@ private:
 	};
 };
 
-void replaceDoubleSlashes(std::string &str);
-bool isDirectory(std::string &path);

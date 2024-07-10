@@ -30,7 +30,7 @@ void Redirection::folderpath(Request &a, Response &resp)
 			AutoIndex index;
 			resp.setBody(index.create(a.getFullPath(), a.getClient()->get_listen_socket().get_root()));
 			resp.setStatusCode(200);
-			a.getClient()->setFlag(WRITING_RESPONSE);
+			a.getClient()->setFlag(PREPARING_RESPONSE);
 		}
 		else
 			throw Forbidden(403);

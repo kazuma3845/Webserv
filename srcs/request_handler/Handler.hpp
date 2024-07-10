@@ -26,9 +26,8 @@ private:
 	void handlePost();
 	void handleDelete();
 
-	std::string extractBoundary(const std::string &contentType);
-	std::string extractFilename(const std::string &partContent);
 	std::map<std::string, std::string> initializeMIMEMap();
+	long getFileSize(const std::string& filename);
 	// ------------------------------------------ ERRORS //
 
 	class unknownMethod : public ErrorWebServ

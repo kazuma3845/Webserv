@@ -38,7 +38,7 @@ void Handler::handlePost()
 	_response.setStatusCode(201);
 	_response.setContentType("text/plain");
 	_response.setBody("POST successful.");
-	_request.getClient()->setFlag(WRITING_RESPONSE);
+	_request.getClient()->setFlag(RESPONSE_OK);
 }
 
 std::map<std::string, std::string> Handler::initializeMIMEMap()
@@ -116,6 +116,12 @@ std::map<std::string, std::string> Handler::initializeMIMEMap()
 	return extensionToMIME;
 }
 
+long Handler::getFileSize(const std::string &filename)
+{
+	std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
+	return file.tellg();
+}
+
 // * This function handles a GET request by determining the file extension of the requested file,
 // * setting the appropriate content type in the response, loading the file content into the response,
 
@@ -130,9 +136,19 @@ void Handler::handleGet()
 	else
 		_response.setContentType("application/octet-stream"); // Default MIME type
 
-	_response.loadContent(_request.getFullPath());
-	_response.setStatusCode(200);
-	_request.getClient()->setFlag(WRITING_RESPONSE);
+	long fileSize = getFileSize(_request.getFullPath());
+	if (fileSize < 8192) // double de 4096 pour pouvoir aller plus vite (buffer de read futur)
+	{
+		_response.loadContent(_request.getFullPath());
+		_response.setStatusCode(200);
+		_request.getClient()->setFlag(PREPARING_RESPONSE);
+	}
+	else
+	{
+		// fonction format Response ajustée pour faire les headers + fileSize
+		_response.setStatusCode(200);
+		_request.getClient()->setFlag(PREPARING_RESPONSE);
+	}
 }
 
 // * This function handles a DELETE request
@@ -145,7 +161,7 @@ void Handler::handleDelete()
 	_response.setStatusCode(204);
 	_response.setContentType("text/plain");
 	_response.setBody("DELETE successful.");
-	_request.getClient()->setFlag(WRITING_RESPONSE);
+	_request.getClient()->setFlag(RESPONSE_OK);
 }
 Request Handler::getRequest()
 {
