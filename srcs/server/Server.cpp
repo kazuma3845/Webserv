@@ -75,6 +75,8 @@ void Server::run_server(void)
 			  << "##################" << std::endl;
 	while (1)
 	{
+    FD_ZERO(&temp_read_sds);
+	  FD_ZERO(&temp_write_sds);
 		temp_read_sds = this->_read_sds;
 		temp_write_sds = this->_write_sds;
 
@@ -172,7 +174,8 @@ void Server::read_socket(Client &client)
 		}
 
 		if (client.getFlag() == WRITING_RESPONSE)
-		{			std::cout << "-----------      Currently writing response         ------------" << std::endl;
+		{			
+      std::cout << "-----------      Currently writing response         ------------" << std::endl;
 			redirect.path(*client.getReq(), *client.getResponse());
 			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
 			client.getResponse()->setConnectionType(client.getKeepAlive());
@@ -222,7 +225,7 @@ void Server::write_socket(Client &client)
 
 	ssize_t written = send(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite, 0);
 	// ssize_t written = write(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite);
-	std::cout << "Fin Write:" << socket << " written : "<< written << std::endl;
+	std::cout << "Fin Write:" << socket << " written : "<< written << std::endl << std::endl;
 
 	if (written > 0) {
 		client.setWriteOffset(client.getWriteOffset() + written);

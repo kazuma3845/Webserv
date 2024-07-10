@@ -1,6 +1,5 @@
 #include "Client.hpp"
 #include "../response/response.hpp"
-#include "../request_handler/Handler.hpp"
 
 // ------------------- Constructors -------------------
 
@@ -11,7 +10,6 @@ Client::Client(int fd, ListenSocket &listen_socket)
 	this->_connected_time = time(NULL);
 	this->_request = new Request(this);
 	this->_response = new Response();
-	this->_handler = new Handler(*_request, *_response);
 	this->_flag = PARSING_REQUEST;
 	this->_writeOffset = 0;
 }
@@ -22,24 +20,22 @@ Client::Client()
 Client::~Client(void)
 {
 	delete _request;
+  delete _response;
 }
 
 Client &Client::operator=(const Client &ref)
 {
 	if (this != &ref)
 	{
-		delete _handler;
-		delete _response;
-		delete _request;
 
 		_connected_sd = ref._connected_sd;
 		_listen_socket = ref._listen_socket;
 		_connected_time = ref._connected_time;
 		_flag = ref._flag;
+    this->_writeOffset = ref._writeOffset;
 
 		_request = new Request(*ref._request);
 		_response = new Response(*ref._response);
-		_handler = new Handler(*_request, *_response);
 
 		_request->setClient(this); //! important pour set up le client de la requete a cette nouvelle instance
 	}
@@ -55,9 +51,6 @@ void Client::reUseClient(void)
 
 	delete _response;
 	_response = new Response();
-
-	delete _handler;
-	_handler = new Handler(*_request, *_response);
 
 	this->_flag = PARSING_REQUEST;
 }
@@ -99,10 +92,6 @@ Request *Client::getReq(void)
 Response *Client::getResponse()
 {
 	return (this->_response);
-}
-Handler *Client::getHandler()
-{
-	return (this->_handler);
 }
 
 void Client::setResp(std::string rep)

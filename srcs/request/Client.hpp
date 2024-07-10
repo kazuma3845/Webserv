@@ -22,7 +22,6 @@ enum Flag
 };
 
 class Client;
-class Handler;
 class Response;
 
 #include "request.hpp"
@@ -43,7 +42,6 @@ private:
 	ListenSocket _listen_socket;
 	Request *_request;
 	Response *_response;
-	Handler *_handler;
 
 	Flag _flag;
 	size_t _writeOffset;
@@ -67,7 +65,6 @@ public:
 
 	ListenSocket get_listen_socket(void);
 	Request *getReq(void);
-	Handler *getHandler();
 	Response *getResponse();
 	Flag getFlag();
 
