@@ -245,7 +245,7 @@ void Response::setConnectionType(bool status)
 
 void Response::printResponse() const
 {
-	std::cout << "HTTP Version: " << _httpVersion << std::endl;
+	std::cout << "HTTP Version: " << _httpVersion << std::endl; // !
 	std::cout << "Status Code: " << _statusCode << " " << _statusMessage << std::endl;
 	std::cout << "Headers:" << std::endl;
 	for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it)
