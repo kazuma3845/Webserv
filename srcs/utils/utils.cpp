@@ -25,9 +25,8 @@ bool isDirectory(std::string &path)
 
 std::string readOnce(int fd)
 {
-	size_t buffer_size = 4096;
-	char buffer[buffer_size];
-	ssize_t bytes_read = read(fd, buffer, buffer_size);
+	char buffer[BUFFER_SIZE];
+	ssize_t bytes_read = read(fd, buffer, BUFFER_SIZE);
 	if (bytes_read < 0)
 		throw errorReadingFD(500);
 	if (bytes_read == 0)

@@ -27,8 +27,15 @@ private:
 	void handleDelete();
 
 	std::map<std::string, std::string> initializeMIMEMap();
-	long getFileSize(const std::string& filename);
+	ssize_t getFileSize(const std::string &filename);
 	// ------------------------------------------ ERRORS //
+
+	class couldNotOpenFile : public ErrorWebServ
+	{
+	public:
+		couldNotOpenFile(int errorCode) : ErrorWebServ(errorCode) {}
+		const char *what() const throw();
+	};
 
 	class unknownMethod : public ErrorWebServ
 	{

@@ -6,6 +6,8 @@ Response::Response()
 {
 	_statusCode = 200;
 	_statusMessage = "OK";
+	_bytesWritten = 0;
+	_headersWritten = false;
 	// Default constructor implementation
 }
 
@@ -53,6 +55,10 @@ std::string Response::getStatusMessage()
 	return (_statusMessage);
 }
 
+bool Response::getHeadersWritten()
+{
+	return (_headersWritten);
+}
 // std::map<std::string, std::string> Response::getHeaders()
 // {
 // 	return (_headers);
@@ -68,7 +74,29 @@ std::string Response::getResp()
 	return (_resp);
 }
 
+ssize_t Response::getFileSize()
+{
+	return (_fileSize);
+}
+int Response::getFD()
+{
+	return (_fd);
+}
+ssize_t Response::getBytesWritten()
+{
+	return (_bytesWritten);
+}
+std::string Response::getBuffer()
+{
+	return (_buffer);
+}
+
 ////////////////////  -------------------------- SETTERS -------------------------- //
+
+void Response::setTrueHeadersWritten()
+{
+	_headersWritten = true;
+}
 
 void Response::setHTTPVersion(std::string version)
 {
@@ -214,16 +242,6 @@ void Response::setStatusMessage(std::string message)
 	this->_statusMessage = message;
 }
 
-// void Response::setHeaders(std::istringstream &ss)
-// {
-// 	std::string key;
-// 	std::string value;
-// 	while (std::getline(ss, key, ':') && std::getline(ss, value))
-// 		_headers[key] = value;
-// 	if (ss.get() != EOF)
-// 		throw settingHeadersError(400); // FIXME: need to be corrected
-// }
-
 void Response::setBody(std::string body)
 {
 	this->_body = body;
@@ -242,6 +260,27 @@ void Response::setConnectionType(bool status)
 		_connectionType = "close";
 }
 
+void Response::setFileSize(ssize_t size)
+{
+	_fileSize = size;
+}
+
+void Response::setFD(int fd)
+{
+	_fd = fd;
+}
+
+void Response::setBytesWritten(ssize_t bytes)
+{
+	_bytesWritten = bytes;
+}
+void Response::setBuffer(std::string buffer)
+{
+	_buffer = buffer;
+}
+
+////////////////////// --------------- ADDITIONNAL FUNCTIONS ---------------- //////////////////////////
+
 void Response::printResponse() const
 {
 	std::cout << "HTTP Version: " << _httpVersion << std::endl; // !
@@ -253,8 +292,6 @@ void Response::printResponse() const
 	std::cout << "Body:" << _body << std::endl;
 }
 
-////////////////////// --------------- ADDITIONNAL FUNCTIONS ---------------- //////////////////////////
-
 void Response::loadContent(const std::string &filePath)
 {
 	int fd = open(filePath.c_str(), O_RDONLY);
@@ -265,6 +302,11 @@ void Response::loadContent(const std::string &filePath)
 		_body = readOnce(fd);
 		close(fd);
 	}
+}
+
+void Response::updateBytesWritten(ssize_t bytes)
+{
+	_bytesWritten += bytes;
 }
 
 std::string Response::takeTime() const
@@ -279,6 +321,32 @@ std::string Response::takeTime() const
 	strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S %Z", time_info);
 	std::string str_buffer(buffer);
 	return str_buffer;
+}
+
+void Response::formatResponseWithoutBody(Client &a, Request &b)
+{
+	std::string loc_path;
+	if (!b.getFullPath().empty())
+	{
+		loc_path = b.getFullPath().substr(a.get_listen_socket().get_root().size(), b.getFullPath().size());
+	}
+	std::stringstream ss;
+	ss << _statusCode;
+	_resp += "HTTP/1.1 " + ss.str() + " " + _statusMessage + "\r\n"
+															 "Date: " +
+			 takeTime() + "\r\n"
+						  "Content-Type: " +
+			 _contentType + "\r\n";
+	ss.str("");
+	ss << a.get_listen_socket().get_port();
+	_resp += "Location: http://" + a.get_listen_socket().get_host() + ":" + ss.str() + "/" + loc_path + "\r\n"
+																										"Connection: " +
+			 _connectionType + "\r\n";
+	ss.str("");
+	ss << _fileSize;
+	_resp += "Content-Length: " + ss.str() + "\r\n"
+											 "\r\n";
+	_responseSize = _fileSize + _resp.length();
 }
 
 void Response::formatResponse(Client &a, Request &b)

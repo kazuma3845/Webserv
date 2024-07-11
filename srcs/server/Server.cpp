@@ -211,33 +211,53 @@ void Server::write_socket(Client &client)
 {
 	int socket = client.get_fd();
 	client.setTimeout();
+	ssize_t written = 0;
 
-	if (client.getFlag() == WRITING_RESPONSE) // We need to load the headers
+	if (client.getFlag() == WRITING_RESPONSE)
 	{
-		client.getResponse()->formatResponse(client, *client.getReq());
+		if (client.getResponse()->getHeadersWritten())
+		{
+			if (!client.getResponse()->getBuffer().empty())
+			{
+				written = send(socket, client.getResponse()->getBuffer().c_str(), client.getResponse()->getBuffer().size(), 0);
+				client.getResponse()->setBuffer("");
+				client.getResponse()->updateBytesWritten(written);
+			}
+			else
+			{
+				std::string buffer = readOnce(client.getResponse()->getFD());
+				written = send(socket, buffer.c_str(), buffer.size(), 0);
+				if (static_cast<ssize_t>(buffer.size()) != written && written > 0)
+				{
+					std::string remaining = buffer.substr(written);
+					client.getResponse()->setBuffer(remaining);
+				}
+				client.getResponse()->updateBytesWritten(written);
+				if (client.getResponse()->getBytesWritten() >= client.getResponse()->getFileSize())
+				{
+					close(client.getResponse()->getFD());
+					client.setFlag(FINISHED);
+				}
+			}
+		}
+		if (!client.getResponse()->getHeadersWritten())
+		{
+			written = send(socket, client.getResponse()->getResp().c_str(), client.getResponse()->getResp().length(), 0);
+			client.getResponse()->setTrueHeadersWritten();
+		}
 	}
 
-	if (client.getFlag() == RESPONSE_OK) // all the body was processed  
+	if (client.getFlag() == RESPONSE_OK) // all the body was processed
 	{
 		if (client.getReq()->getHasReturn())
 			client.getResponse()->setStatusCode(301);
 		client.getResponse()->formatResponse(client, *client.getReq());
+		written = send(socket, client.getResponse()->getResp().c_str(), client.getResponse()->getResp().length(), 0);
+		client.setFlag(FINISHED);
 	}
 
-	size_t remaining = client.getResponse()->getResp().length() - client.getWriteOffset();
-	// const size_t MAX_WRITE_SIZE = 60000; // Assurez-vous que cette constante est définie quelque part accessible
-	size_t toWrite = std::min(remaining, MAX_WRITE_SIZE);
-
-	ssize_t written = send(socket, client.getResponse()->getResp().c_str() + client.getWriteOffset(), toWrite, 0);
-	// ssize_t written = write(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite);
-
-	if (written > 0)
+	if (written <= 0)
 	{
-		client.setWriteOffset(client.getWriteOffset() + written);
-	}
-	else if (written <= 1)
-	{
-		// Une erreur sérieuse s'est produite, loguez l'erreur et fermez le socket
 		FD_CLR(socket, &this->_write_sds);
 		close(socket);
 		this->_client_sds_map.erase(socket);
@@ -255,25 +275,23 @@ void Server::write_socket(Client &client)
 		return;
 	}
 
-	if (client.hasMoreToWrite())
+	if (client.getFlag() == FINISHED)
 	{
-		return; // Encore des données à envoyer
+		FD_CLR(socket, &this->_write_sds);
+		if (client.getKeepAlive()) // status is inherited from Request parsing
+		{
+			std::cerr << "Taille resp " << client.getResponse()->getResp().length() << std::endl;
+			FD_SET(socket, &this->_read_sds);
+			client.reUseClient();
+		}
+		else
+		{
+			std::cerr << "End of connection from client fd : " << socket << std::endl;
+			this->_client_sds_map.erase(socket);
+			close(socket);
+		}
 	}
-
-	// Remove socket from write set
-	FD_CLR(socket, &this->_write_sds);
-	if (client.getKeepAlive()) // status is inherited from Request parsing
-	{
-		std::cerr << "Taille resp " << client.getResponse()->getResp().length() << std::endl;
-		FD_SET(socket, &this->_read_sds);
-		client.reUseClient();
-	}
-	else
-	{
-		std::cerr << "End of connection from client fd : " << socket << std::endl;
-		this->_client_sds_map.erase(socket);
-		close(socket);
-	}
+	return;
 }
 
 void Server::check_timeout(void)

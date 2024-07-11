@@ -116,7 +116,7 @@ std::map<std::string, std::string> Handler::initializeMIMEMap()
 	return extensionToMIME;
 }
 
-long Handler::getFileSize(const std::string &filename)
+ssize_t Handler::getFileSize(const std::string &filename)
 {
 	std::ifstream file(filename.c_str(), std::ios::binary | std::ios::ate);
 	return file.tellg();
@@ -131,23 +131,29 @@ void Handler::handleGet()
 	std::string extension = filePath.substr(filePath.find_last_of('.') + 1); // Extract the file extension.
 	const static std::map<std::string, std::string> extensionToMIME = initializeMIMEMap();
 	std::map<std::string, std::string>::const_iterator it = extensionToMIME.find(extension);
+
 	if (it != extensionToMIME.end())
 		_response.setContentType(it->second);
 	else
 		_response.setContentType("application/octet-stream"); // Default MIME type
 
-	long fileSize = getFileSize(_request.getFullPath());
-	if (fileSize < 8192) // double de 4096 pour pouvoir aller plus vite (buffer de read futur)
+	ssize_t fileSize = getFileSize(_request.getFullPath());
+	if (fileSize < BUFFER_SIZE)
 	{
 		_response.loadContent(_request.getFullPath());
 		_response.setStatusCode(200);
-		_request.getClient()->setFlag(PREPARING_RESPONSE);
+		_request.getClient()->setFlag(RESPONSE_OK);
 	}
 	else
 	{
-		// fonction format Response ajustée pour faire les headers + fileSize
-		_response.setStatusCode(200);
-		_request.getClient()->setFlag(PREPARING_RESPONSE);
+		int fd = open(_request.getFullPath().c_str(), O_RDONLY);
+		if (fd == -1)
+			throw couldNotOpenFile(404);
+		_response.setFD(fd);
+		_response.setFileSize(fileSize);
+		_response.setStatusCode(202); // Processing body
+		_response.formatResponseWithoutBody(*_request.getClient(), _request);
+		_request.getClient()->setFlag(WRITING_RESPONSE);
 	}
 }
 
@@ -173,6 +179,11 @@ void Handler::setRequest(Request &req)
 }
 
 // ------------------------------------------------------ ERRORS //
+
+const char *Handler::couldNotOpenFile::what() const throw()
+{
+	return ("Error while trying to open file (Handler)");
+}
 
 const char *Handler::unknownMethod::what() const throw()
 {

@@ -30,7 +30,7 @@ void Redirection::folderpath(Request &a, Response &resp)
 			AutoIndex index;
 			resp.setBody(index.create(a.getFullPath(), a.getClient()->get_listen_socket().get_root()));
 			resp.setStatusCode(200);
-			a.getClient()->setFlag(PREPARING_RESPONSE);
+			a.getClient()->setFlag(RESPONSE_OK);
 		}
 		else
 			throw Forbidden(403);
@@ -51,6 +51,7 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 		CgiHandler cgi(a);
 		resp.setContentType("text/plain");
 		resp.setBody(cgi.execute(a.getFullPath(), resp));
+		a.getClient()->setFlag(RESPONSE_OK);
 	}
 	else if (checkMimeExt(a.getURI()))
 	{

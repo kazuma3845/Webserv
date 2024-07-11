@@ -25,6 +25,11 @@ public:
 	// std::map<std::string, std::string> getHeaders();
 	std::string getBody();
 	std::string getResp();
+	ssize_t getFileSize();
+	int getFD();
+	ssize_t getBytesWritten();
+	bool getHeadersWritten();
+	std::string getBuffer();
 
 	// ---------------------------------- SETTERS
 	void setHTTPVersion(std::string version);
@@ -34,14 +39,21 @@ public:
 	void setBody(std::string body);
 	void setContentType(std::string type);
 	void setConnectionType(bool status);
+	void setFileSize(ssize_t size);
+	void setFD(int fd);
+	void setBytesWritten(ssize_t bytes);
+	void setTrueHeadersWritten();
+	void setBuffer(std::string buffer);
 
 	// ------------------------------------ FUNCTIONS
 	void printResponse() const;
 	void formatResponse(Client &a, Request &b);
+	void formatResponseWithoutBody(Client &a, Request &b);
 	void loadContent(const std::string &filePath);
 
-	void ErrorBody(int error_code, Client &a, bool b);
 
+	void ErrorBody(int error_code, Client &a, bool b);
+	void updateBytesWritten(ssize_t bytes);
 private:
 	// --------------------------------------- ATTRIBUTES
 	std::string _httpVersion;
@@ -52,6 +64,12 @@ private:
 	std::string _resp;
 	std::string _contentType;
 	std::string _connectionType;
+	int _fd;
+	ssize_t _fileSize;
+	ssize_t _responseSize;
+	ssize_t _bytesWritten;
+	bool _headersWritten;
+	std::string _buffer;
 
 	std::string takeTime() const;
 

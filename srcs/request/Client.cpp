@@ -20,7 +20,7 @@ Client::Client()
 Client::~Client(void)
 {
 	delete _request;
-  delete _response;
+	delete _response;
 }
 
 Client &Client::operator=(const Client &ref)
@@ -32,7 +32,7 @@ Client &Client::operator=(const Client &ref)
 		_listen_socket = ref._listen_socket;
 		_connected_time = ref._connected_time;
 		_flag = ref._flag;
-    this->_writeOffset = ref._writeOffset;
+		this->_writeOffset = ref._writeOffset;
 
 		_request = new Request(*ref._request);
 		_response = new Response(*ref._response);

@@ -272,7 +272,7 @@ void Request::ChunkedBody(std::string &current_buffer)
 				processMultipart(chunkData);
 			else
 				processUniqueBodyChunked(chunkData);
-			_chunkBodySize = 0; // Préparer pour le prochain chunk
+			_chunkBodySize = 0; 
 		}
 		else
 			return;
