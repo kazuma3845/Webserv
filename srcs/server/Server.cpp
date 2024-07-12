@@ -75,8 +75,8 @@ void Server::run_server(void)
 			  << "##################" << std::endl;
 	while (1)
 	{
-    FD_ZERO(&temp_read_sds);
-	  FD_ZERO(&temp_write_sds);
+		FD_ZERO(&temp_read_sds);
+		FD_ZERO(&temp_write_sds);
 		temp_read_sds = this->_read_sds;
 		temp_write_sds = this->_write_sds;
 
@@ -113,6 +113,7 @@ bool Server::add_client(ListenSocket &listen_socket)
 	int new_socket;
 	bool socket_exist = false;
 
+	memset(&address, 0, sizeof(address));
 	addrlen = sizeof(address);
 	new_socket = accept(listen_socket.get_listen_fd(), (struct sockaddr *)&address, (socklen_t *)&addrlen);
 	if (new_socket == -1)
@@ -133,7 +134,7 @@ bool Server::add_client(ListenSocket &listen_socket)
 	std::cout << std::endl
 			  << "|" << std::endl
 			  << "|   New connection: socket fd is " << new_socket << " | "
-			  << inet_ntoa(address.sin_addr) << " | " << ntohs(address.sin_port) << std::endl
+			  << inet_ntoa(address.sin_addr) << " | " << ntohs(address.sin_port) << "/" << std::endl
 			  << "|" << std::endl;
 
 	// Add new socket to fd_set
@@ -174,7 +175,7 @@ void Server::read_socket(Client &client)
 		}
 
 		if (client.getFlag() == WRITING_RESPONSE)
-		{			
+		{
       std::cout << "-----------      Currently writing response         ------------" << std::endl;
 			redirect.path(*client.getReq(), *client.getResponse());
 			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
@@ -227,14 +228,19 @@ void Server::write_socket(Client &client)
 	// ssize_t written = write(socket, client.getResp().c_str() + client.getWriteOffset(), toWrite);
 	std::cout << "Fin Write:" << socket << " written : "<< written << std::endl << std::endl;
 
-	if (written > 0) {
+	if (written > 0)
 		client.setWriteOffset(client.getWriteOffset() + written);
-	} else if (written <= 1) {
-			// Une erreur sérieuse s'est produite, loguez l'erreur et fermez le socket
+	else
+	{
+		if (written == 0)
+			std::cerr << "Nothing to send" << std::endl;
+		else
+		{
 			FD_CLR(socket, &this->_write_sds);
 			close(socket);
 			this->_client_sds_map.erase(socket);
-			return;
+			return; // Une erreur sérieuse s'est produite, loguez l'erreur et fermez le socket
+		}
 	}
 
 	if (client.getFlag() == EXPECTING)
@@ -251,7 +257,6 @@ void Server::write_socket(Client &client)
 	if (client.hasMoreToWrite()) {
 		return; // Encore des données à envoyer
 	}
-
 	// Remove socket from write set
 	FD_CLR(socket, &this->_write_sds);
 	if (client.getKeepAlive()) // status is inherited from Request parsing

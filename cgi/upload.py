@@ -6,7 +6,7 @@ import shutil
 
 cgitb.enable()
 
-UPLOAD_DIR = "/Users/kazuma3845/Desktop/webserv/Page/data/"
+UPLOAD_DIR = "Page/data/"
 
 def move_uploaded_file(fileitem, upload_dir):
     if not fileitem.file:
@@ -14,9 +14,9 @@ def move_uploaded_file(fileitem, upload_dir):
 
     # Assurez-vous que le dossier de destination existe
     os.makedirs(upload_dir, exist_ok=True)
-    
+
     filepath = os.path.join(upload_dir, os.path.basename(fileitem.filename))
-    
+
     with open(filepath, 'wb') as fout:
         shutil.copyfileobj(fileitem.file, fout)
 

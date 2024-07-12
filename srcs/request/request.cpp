@@ -204,6 +204,10 @@ void Request::checkRequest(std::string &currentBuffer)
 
 	checkFile(F_OK); // Checks if the requested file exists and can be accessed.
 
+	checkHostName();
+
+	checkLength();
+
 	// Sets up the connection mode in the Client object to keep-alive if the "Connection" header is set to "keep-alive".
 	if (_headers["Connection"] == "keep-alive")
 		client->setKeepAlive(true);
@@ -772,6 +776,34 @@ void Request::parseUri()
 	redirectInURI(); // Perform any necessary URI redirections.
 }
 
+void Request::checkLength()
+{
+	if (_headers.count("Content-Length"))
+	{
+		std::istringstream contentLengthStream(_headers["Content-Length"]);
+		unsigned int contentLength;
+		contentLengthStream >> contentLength;
+		unsigned int max_size = client->get_listen_socket().get_clientSize();
+
+		if (max_size < contentLength)
+		{
+			std::cerr << "overload" << std::endl;
+			throw bodySize(413);
+		}
+	}
+}
+
+void Request::checkHostName()
+{
+	std::string host = _headers["Host"];
+	std::istringstream iss(host);
+	std::string host_name;
+	std::getline(iss, host_name, ':');
+	if (host_name != this->client->get_listen_socket().get_host() &&
+			host_name != this->client->get_listen_socket().get_name())
+		throw fileNotFound(404);
+}
+
 // * Checks if a file at _full_path is accessible with the specified mode.
 // * Throws a 404 error if the file is not found.
 
@@ -859,9 +891,9 @@ bool isDirectory(std::string &path)
 		return false;
 	}
 	else if (info.st_mode & S_IFDIR)
-		return true; 
+		return true;
 	else
-		return false; 
+		return false;
 }
 
 // ------------------------------------------------- ERROR -- //
