@@ -92,9 +92,12 @@ void Server::run_server(void)
 
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
+      // if (_client_sds_map.count(i))
+      //   std::cout << " " << this->_client_sds_map[i].get_fd();
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_read_sds))
 				read_socket(this->_client_sds_map[i]);
 		}
+    // std::cout << std::endl;
 		for (int i = 4; i <= this->_max_sd; ++i)
 		{
 			if (_client_sds_map.count(i) && FD_ISSET((this->_client_sds_map[i]).get_fd(), &temp_write_sds))
@@ -199,9 +202,9 @@ void Server::read_socket(Client &client)
 			client.getResponse()->ErrorBody(e.getErrorCode(), client, false);
 		client.getResponse()->setConnectionType(false);
 		client.getResponse()->setContentType("text/html");
-		client.getResponse()->formatResponse(client, *client.getReq());
-		client.setResp(client.getResponse()->getResp());
-		client.setFlag(FINISHED);
+		// client.getResponse()->formatResponse(client, *client.getReq());
+		// client.setResp(client.getResponse()->getResp());
+		client.setFlag(RESPONSE_OK);
 		FD_CLR(socket, &this->_read_sds);
 		FD_SET(socket, &this->_write_sds);
 	}
@@ -225,19 +228,25 @@ void Server::write_socket(Client &client)
 			}
 			else
 			{
-				std::string buffer = readOnce(client.getResponse()->getFD());
-				written = send(socket, buffer.c_str(), buffer.size(), 0);
-				if (static_cast<ssize_t>(buffer.size()) != written && written > 0)
-				{
-					std::string remaining = buffer.substr(written);
-					client.getResponse()->setBuffer(remaining);
-				}
-				client.getResponse()->updateBytesWritten(written);
-				if (client.getResponse()->getBytesWritten() >= client.getResponse()->getFileSize())
-				{
-					close(client.getResponse()->getFD());
-					client.setFlag(FINISHED);
-				}
+        try
+        {
+				  std::string buffer = readOnce(client.getResponse()->getFD());
+          written = send(socket, buffer.c_str(), buffer.size(), 0);
+          if (static_cast<ssize_t>(buffer.size()) != written && written > 0)
+          {
+            std::string remaining = buffer.substr(written);
+            client.getResponse()->setBuffer(remaining);
+          }
+          client.getResponse()->updateBytesWritten(written);
+          if (client.getResponse()->getBytesWritten() >= client.getResponse()->getFileSize())
+          {
+            close(client.getResponse()->getFD());
+            client.setFlag(FINISHED);
+          }
+        }
+        catch (const ErrorWebServ &e) {
+          written = -1;
+        }
 			}
 		}
 		if (!client.getResponse()->getHeadersWritten())
@@ -258,6 +267,8 @@ void Server::write_socket(Client &client)
 
 	if (written <= 0)
 	{
+    if (client.getFlag() == WRITING_RESPONSE)
+      close(client.getResponse()->getFD());
 		FD_CLR(socket, &this->_write_sds);
 		close(socket);
 		this->_client_sds_map.erase(socket);
