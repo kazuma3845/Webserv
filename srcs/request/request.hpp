@@ -94,6 +94,8 @@ private:
 	void isMethodAllowed();
 	void redirectInURI();
 	void parseUri();
+	void checkHostName();
+	void checkLength();
 	void checkFile(int mode);
 	bool checkfolder(std::string uri);
 	std::string cleanString(std::string toClean);
