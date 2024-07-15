@@ -265,6 +265,17 @@ void Server::write_socket(Client &client)
 		client.setFlag(FINISHED);
 	}
 
+
+	if (client.getFlag() == EXPECTING)
+	{
+		written = send(socket, client.getResp().c_str(), client.getResp().length(), 0);
+		client.setResp(""); // Nettoyer la réponse
+		client.setFlag(PARSING_REQUEST);
+		client.getReq()->setStatus(PARSING_BODY);
+		FD_CLR(socket, &this->_write_sds);
+		FD_SET(socket, &this->_read_sds);
+	}
+	
 	if (written <= 0)
 	{
 		if (client.getFlag() == WRITING_RESPONSE)
@@ -272,17 +283,6 @@ void Server::write_socket(Client &client)
 		FD_CLR(socket, &this->_write_sds);
 		close(socket);
 		this->_client_sds_map.erase(socket);
-		return;
-	}
-
-	if (client.getFlag() == EXPECTING)
-	{
-		client.setResp(""); // Nettoyer la réponse
-		client.setFlag(PARSING_REQUEST);
-		client.getReq()->setStatus(PARSING_BODY);
-		FD_CLR(socket, &this->_write_sds);
-		FD_SET(socket, &this->_read_sds);
-		std::cerr << "EXPECTING sent" << std::endl;
 		return;
 	}
 
