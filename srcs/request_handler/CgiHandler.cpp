@@ -1,7 +1,22 @@
 #include "CgiHandler.hpp"
 
-CgiHandler::CgiHandler(Request &request) : _body(request.getBody())
+CgiHandler::CgiHandler(Request &request)
 {
+	if (request.getMethod().compare("POST") == 0)
+	{
+		std::cout << request.getCurrentFilename() << std::endl;
+		std::string filename = "Page/data/" + request.getCurrentFilename();
+		std::ifstream file(filename.c_str());
+		if (!file)
+		{
+			std::cerr << "Unable to open file " << filename;
+			throw InternalServerError(500);
+		}
+		std::string line;
+		while (std::getline(file, line))
+			_body += line + "\n";
+		file.close();
+	}
 	initenv(request);
 }
 
@@ -13,7 +28,7 @@ void CgiHandler::initenv(Request &request)
 {
 	std::stringstream ss;
 	_env["AUTH_TYPE"] = request.getHeaders().count("Authorization") ? request.getHeaders()["Authorization"] : "";
-	ss << request.getBody().size();
+	ss << _body.size();
 	_env["CONTENT_LENGTH"] = ss.str();
 	ss.str("");
 	_env["CONTENT_TYPE"] = request.getHeaders().count("Content-Type") ? request.getHeaders()["Content-Type"] : "";
@@ -65,6 +80,7 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 	long fdOut = fileno(fOut);
 	int ret = 1;
 
+	std::cout << "Body : " << _body << std::endl;
 	write(fdIn, _body.c_str(), _body.size());
 	lseek(fdIn, 0, SEEK_SET);
 
@@ -76,9 +92,9 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 	}
 	else if (!pid)
 	{
-		char *argv[2];								  // Tableau pour les arguments
-		argv[0] = const_cast<char *>(Script.c_str()); // Convertir std::string en char*
-		argv[1] = NULL;								  // Terminateur NULL
+		char *argv[2];
+		argv[0] = const_cast<char *>(Script.c_str());
+		argv[1] = NULL;
 		dup2(fdIn, STDIN_FILENO);
 		dup2(fdOut, STDOUT_FILENO);
 		execve(Script.c_str(), argv, env);

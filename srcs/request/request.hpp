@@ -48,6 +48,7 @@ public:
 	std::string getQueryString();
 	Client *getClient();
 	bool getHasReturn();
+	std::string getCurrentFilename();
 
 	// ------------------------------------------- SETTERS
 

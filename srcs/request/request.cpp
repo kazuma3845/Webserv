@@ -104,6 +104,12 @@ bool Request::getHasReturn()
 	return _hasReturn;
 }
 
+std::string Request::getCurrentFilename()
+{
+	return _currentFilename;
+}
+
+
 // ---------------------------------- SETTERS -- //
 
 void Request::setURI(std::string uri)
@@ -479,7 +485,6 @@ void Request::processUniqueBody(std::string &current_buffer)
 		_currentFilename = generateUniqueFilename(baseDir, filename);
 		_currentFilename = generateUniqueFilename(baseDir, filename);
 		std::string fullPath = baseDir + _currentFilename;
-
 		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::app);
 		if (!_currentFile.is_open())
 		{
@@ -487,7 +492,6 @@ void Request::processUniqueBody(std::string &current_buffer)
 			throw cantOpenFile(500);
 		}
 	}
-
 	_currentFile << current_buffer;
 	_bytesWritten += current_buffer.size();
 
@@ -498,7 +502,7 @@ void Request::processUniqueBody(std::string &current_buffer)
 	if (_bytesWritten >= contentLength)
 	{
 		_currentFile.close();
-		_currentFilename.clear();
+		// _currentFilename.clear();
 		_bytesWritten = 0;
 		status = PARSING_FINISHED;
 		getClient()->setFlag(PREPARING_RESPONSE);

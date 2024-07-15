@@ -3,6 +3,8 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <string>
 #include "../request/request.hpp"
 #include "../response/response.hpp"
 #include <sys/wait.h>
