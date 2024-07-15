@@ -106,7 +106,7 @@ bool Request::getHasReturn()
 
 std::string Request::getCurrentFilename()
 {
-	return _currentFilename;
+	return _FullcurrentFilename;
 }
 
 
@@ -492,6 +492,7 @@ void Request::processUniqueBody(std::string &current_buffer)
 			throw cantOpenFile(500);
 		}
 	}
+	_FullcurrentFilename = _currentFilename;
 	_currentFile << current_buffer;
 	_bytesWritten += current_buffer.size();
 
@@ -502,7 +503,7 @@ void Request::processUniqueBody(std::string &current_buffer)
 	if (_bytesWritten >= contentLength)
 	{
 		_currentFile.close();
-		// _currentFilename.clear();
+		_currentFilename.clear();
 		_bytesWritten = 0;
 		status = PARSING_FINISHED;
 		getClient()->setFlag(PREPARING_RESPONSE);

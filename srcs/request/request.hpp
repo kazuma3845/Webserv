@@ -85,6 +85,7 @@ private:
 
 	std::string _currentBoundary;
 	std::string _currentFilename;
+	std::string _FullcurrentFilename;
 	std::ofstream _currentFile;
 
 	// ------------------------------------------ REQUEST PARSING FUNCTIONS
