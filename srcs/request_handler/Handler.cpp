@@ -20,7 +20,7 @@ Handler::~Handler()
 
 void Handler::process()
 {
-	std::cout << "Current METHOD is " << _request.getMethod() << std::endl;
+	// std::cout << "Current METHOD is " << _request.getMethod() << std::endl;
 	// Find the request method in the map of method functions
 	std::map<std::string, void (Handler::*)()>::iterator it = _methodFunctions.find(_request.getMethod());
 	if (it != _methodFunctions.end()) // If method is found, call the corresponding function

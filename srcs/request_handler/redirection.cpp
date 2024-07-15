@@ -61,7 +61,6 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 	else if (checkMimeExt(a.getURI()))
 	{
 		Handler handler(a, resp);
-		std::cout << "MIME" << std::endl;
 		handler.process();
 	}
 	else

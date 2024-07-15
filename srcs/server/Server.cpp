@@ -275,7 +275,7 @@ void Server::write_socket(Client &client)
 		FD_CLR(socket, &this->_write_sds);
 		FD_SET(socket, &this->_read_sds);
 	}
-	
+
 	if (written <= 0)
 	{
 		if (client.getFlag() == WRITING_RESPONSE)
@@ -291,13 +291,11 @@ void Server::write_socket(Client &client)
 		FD_CLR(socket, &this->_write_sds);
 		if (client.getKeepAlive()) // status is inherited from Request parsing
 		{
-			std::cerr << "Taille resp " << client.getResponse()->getResp().length() << std::endl;
 			FD_SET(socket, &this->_read_sds);
 			client.reUseClient();
 		}
 		else
 		{
-			std::cerr << "End of connection from client fd : " << socket << std::endl;
 			this->_client_sds_map.erase(socket);
 			close(socket);
 		}
@@ -311,7 +309,7 @@ void Server::check_timeout(void)
 	{
 		if (_client_sds_map.count(i) && (time(NULL) - _client_sds_map[i].get_connected_time() > TIMEOUT_LIMIT))
 		{
-			std::cerr << "Disconnection from client fd : " << i << " sec asgo " << time(NULL) - _client_sds_map[i].get_connected_time() << std::endl;
+			// std::cerr << "Disconnection from client fd : " << i << " sec asgo " << time(NULL) - _client_sds_map[i].get_connected_time() << std::endl;
 			if (FD_ISSET(i, &_read_sds))
 				FD_CLR(i, &_read_sds);
 			if (FD_ISSET(i, &_write_sds))

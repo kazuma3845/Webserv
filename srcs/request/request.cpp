@@ -282,7 +282,7 @@ void Request::ChunkedBody(std::string &current_buffer)
 				processMultipart(chunkData);
 			else
 				processUniqueBodyChunked(chunkData);
-			_chunkBodySize = 0; 
+			_chunkBodySize = 0;
 		}
 		else
 			return;
@@ -637,7 +637,7 @@ std::string Request::cleanString(std::string toClean)
 
 std::string Request::parseHeaders(std::string &current_buffer)
 {
-	std::cout << "----------------       PARSING HEADER START        -------------------" << std::endl;
+	std::cout << std::endl << "----------------       PARSING HEADER START        -------------------" << std::endl;
 	// std::cout << "Received the current buffer : " << current_buffer << std::endl;
 	_buffer += current_buffer;
 	// std::cout << "Merged buffer is currently : " << _buffer << std::endl;
@@ -819,7 +819,6 @@ void Request::isMethodAllowed()
 {
 	std::vector<std::string> methods;
 
-	std::cout << _curr_loc.getName() << std::endl;
 	// Get allowed methods based on the current location or root
 	if (_curr_loc.empty())
 		methods = client->get_listen_socket().get_allow_methods(); // Root allowed methods
