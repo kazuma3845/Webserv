@@ -819,6 +819,7 @@ void Request::isMethodAllowed()
 {
 	std::vector<std::string> methods;
 
+	std::cout << _curr_loc.getName() << std::endl;
 	// Get allowed methods based on the current location or root
 	if (_curr_loc.empty())
 		methods = client->get_listen_socket().get_allow_methods(); // Root allowed methods

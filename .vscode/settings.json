@@ -1,5 +1,6 @@
 {
 	"files.associations": {
+<<<<<<< HEAD
 		"fstream": "cpp",
 		"istream": "cpp",
 		"iostream": "cpp",
@@ -51,5 +52,8 @@
 		"variant": "cpp",
 		"vector": "cpp",
 		"algorithm": "cpp"
+=======
+		"string": "cpp"
+>>>>>>> Neah
 	}
 }
