@@ -637,7 +637,6 @@ std::string Request::cleanString(std::string toClean)
 
 std::string Request::parseHeaders(std::string &current_buffer)
 {
-	std::cout << std::endl << "----------------       PARSING HEADER START        -------------------" << std::endl;
 	// std::cout << "Received the current buffer : " << current_buffer << std::endl;
 	_buffer += current_buffer;
 	// std::cout << "Merged buffer is currently : " << _buffer << std::endl;
@@ -668,7 +667,6 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	// std::cout << "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
 	_buffer.clear();
 	status = CHECKING_HEADERS;
-	std::cout << "----------------       PARSING HEADER COMPLETED        -------------------" << std::endl;
 	return remainingString;
 }
 

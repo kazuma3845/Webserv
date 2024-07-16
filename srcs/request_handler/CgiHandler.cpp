@@ -80,7 +80,6 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 	long fdOut = fileno(fOut);
 	int ret = 1;
 
-	std::cout << "Body : " << _body << std::endl;
 	write(fdIn, _body.c_str(), _body.size());
 	lseek(fdIn, 0, SEEK_SET);
 

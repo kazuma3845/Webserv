@@ -26,7 +26,6 @@ void Redirection::folderpath(Request &a, Response &resp)
 	{
 		if (a.getCurr_loc().getAutoindex() == true)
 		{
-			std::cout << "AutoIndex" << std::endl;
 			AutoIndex index;
 			resp.setBody(index.create(a.getFullPath(), a.getClient()->get_listen_socket().get_root()));
 			resp.setStatusCode(200);
@@ -47,7 +46,6 @@ void Redirection::check_ext_cgi(Request &a, Response &resp)
 {
 	if (!a.getCurr_loc().getCgiPath().empty() && checkCgiExt(a.getURI(), a))
 	{
-		std::cout << "CGI" << std::endl;
 		CgiHandler cgi(a);
 		resp.setContentType("text/plain");
 		resp.setBody(cgi.execute(a.getFullPath(), resp));

@@ -14,7 +14,6 @@ bool isDirectory(std::string &path)
 	struct stat info;
 	if (stat(path.c_str(), &info) != 0)
 	{
-		std::cerr << "Cannot access " << path << std::endl;
 		return false;
 	}
 	else if (info.st_mode & S_IFDIR)

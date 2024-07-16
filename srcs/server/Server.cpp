@@ -179,9 +179,9 @@ void Server::read_socket(Client &client)
 
 		if (client.getFlag() == PREPARING_RESPONSE)
 		{
-			redirect.path(*client.getReq(), *client.getResponse());
-			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
 			client.getResponse()->setConnectionType(client.getKeepAlive());
+			client.getResponse()->setHTTPVersion(client.getReq()->getHttpVersion());
+			redirect.path(*client.getReq(), *client.getResponse());
 
 			FD_CLR(socket, &this->_read_sds);
 			FD_SET(socket, &this->_write_sds);
