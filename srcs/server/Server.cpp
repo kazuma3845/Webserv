@@ -19,23 +19,19 @@ Server::Server(std::vector<configserv> config_servs) : _max_sd(0)
 			this->_ListenSockets.push_back(curr_listen_socket);
 		}
 	}
-	std::cout << "Server was called." << std::endl;
 }
 
 Server::~Server(void)
 {
-	std::cout << "Server was destroyed." << std::endl;
 }
 
 Server::Server(const Server &copy)
 {
-	std::cout << "Server copy constructor called" << std::endl;
 	*this = copy;
 }
 
 Server &Server::operator=(const Server &ref)
 {
-	std::cout << "Server assignment operator called" << std::endl;
 	if (this != &ref)
 	{
 	}
@@ -190,8 +186,7 @@ void Server::read_socket(Client &client)
 	catch (const ErrorWebServ &e)
 	{
 		// std::cerr << "####### Client :"  << std::endl;
-		std::cerr << "Error number: " << e.getErrorCode() << std::endl;
-		std::cerr << "What happened : " << e.what() << std::endl;
+		std::cerr << "Error(" << e.getErrorCode() << "): " <<  e.what()<< std::endl;
 		client.setKeepAlive(false);
 		client.getResponse()->setStatusCode(e.getErrorCode());
 		client.getResponse()->setStatusMessage(e.what());

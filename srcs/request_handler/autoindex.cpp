@@ -20,7 +20,7 @@ std::string AutoIndex::create(std::string uri, std::string root) {
            "            <tr><th>Name</th><th>Size</th></tr>\n";
 
     if (dir == NULL) {
-        std::cerr << "Error: Directory not opened: " << dirName << std::endl;
+        // std::cerr << "Error: Directory not opened: " << dirName << std::endl;
         return "";
     }
 

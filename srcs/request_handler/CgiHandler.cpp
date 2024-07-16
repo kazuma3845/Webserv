@@ -4,12 +4,11 @@ CgiHandler::CgiHandler(Request &request)
 {
 	if (request.getMethod().compare("POST") == 0)
 	{
-		std::cout << request.getCurrentFilename() << std::endl;
 		std::string filename = "Page/data/" + request.getCurrentFilename();
 		std::ifstream file(filename.c_str());
 		if (!file)
 		{
-			std::cerr << "Unable to open file " << filename;
+			// std::cerr << "Unable to open file " << filename;
 			throw InternalServerError(500);
 		}
 		std::string line;
@@ -86,7 +85,7 @@ std::string CgiHandler::execute(std::string Script, Response &resp)
 	pid = fork();
 	if (pid == -1)
 	{
-		std::cerr << "Error Fork";
+		// std::cerr << "Error Fork";
 		throw InternalServerError(500);
 	}
 	else if (!pid)

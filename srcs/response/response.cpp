@@ -393,7 +393,7 @@ void Response::ErrorBody(int error_code, Client &a, bool b)
 	std::ifstream file(path.c_str());
 	if (!file)
 	{
-		std::cerr << "Failed to open file: " << path << '\n';
+		// std::cerr << "Failed to open file: " << path << '\n';
 		ErrorBody(error_code, a, false);
 		return;
 	}

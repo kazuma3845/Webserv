@@ -9,7 +9,7 @@
 #include <unistd.h>
 #include "../errors/ErrorWebServ.hpp"
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 4096
 
 void replaceDoubleSlashes(std::string &str);
 bool isDirectory(std::string &path);
