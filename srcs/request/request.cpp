@@ -13,6 +13,7 @@ Request::Request(Client *client) : _hasReturn(false), client(client)
 	_chunkBodySize = 0;
 	_bytesWritten = 0;
 	_currentFilename = "";
+	_fileSize = 0;
 	// std::cout << "Request instance with pointer on client created : " << this->client->get_fd() << std::endl;
 }
 
@@ -40,6 +41,8 @@ Request &Request::operator=(const Request &other)
 		_chunkBodySize = other._chunkBodySize;
 		_chunkBuffer = other._chunkBuffer;
 		_bytesWritten = other._bytesWritten;
+		_fileSize = other._fileSize;
+		_currentFilename = other._currentFilename;
 	}
 	return *this;
 }
@@ -108,7 +111,6 @@ std::string Request::getCurrentFilename()
 {
 	return _FullcurrentFilename;
 }
-
 
 // ---------------------------------- SETTERS -- //
 
@@ -261,7 +263,13 @@ void Request::ChunkedBody(std::string &current_buffer)
 
 			std::stringstream ss(chunkSizeLine);
 			ss >> std::hex >> chunkSize;
-			std::cout << "Current CHUNKSIZE : " << chunkSize << std::endl;
+			std::cout << "Chunksize is : " << chunkSize << std::endl;
+			std::cout << "_fileSize is : " << _fileSize << std::endl;
+
+			_fileSize += chunkSize;
+			std::cout << _fileSize << std::endl;
+			if (_fileSize > client->get_listen_socket().get_clientSize())
+				throw bodySize(413);
 			if (chunkSize == 0)
 			{
 				status = PARSING_FINISHED;
@@ -269,6 +277,7 @@ void Request::ChunkedBody(std::string &current_buffer)
 				_currentFile.close();
 				_currentFilename.clear();
 				_bytesWritten = 0;
+				_fileSize = 0;
 				return;
 			}
 			_chunkBodySize = chunkSize;
@@ -463,10 +472,7 @@ void Request::processUniqueBodyChunked(std::string &current_buffer)
 
 		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::app);
 		if (!_currentFile.is_open())
-		{
-			std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
 			throw cantOpenFile(500);
-		}
 	}
 	_currentFile << current_buffer;
 }
@@ -487,10 +493,7 @@ void Request::processUniqueBody(std::string &current_buffer)
 		std::string fullPath = baseDir + _currentFilename;
 		_currentFile.open(fullPath.c_str(), std::ios::out | std::ios::binary | std::ios::app);
 		if (!_currentFile.is_open())
-		{
-			std::cerr << "Failed to open file for writing: " << fullPath << std::endl;
 			throw cantOpenFile(500);
-		}
 	}
 	_FullcurrentFilename = _currentFilename;
 	_currentFile << current_buffer;
@@ -517,9 +520,7 @@ void Request::processMultipart(std::string &current_buffer)
 	if (_currentFilename.empty())
 	{
 		_currentBoundary = extractBoundary(_headers["Content-Type"]);
-		std::cout << "Current buffer before filename is : " << current_buffer << std::endl;
 		_currentFilename = extractFilename(current_buffer);
-		std::cout << "Filename is: " << _currentFilename << std::endl;
 		std::string baseDir = "Page/data/";
 		ensureDirectoryExists(baseDir);
 		std::string fullPath = baseDir + _currentFilename;
@@ -637,7 +638,6 @@ std::string Request::cleanString(std::string toClean)
 
 std::string Request::parseHeaders(std::string &current_buffer)
 {
-	std::cout << std::endl << "----------------       PARSING HEADER START        -------------------" << std::endl;
 	// std::cout << "Received the current buffer : " << current_buffer << std::endl;
 	_buffer += current_buffer;
 	// std::cout << "Merged buffer is currently : " << _buffer << std::endl;
@@ -668,7 +668,6 @@ std::string Request::parseHeaders(std::string &current_buffer)
 	// std::cout << "Remaining string is : " << (remainingString.empty() ? "empty" : "not empty") << std::endl;
 	_buffer.clear();
 	status = CHECKING_HEADERS;
-	std::cout << "----------------       PARSING HEADER COMPLETED        -------------------" << std::endl;
 	return remainingString;
 }
 
@@ -784,10 +783,7 @@ void Request::checkLength()
 		unsigned int max_size = client->get_listen_socket().get_clientSize();
 
 		if (max_size < contentLength)
-		{
-			std::cerr << "overload" << std::endl;
 			throw bodySize(413);
-		}
 	}
 }
 
@@ -798,7 +794,7 @@ void Request::checkHostName()
 	std::string host_name;
 	std::getline(iss, host_name, ':');
 	if (host_name != this->client->get_listen_socket().get_host() &&
-			host_name != this->client->get_listen_socket().get_name())
+		host_name != this->client->get_listen_socket().get_name())
 		throw fileNotFound(404);
 }
 

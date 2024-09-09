@@ -70,7 +70,6 @@ void ListenSocket::initSocket(void)
 	this->_address.sin_port = htons(this->_port);
 
 	if (inet_pton(AF_INET, this->_host.c_str(), &this->_address.sin_addr) <= 0) {
-		perror("Invalid address/ Address not supported");
 		exit(EXIT_FAILURE);
 	}
 
@@ -78,7 +77,7 @@ void ListenSocket::initSocket(void)
 	this->_listen_sd = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_listen_sd < 0)
 	{
-		std::cerr << "Issue creating _listen_sd" << std::endl;
+		// std::cerr << "Issue creating _listen_sd" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -86,21 +85,21 @@ void ListenSocket::initSocket(void)
 	int opt = 1;
 	if (setsockopt(this->_listen_sd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
 	{
-		std::cerr << "Issue setsockopt : " << this->_port << std::endl;
+		// std::cerr << "Issue setsockopt : " << this->_port << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// Bind socket to IP address and port
 	if (bind(this->_listen_sd, (struct sockaddr *)&this->_address, sizeof(this->_address)) < 0)
 	{
-		std::cerr << "Issue binding _listen_sd at port : " << this->_port << std::endl;
+		// std::cerr << "Issue binding _listen_sd at port : " << this->_port << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// Set a listener ont the socket
 	if (listen(this->_listen_sd, 512) < 0)
 	{
-		std::cerr << "Issue listening _listen_sd at port : " << this->_port << std::endl;
+		// std::cerr << "Issue listening _listen_sd at port : " << this->_port << std::endl;
 		exit(EXIT_FAILURE);
 	}
 

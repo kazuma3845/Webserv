@@ -82,6 +82,7 @@ private:
 	unsigned int _bytesWritten;
 	unsigned int _chunkBodySize;
 	std::string _chunkBuffer;
+	size_t _fileSize;
 
 	std::string _currentBoundary;
 	std::string _currentFilename;
